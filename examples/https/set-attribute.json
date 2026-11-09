@@ -1,0 +1,12 @@
+{"tag": "RequestMessage", "value": [
+  {"tag": "RequestHeader", "value": [
+    {"tag": "ProtocolVersion", "value": [
+      {"tag": "ProtocolVersionMajor", "type": "Integer", "value": 2},
+      {"tag": "ProtocolVersionMinor", "type": "Integer", "value": 1}]},
+    {"tag": "BatchCount", "type": "Integer", "value": 1}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "SetAttribute"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "UniqueIdentifier", "type": "TextString", "value": "$ID"},
+      {"tag": "NewAttribute", "value": [
+        {"tag": "ContactInformation", "type": "TextString", "value": "$CONTACT"}]}]}]}]}

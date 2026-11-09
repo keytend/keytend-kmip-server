@@ -1,0 +1,50 @@
+[
+  {
+    "version": "1.0",
+    "url": "https://docs.oasis-open.org/kmip/spec/v1.0/os/kmip-spec-1.0-os.html",
+    "sha256": "c024b3fdff7fc5b55512f2e6c0b18eb7edb61d5b5560b90cf6c60720d703fcb3",
+    "status": "final"
+  },
+  {
+    "version": "1.1",
+    "url": "https://docs.oasis-open.org/kmip/spec/v1.1/os/kmip-spec-v1.1-os.html",
+    "sha256": "bde1005a9c265f550e670eab670bbf238f4c9d3191b9bc344c76a9aaaca68cec",
+    "status": "final"
+  },
+  {
+    "version": "1.2",
+    "url": "https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html",
+    "sha256": "d6fe49fc9fd16601369430373e8507f63c6a9a6a92e946e63f114d93b6aaaaa1",
+    "status": "final"
+  },
+  {
+    "version": "1.3",
+    "url": "https://docs.oasis-open.org/kmip/spec/v1.3/os/kmip-spec-v1.3-os.html",
+    "sha256": "f37bd6ba02ae21baaa35bc01fb892dcc938761a702fcd01bb67c3a2f7bdd60b7",
+    "status": "final"
+  },
+  {
+    "version": "1.4",
+    "url": "https://docs.oasis-open.org/kmip/spec/v1.4/os/kmip-spec-v1.4-os.html",
+    "sha256": "bdceac414880cbda4cbded5d4670f2697bb37cedd5b47bd804a9abd2d9f066d2",
+    "status": "final"
+  },
+  {
+    "version": "2.0",
+    "url": "https://docs.oasis-open.org/kmip/kmip-spec/v2.0/os/kmip-spec-v2.0-os.html",
+    "sha256": "0d1b675c8f01165c0ccaa0eb122b9cfc409d3306bacb458bfd214eb4521a0c44",
+    "status": "final"
+  },
+  {
+    "version": "2.1",
+    "url": "https://docs.oasis-open.org/kmip/kmip-spec/v2.1/os/kmip-spec-v2.1-os.html",
+    "sha256": "462b07d2b4b234e0f2db6ff9ad217b7f372dcca5873c4cbb4a85ff7b3159e3c8",
+    "status": "final"
+  },
+  {
+    "version": "3.0",
+    "url": "https://docs.oasis-open.org/kmip/kmip-spec/v3.0/csd02/kmip-spec-v3.0-csd02.html",
+    "sha256": "79570990bb89eebf82f32dddbcdc99539c5c6a2554d50da2675a7347b54e4a68",
+    "status": "draft"
+  }
+]

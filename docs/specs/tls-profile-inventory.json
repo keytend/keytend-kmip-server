@@ -1,0 +1,897 @@
+{
+  "description": "Curated inventory of KMIP authentication-suite TLS requirements read from pinned primary profiles. Paraphrased; section numbers refer to each Profiles document. Not a TC ruling and not a product decision.",
+  "naming": "Cipher suites use IANA names. The 2.0-3.0 documents spell TLS 1.3 suites as TLS13-CHACHA20-POLY1305-SHA256 and TLS13-AES-256-GCM-SHA384; this inventory maps them to the RFC 8446 names TLS_CHACHA20_POLY1305_SHA256 and TLS_AES_256_GCM_SHA384 (mapping is an interpretation of the spelling).",
+  "base_specification_clauses": [
+    {
+      "edition": "1.0",
+      "section": "10 Transport",
+      "paraphrase": "Server SHALL provide channel confidentiality, integrity and server authenticity; over TCP/IP it SHALL support TLS v1.0 or later and may support other protocols in [KMIP-Prof].",
+      "sha256": "c024b3fdff7fc5b55512f2e6c0b18eb7edb61d5b5560b90cf6c60720d703fcb3"
+    },
+    {
+      "edition": "1.0",
+      "section": "8 Authentication",
+      "paraphrase": "Server SHALL support authentication as defined in [KMIP-Prof]."
+    },
+    {
+      "edition": "1.1-1.4",
+      "section": "8 Authentication; 10 Transport",
+      "paraphrase": "Authentication is external to the messages; server SHALL support authentication and channel security as specified in [KMIP-Prof]."
+    },
+    {
+      "edition": "2.0-3.0",
+      "section": "10.3 Authentication; 10.4 Transport",
+      "paraphrase": "Same delegation to [KMIP-Prof]."
+    },
+    {
+      "edition": "errata",
+      "section": "1.1 errata01, 1.4 errata01",
+      "paraphrase": "Neither pinned errata document changes TLS, cipher-suite or authentication-suite text (no TLS/cipher/SSL mention found).",
+      "sha256": [
+        "56db980587430cff4572a364328ea7bdc0a154e57e28a3f040f811f056e6577e",
+        "57d9902b7173f07a109330a29fd2f31df7e98e578657df32f83b8b12a8a8995a"
+      ]
+    }
+  ],
+  "unpinned_sources": [
+    {
+      "source": "KMIP Profiles 1.0",
+      "reason": "Required by spec 1.0 [KMIP-Prof] but not pinned; 1.0 authentication suites are unreviewed."
+    },
+    {
+      "source": "NIST SP 800-57 Part 3 tables 4-1..4-4",
+      "reason": "Profiles 1.1 defines its MAY cipher lists by reference to these tables; not pinned, so the 1.1 allowlist is not enumerable here."
+    },
+    {
+      "source": "RFC 5759 / CNSSP-15",
+      "reason": "Suite B certificate profile referenced by 1.3/1.4 Suite B clauses; not pinned or tested."
+    }
+  ],
+  "editions": {
+    "1.1": {
+      "profiles_url": "https://docs.oasis-open.org/kmip/profiles/v1.1/os/kmip-profiles-v1.1-os.zip",
+      "profiles_sha256": "d2a5d0a8b27c97c4c4f254856e8c96d19a05a7e326ff2fc43c8e1be0281248a2",
+      "suites": {
+        "basic": {
+          "section": "3.1",
+          "protocols": {
+            "server_shall": [
+              "TLSv1.0"
+            ],
+            "server_may": [
+              "TLSv1.1",
+              "TLSv1.2"
+            ],
+            "shall_not": [
+              "SSLv3.0",
+              "SSLv2.0",
+              "SSLv1.0"
+            ]
+          },
+          "ciphers": {
+            "server_shall": [
+              "TLS_RSA_WITH_AES_128_CBC_SHA"
+            ],
+            "server_may": "NIST SP 800-57 Part 3 tables 4-1..4-4 except NULL (unpinned)",
+            "closed_list": true,
+            "server_may_excludes": [
+              "TLS_RSA_WITH_NONE_SHA"
+            ]
+          },
+          "client_authenticity": "SHALL require channel (TLS) mutual authentication for authenticated services; channel identity used absent Credential",
+          "port": "SHOULD use 5696",
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        },
+        "tls12": {
+          "section": "3.2",
+          "protocols": {
+            "server_shall": [
+              "TLSv1.2"
+            ]
+          },
+          "ciphers": {
+            "server_shall": [
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256"
+            ],
+            "server_may": "NIST SP 800-57 Part 3 tables 4-1..4-4 except NULL (unpinned)",
+            "closed_list": true,
+            "server_may_excludes": [
+              "TLS_RSA_WITH_NONE_SHA"
+            ]
+          },
+          "client_authenticity": "same as 3.1.3",
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        }
+      },
+      "profile_mapping": {
+        "basic": "4.1-4.10, 4.21-4.30, 4.41",
+        "tls12": "4.11-4.20, 4.33-4.40, 4.42"
+      },
+      "anomalies": [
+        "4.31 and 4.32 are titled TLS 1.2 Authentication profiles but their tuples name the Basic Authentication Suite.",
+        "4.15 tuple text is truncated (\"TLS\")."
+      ]
+    },
+    "1.2": {
+      "profiles_url": "https://docs.oasis-open.org/kmip/profiles/v1.2/os/kmip-profiles-v1.2-os.zip",
+      "profiles_sha256": "487be3118589a852c69943a68d2323ec3d7746be464edf32172be792bf57bb63",
+      "suites": {
+        "basic": {
+          "section": "3.1",
+          "protocols": {
+            "shall": [
+              "TLSv1.0"
+            ],
+            "may": [
+              "TLSv1.1",
+              "TLSv1.2"
+            ],
+            "shall_not": [
+              "SSLv3.0",
+              "SSLv2.0",
+              "SSLv1.0"
+            ]
+          },
+          "ciphers": {
+            "shall": [
+              "TLS_RSA_WITH_AES_128_CBC_SHA"
+            ],
+            "may": [
+              "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DH_DSS_WITH_AES_128_CBC_SHA",
+              "TLS_DH_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+              "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_DH_DSS_WITH_AES_256_CBC_SHA",
+              "TLS_DH_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
+              "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_DH_DSS_WITH_AES_128_CBC_SHA256",
+              "TLS_DH_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256",
+              "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_DH_DSS_WITH_AES_256_CBC_SHA256",
+              "TLS_DH_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
+              "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_PSK_WITH_3DES_EDE_CBC_SHA",
+              "TLS_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DHE_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_DHE_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_RSA_PSK_WITH_3DES_EDE_CBC_SHA",
+              "TLS_RSA_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_RSA_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+            ],
+            "closed_list": true
+          },
+          "client_authenticity": {
+            "server_requires_mutual_tls": "all operations other than Query and Discover Versions (SHALL require); requiring it for those two as well is stricter, not prohibited",
+            "identity_without_authentication_object": "SHALL use identity derived from channel mutual authentication",
+            "identity_with_authentication_object": "SHALL use channel identity along with Credential information"
+          },
+          "port": "SHOULD use 5696",
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        },
+        "tls12": {
+          "section": "3.2",
+          "protocols": {
+            "shall": [
+              "TLSv1.2"
+            ]
+          },
+          "ciphers": {
+            "server_shall": [
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256"
+            ],
+            "may": "the Basic suite MAY list",
+            "closed_list": false
+          },
+          "client_authenticity": "per Basic 3.1.3",
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        }
+      },
+      "profile_mapping": {
+        "basic": "4.1 Baseline Server, 4.3 Baseline Client, 4.5 Complete Server",
+        "tls12": "4.2, 4.4, 4.6"
+      },
+      "anomalies": [
+        "3.2.1 cites [RFC2246] for TLS v1.2.",
+        "3.2.2/3.2.3 refer to \"section 3.2.x of the Basic Authentication Suite\" (Basic is 3.1).",
+        "The TLS 1.2 suite has no explicit \"SHALL NOT support any other\" sentence.",
+        "MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+        "MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
+      ]
+    },
+    "1.3": {
+      "profiles_url": "https://docs.oasis-open.org/kmip/profiles/v1.3/os/kmip-profiles-v1.3-os.zip",
+      "profiles_sha256": "120eb82c717f71e4a70b2680f552006de818f3a4e88129b2083c816ff01361fb",
+      "suites": {
+        "basic": {
+          "section": "3.1",
+          "protocols": {
+            "shall": [
+              "TLSv1.0"
+            ],
+            "should": [
+              "TLSv1.2"
+            ],
+            "may": [
+              "TLSv1.1"
+            ],
+            "shall_not": [
+              "SSLv3.0",
+              "SSLv2.0",
+              "SSLv1.0"
+            ]
+          },
+          "ciphers": {
+            "shall": [
+              "TLS_RSA_WITH_AES_128_CBC_SHA"
+            ],
+            "may": [
+              "TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DH_DSS_WITH_AES_128_CBC_SHA",
+              "TLS_DH_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+              "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_DH_DSS_WITH_AES_256_CBC_SHA",
+              "TLS_DH_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
+              "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_DH_DSS_WITH_AES_128_CBC_SHA256",
+              "TLS_DH_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256",
+              "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_DH_DSS_WITH_AES_256_CBC_SHA256",
+              "TLS_DH_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
+              "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_PSK_WITH_3DES_EDE_CBC_SHA",
+              "TLS_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA",
+              "TLS_DHE_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_DHE_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_RSA_PSK_WITH_3DES_EDE_CBC_SHA",
+              "TLS_RSA_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_RSA_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+            ],
+            "closed_list": true
+          },
+          "client_authenticity": {
+            "server_requires_mutual_tls": "all operations other than Query and Discover Versions (SHALL require); requiring it for those two as well is stricter, not prohibited",
+            "identity_without_authentication_object": "SHALL use identity derived from channel mutual authentication",
+            "identity_with_authentication_object": "SHALL use channel identity along with Credential information"
+          },
+          "port": "SHALL use 5696",
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        },
+        "tls12": {
+          "section": "3.2",
+          "protocols": {
+            "shall": [
+              "TLSv1.2"
+            ],
+            "only": [
+              "TLSv1.2"
+            ]
+          },
+          "ciphers": {
+            "server_shall": [
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256"
+            ],
+            "may": "the Basic suite MAY list",
+            "closed_list": false
+          },
+          "client_authenticity": "per Basic 3.1.3",
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        },
+        "suite_b_128": {
+          "section": "3.3, 5.13",
+          "protocols": {
+            "shall": [
+              "TLSv1.2"
+            ]
+          },
+          "ciphers": {
+            "server_shall": [
+              "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
+            ],
+            "closed_list": false
+          },
+          "certificates": "Both peers use ECDSA authentication with RFC5759 certificate requirements; minLOS128 permits ECDSA256 or ECDSA384, minLOS192 requires ECDSA384 on both peers",
+          "modelled": false,
+          "primitive_columns": "minLOS128 non-signature primitives come entirely from column1 (AES128/SHA256/P256) or entirely from column2 (AES256/SHA384/P384); minLOS192 uses column2 only",
+          "unmodelled_requirements": [
+            "Peer certificate algorithm/curve and RFC5759 checks",
+            "Non-signature primitive column coherence",
+            "Complete section5.13 profile requirements"
+          ]
+        },
+        "suite_b_192": {
+          "section": "3.4, 5.13",
+          "protocols": {
+            "shall": [
+              "TLSv1.2"
+            ]
+          },
+          "ciphers": {
+            "server_shall": [
+              "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+            ],
+            "closed_list": false
+          },
+          "certificates": "Both peers use ECDSA authentication with RFC5759 certificate requirements; minLOS128 permits ECDSA256 or ECDSA384, minLOS192 requires ECDSA384 on both peers",
+          "modelled": false,
+          "primitive_columns": "minLOS128 non-signature primitives come entirely from column1 (AES128/SHA256/P256) or entirely from column2 (AES256/SHA384/P384); minLOS192 uses column2 only",
+          "unmodelled_requirements": [
+            "Peer certificate algorithm/curve and RFC5759 checks",
+            "Non-signature primitive column coherence",
+            "Complete section5.13 profile requirements"
+          ]
+        },
+        "https": {
+          "section": "3.5",
+          "protocols": "per Basic 3.1.1",
+          "ciphers": "per Basic 3.1.2",
+          "port": "MAY use 5696 if HTTPS and non-HTTPS both supported"
+        }
+      },
+      "profile_mapping": {
+        "basic": "6.1, 6.3, 6.5, 6.9-6.32 (XML, JSON, symmetric/asymmetric lifecycle, foundry, cryptographic, opaque, SED storage array, tape library)",
+        "tls12": "6.2, 6.4, 6.6 (Baseline Client/Server, Complete Server)",
+        "https": "6.7, 6.8",
+        "suite_b": "6.33-6.36"
+      },
+      "anomalies": [
+        "3.2.1 cites [RFC2246] for TLS v1.2.",
+        "3.5.1/3.5.2 say \"handle client authenticity in accordance with\" the protocol and cipher clauses.",
+        "The TLS 1.2 and Suite B suites have no explicit closed-list sentence.",
+        "MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+        "MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
+      ]
+    },
+    "1.4": {
+      "profiles_url": "https://docs.oasis-open.org/kmip/profiles/v1.4/os/kmip-profiles-v1.4-os.zip",
+      "profiles_sha256": "ec85e2ebfffd18b8fc6b56e4c46f8c9cb68d2cda1b3da48810a41fa62329e97d",
+      "suites": {
+        "basic": {
+          "section": "3.1",
+          "protocols": {
+            "shall": [
+              "TLSv1.2"
+            ],
+            "shall_not": [
+              "TLSv1.0",
+              "SSLv3.0",
+              "SSLv2.0",
+              "SSLv1.0"
+            ],
+            "unstated": [
+              "TLSv1.1",
+              "TLSv1.3"
+            ]
+          },
+          "ciphers": {
+            "shall": [
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256"
+            ],
+            "may": [
+              "TLS_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_DH_DSS_WITH_AES_128_CBC_SHA",
+              "TLS_DH_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+              "TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_DH_DSS_WITH_AES_256_CBC_SHA",
+              "TLS_DH_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_DHE_DSS_WITH_AES_256_CBC_SHA",
+              "TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_DH_DSS_WITH_AES_128_CBC_SHA256",
+              "TLS_DH_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_DHE_DSS_WITH_AES_128_CBC_SHA256",
+              "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_DH_DSS_WITH_AES_256_CBC_SHA256",
+              "TLS_DH_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_DHE_DSS_WITH_AES_256_CBC_SHA256",
+              "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_DHE_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_DHE_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_RSA_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_RSA_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+            ],
+            "closed_list": true
+          },
+          "client_authenticity": {
+            "server_requires_mutual_tls": "all operations other than Query and Discover Versions (SHALL require); requiring it for those two as well is stricter, not prohibited",
+            "identity_without_authentication_object": "SHALL use identity derived from channel mutual authentication",
+            "identity_with_authentication_object": "SHALL use channel identity along with Credential information"
+          },
+          "port": "SHALL use 5696",
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        },
+        "tls12": {
+          "section": "3.2",
+          "protocols": {
+            "shall": [
+              "TLSv1.2"
+            ],
+            "only": [
+              "TLSv1.2"
+            ]
+          },
+          "ciphers": {
+            "server_shall": [
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256"
+            ],
+            "may": "the Basic suite MAY list",
+            "closed_list": false
+          },
+          "client_authenticity": "per Basic 3.1.3",
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        },
+        "suite_b_128": {
+          "section": "3.3, 5.13",
+          "protocols": {
+            "shall": [
+              "TLSv1.2"
+            ]
+          },
+          "ciphers": {
+            "server_shall": [
+              "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
+            ],
+            "closed_list": false
+          },
+          "modelled": false,
+          "certificates": "Both peers use ECDSA authentication with RFC5759 certificate requirements; minLOS128 permits ECDSA256 or ECDSA384, minLOS192 requires ECDSA384 on both peers",
+          "primitive_columns": "minLOS128 non-signature primitives come entirely from column1 (AES128/SHA256/P256) or entirely from column2 (AES256/SHA384/P384); minLOS192 uses column2 only",
+          "unmodelled_requirements": [
+            "Peer certificate algorithm/curve and RFC5759 checks",
+            "Non-signature primitive column coherence",
+            "Complete section5.13 profile requirements"
+          ]
+        },
+        "suite_b_192": {
+          "section": "3.4, 5.13",
+          "protocols": {
+            "shall": [
+              "TLSv1.2"
+            ]
+          },
+          "ciphers": {
+            "server_shall": [
+              "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+            ],
+            "closed_list": false
+          },
+          "modelled": false,
+          "certificates": "Both peers use ECDSA authentication with RFC5759 certificate requirements; minLOS128 permits ECDSA256 or ECDSA384, minLOS192 requires ECDSA384 on both peers",
+          "primitive_columns": "minLOS128 non-signature primitives come entirely from column1 (AES128/SHA256/P256) or entirely from column2 (AES256/SHA384/P384); minLOS192 uses column2 only",
+          "unmodelled_requirements": [
+            "Peer certificate algorithm/curve and RFC5759 checks",
+            "Non-signature primitive column coherence",
+            "Complete section5.13 profile requirements"
+          ]
+        },
+        "https": {
+          "section": "3.5",
+          "protocols": "per Basic 3.1.1",
+          "ciphers": "per Basic 3.1.2"
+        }
+      },
+      "profile_mapping": {
+        "basic": "29 profile clauses",
+        "tls12": "3 (Baseline Client/Server, Complete Server TLS v1.2)",
+        "https": 2,
+        "suite_b": 4
+      },
+      "anomalies": [
+        "The closed Basic list contains no TLS 1.3 suite while TLS 1.3 is not itself forbidden; a literal reading makes TLS 1.3 support conflict with the Basic suite.",
+        "3.2.1 cites [RFC2246] for TLS v1.2.",
+        "MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+        "MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
+      ]
+    },
+    "2.0": {
+      "profiles_url": "https://docs.oasis-open.org/kmip/kmip-profiles/v2.0/os/kmip-profiles-v2.0-os.zip",
+      "profiles_sha256": "449cc338e1d66cdee9cf51ee16e4a486a97d911f3e6e393d579e7075a249b8b5",
+      "suites": {
+        "basic": {
+          "section": "3.1",
+          "protocols": {
+            "server_shall": [
+              "TLSv1.3"
+            ],
+            "server_should": [
+              "TLSv1.2"
+            ],
+            "client_should": [
+              "TLSv1.3"
+            ],
+            "client_may": [
+              "TLSv1.2"
+            ],
+            "shall_not": [
+              "TLSv1.1",
+              "TLSv1.0",
+              "SSL (any version)"
+            ]
+          },
+          "ciphers": {
+            "tls13_server_shall_all_if_tls13": [
+              "TLS_CHACHA20_POLY1305_SHA256",
+              "TLS_AES_256_GCM_SHA384"
+            ],
+            "tls13_client_shall_one_of_if_tls13": [
+              "TLS_CHACHA20_POLY1305_SHA256",
+              "TLS_AES_256_GCM_SHA384"
+            ],
+            "tls13_spelling_in_source": [
+              "TLS13-CHACHA20-POLY1305-SHA256",
+              "TLS13-AES-256-GCM-SHA384"
+            ],
+            "tls12_shall_if_tls12": [
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256"
+            ],
+            "tls12_may_if_tls12": [
+              "TLS_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+            ],
+            "closed_list": true
+          },
+          "port": "SHALL use TCP 5696",
+          "client_authenticity": {
+            "server_requires_mutual_tls": "all operations except when using automated client provisioning (SHALL require)",
+            "identity_without_authentication_object": "SHALL use identity derived from channel mutual authentication",
+            "identity_with_authentication_object": "SHALL use identity derived from the Credential information"
+          },
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        },
+        "https": {
+          "section": "3.2",
+          "protocols": "per Basic 3.1.1",
+          "ciphers": "per Basic 3.1.2"
+        }
+      },
+      "profile_mapping": {
+        "basic": "33 profile clauses",
+        "https": 2
+      },
+      "anomalies": [
+        "TLS 1.2 MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+        "TLS 1.2 MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
+      ]
+    },
+    "2.1": {
+      "profiles_url": "https://docs.oasis-open.org/kmip/kmip-profiles/v2.1/os/kmip-profiles-v2.1-os.zip",
+      "profiles_sha256": "4f32dea38072c98517e1a406227b567cfd644feaea3bf85a7d0d7b7dbe4cf9b6",
+      "suites": {
+        "basic": {
+          "section": "3.1",
+          "protocols": {
+            "server_shall": [
+              "TLSv1.3"
+            ],
+            "server_should": [
+              "TLSv1.2"
+            ],
+            "client_should": [
+              "TLSv1.3"
+            ],
+            "client_may": [
+              "TLSv1.2"
+            ],
+            "shall_not": [
+              "TLSv1.1",
+              "TLSv1.0",
+              "SSL (any version)"
+            ]
+          },
+          "ciphers": {
+            "tls13_server_shall_all_if_tls13": [
+              "TLS_CHACHA20_POLY1305_SHA256",
+              "TLS_AES_256_GCM_SHA384"
+            ],
+            "tls13_client_shall_one_of_if_tls13": [
+              "TLS_CHACHA20_POLY1305_SHA256",
+              "TLS_AES_256_GCM_SHA384"
+            ],
+            "tls13_spelling_in_source": [
+              "TLS13-CHACHA20-POLY1305-SHA256",
+              "TLS13-AES-256-GCM-SHA384"
+            ],
+            "tls12_shall_if_tls12": [
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256"
+            ],
+            "tls12_may_if_tls12": [
+              "TLS_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+            ],
+            "closed_list": true
+          },
+          "port": "SHALL use TCP 5696",
+          "client_authenticity": {
+            "server_requires_mutual_tls": "all operations except when using automated client provisioning (SHALL require)",
+            "identity_without_authentication_object": "SHALL use identity derived from channel mutual authentication",
+            "identity_with_authentication_object": "SHALL use identity derived from the Credential information"
+          },
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        },
+        "https": {
+          "section": "3.2",
+          "protocols": "per Basic 3.1.1",
+          "ciphers": "per Basic 3.1.2"
+        }
+      },
+      "profile_mapping": {
+        "basic": "33 profile clauses",
+        "https": 2
+      },
+      "anomalies": [
+        "TLS 1.2 MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+        "TLS 1.2 MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
+      ]
+    },
+    "3.0-csd02": {
+      "profiles_url": "https://docs.oasis-open.org/kmip/kmip-profiles/v3.0/csd02/kmip-profiles-v3.0-csd02.zip",
+      "profiles_sha256": "b60453bfb4c8c04703edd33ce9213801f9f204ef1a18a854aa288cad50f0b9fa",
+      "status": "draft (CSD02); not an approved standard",
+      "suites": {
+        "basic": {
+          "section": "3.1",
+          "protocols": {
+            "server_shall": [
+              "TLSv1.3"
+            ],
+            "server_should": [
+              "TLSv1.2"
+            ],
+            "client_should": [
+              "TLSv1.3"
+            ],
+            "client_may": [
+              "TLSv1.2"
+            ],
+            "shall_not": [
+              "TLSv1.1",
+              "TLSv1.0",
+              "SSL (any version)"
+            ]
+          },
+          "ciphers": {
+            "tls13_server_shall_all_if_tls13": [
+              "TLS_CHACHA20_POLY1305_SHA256",
+              "TLS_AES_256_GCM_SHA384"
+            ],
+            "tls13_client_shall_one_of_if_tls13": [
+              "TLS_CHACHA20_POLY1305_SHA256",
+              "TLS_AES_256_GCM_SHA384"
+            ],
+            "tls13_spelling_in_source": [
+              "TLS13-CHACHA20-POLY1305-SHA256",
+              "TLS13-AES-256-GCM-SHA384"
+            ],
+            "tls12_shall_if_tls12": [
+              "TLS_RSA_WITH_AES_256_CBC_SHA256",
+              "TLS_RSA_WITH_AES_128_CBC_SHA256"
+            ],
+            "tls12_may_if_tls12": [
+              "TLS_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_RSA_WITH_AES_256_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+              "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
+              "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+              "TLS_PSK_WITH_AES_128_CBC_SHA",
+              "TLS_PSK_WITH_AES_256_CBC_SHA",
+              "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+              "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
+            ],
+            "closed_list": true
+          },
+          "port": "SHALL use TCP 5696",
+          "client_authenticity": {
+            "server_requires_mutual_tls": "SHOULD require for all operations; if omitted, requests SHALL carry an Authentication structure with some form of authentication",
+            "identity_without_authentication_object": "SHOULD use identity derived from channel mutual authentication",
+            "identity_with_authentication_object": "SHALL use identity derived from the credentials; MAY bind to or treat independently of the channel identity"
+          },
+          "credential_requirements": {
+            "rsa_server_certificate": "Required to negotiate mandatory static-RSA suites; conditional on TLS1.2 enabled for 2.x/3.0 Basic"
+          }
+        },
+        "https": {
+          "section": "3.2",
+          "protocols": "per Basic 3.1.1",
+          "ciphers": "per Basic 3.1.2"
+        },
+        "quantum_safe": {
+          "section": "3.3",
+          "protocols": {
+            "server_shall": [
+              "TLSv1.3"
+            ],
+            "client_shall": [
+              "TLSv1.3"
+            ],
+            "shall_not": [
+              "TLSv1.2",
+              "TLSv1.1",
+              "TLSv1.0",
+              "SSL (any version)"
+            ]
+          },
+          "ciphers": {
+            "tls13_server_shall_all": [
+              "TLS_CHACHA20_POLY1305_SHA256",
+              "TLS_AES_256_GCM_SHA384"
+            ],
+            "tls13_client_shall_one_of": [
+              "TLS_CHACHA20_POLY1305_SHA256",
+              "TLS_AES_256_GCM_SHA384"
+            ],
+            "closed_list": true
+          },
+          "groups": {
+            "server_shall_all": [
+              "X25519MLKEM768",
+              "SecP256r1MLKEM768",
+              "SecP384r1MLKEM1024"
+            ],
+            "client_shall_one_of": [
+              "X25519MLKEM768",
+              "SecP256r1MLKEM768",
+              "SecP384r1MLKEM1024"
+            ],
+            "closed_list": true
+          },
+          "client_authenticity": {
+            "server_requires_mutual_tls": "SHOULD require for all operations; if omitted, requests SHALL carry an Authentication structure with some form of authentication",
+            "identity_without_authentication_object": "SHOULD use identity derived from channel mutual authentication",
+            "identity_with_authentication_object": "SHALL use identity derived from the credentials; MAY bind to or treat independently of the channel identity"
+          }
+        }
+      },
+      "profile_mapping": {
+        "basic": "31 profile clauses",
+        "https": 2,
+        "quantum_safe": "6.32 client, 6.33 server"
+      },
+      "anomalies": [
+        "TLS 1.2 MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256",
+        "TLS 1.2 MAY list repeats TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"
+      ]
+    }
+  },
+  "single_certificate_constraint": "Runtime loads one certificate/key pair: mandatory static-RSA suites and SuiteB ECDSA credentials require different configurations; no single current configuration satisfies both. ECDSA-only with TLS1.2 enabled cannot meet 2.x Basic mandatory RSA suites.",
+  "external_reference_manifest": "docs/specs/tls-external-references.json"
+}

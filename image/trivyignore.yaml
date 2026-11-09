@@ -1,0 +1,96 @@
+# Copyright 2026 Jeremiah Jordan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Reviewed image findings (Trivy ignore file; scripts/scan_image.py passes it
+# with --ignorefile for every platform). An entry records that a finding was
+# reviewed, not that it is fixed: each one has no Red Hat Enterprise Linux 9
+# fix at review time, and a finding with a fixed version fails the scan anyway,
+# because the remedy then is to update the package pin. Statements name the
+# package and the reason the finding does not need an image change.
+# Add an entry only with a statement; see docs/testing.md (Reviewing image scanner findings).
+vulnerabilities:
+  # glibc
+  - id: CVE-2026-8674
+    statement: "glibc getaddrinfo, conditionally reachable. Listen addresses are parsed as numeric socket addresses and never resolved; only an outbound Notify/Put connection to a policy client_endpoint address given as a host name calls the resolver, which reads the platform resolv.conf. Impact is process abort."
+  - id: CVE-2026-84243
+    statement: "glibc message translation in a non-C locale. The server binary, libssl, libcrypto, libgcc_s and libz import no setlocale, uselocale, newlocale, gettext or textdomain entry point, so the process stays in the C locale where glibc ignores LANGUAGE."
+  - id: CVE-2026-86805
+    statement: "glibc, needs a setuid/setgid (AT_SECURE) program. The image ships no setuid/setgid files and runs as UID 10001 with no-new-privileges in the provided fixtures."
+  - id: CVE-2026-95818
+    statement: "glibc, needs a setuid/setgid (AT_SECURE) program. The image ships no setuid/setgid files and runs as UID 10001 with no-new-privileges in the provided fixtures."
+  - id: CVE-2026-89092
+    statement: "glibc nscd. nscd is not shipped."
+  - id: CVE-2026-97399
+    statement: "glibc Power8-optimised implementation. The image is linux/amd64 or linux/arm64."
+  - id: CVE-2026-122054
+    statement: "glibc iconv BIG5-HKSCS conversion. The image ships no BIG5HKSCS gconv module (only UTF-7, UTF-16, UTF-32, UNICODE, ISO8859-1, ISO8859-15 and CP1252), and the server binary, libssl, libcrypto, libgcc_s and libz import no iconv entry point."
+  # libgcc (matched through the gcc source package)
+  - id: CVE-2026-102010
+    statement: "gcc libstdc++. libstdc++ is not shipped; only libgcc_s is."
+  - id: CVE-2026-95619
+    statement: "gcc libstdc++. libstdc++ is not shipped; only libgcc_s is."
+  - id: CVE-2026-114690
+    statement: "gcc libstdc++ parallel-mode search. libstdc++ is not shipped; only libgcc_s is."
+  - id: CVE-2026-114691
+    statement: "gcc libstdc++ std::vector<bool>. libstdc++ is not shipped; only libgcc_s is."
+  - id: CVE-2026-115456
+    statement: "gcc libstdc++ std::from_chars. libstdc++ is not shipped; only libgcc_s is."
+  - id: CVE-2021-46195
+    statement: "gcc libiberty demangler (binutils/gcc tools). It is not part of libgcc and is not shipped."
+  - id: CVE-2022-27943
+    statement: "gcc libiberty demangler (binutils/gcc tools). It is not part of libgcc and is not shipped."
+  # zlib
+  - id: CVE-2026-27171
+    statement: "zlib crc32_combine family. None of these functions is imported by the server binary, libssl, libcrypto, libgcc_s or libz."
+  # openssl-libs
+  - id: CVE-2024-13176
+    statement: "OpenSSL ECDSA timing, reachable. The server signs with ECDSA (KMIP Sign), including P-521; Red Hat defers the fix and the FIPS provider build implements the same ECDSA code."
+  - id: CVE-2024-41996
+    statement: "OpenSSL finite-field DHE, non-default configuration. The default modern TLS policy (src/fips.rs) and the server-to-client connector offer no DHE suite and no FFDHE group; only --tls-profile mozilla-intermediate enables them. Impact is server CPU cost."
+  - id: CVE-2025-9232
+    statement: "OpenSSL HTTP client. The OSSL_HTTP client functions are not imported; the server is an HTTPS server only."
+  - id: CVE-2026-28387
+    statement: "OpenSSL DANE TLSA authentication. The SSL_dane functions are not imported; DANE is never enabled."
+  - id: CVE-2026-28388
+    statement: "OpenSSL delta CRLs. Needs X509_V_FLAG_USE_DELTAS, which the server source never sets; CRLs are complete CRLs supplied with KMIP_CRL."
+  - id: CVE-2026-28389
+    statement: "OpenSSL CMS/PKCS#7 decryption. CMS_decrypt and PKCS7_decrypt are not imported."
+  - id: CVE-2026-31789
+    statement: "OpenSSL, 32-bit systems only. The image is linux/amd64 or linux/arm64."
+  - id: CVE-2026-35189
+    statement: "OpenSSL certificate extension caching, reachable. Client certificates are parsed during the mutually authenticated TLS handshake, before KMIP authorization, so a crafted client certificate can force large allocations. Impact is memory pressure."
+  - id: CVE-2026-42765
+    statement: "OpenSSL partial-chain verification with whole-chain OCSP checking. The server source sets neither a PARTIAL_CHAIN nor an OCSP verification flag."
+  - id: CVE-2026-42772
+    statement: "OpenSSL QUIC. The QUIC methods and listener API are not imported; the server uses TLS over TCP."
+  - id: CVE-2026-54873
+    statement: "OpenSSL QUIC. The QUIC methods and listener API are not imported; the server uses TLS over TCP."
+  - id: CVE-2026-75804
+    statement: "OpenSSL QUIC. The QUIC methods and listener API are not imported; the server uses TLS over TCP."
+  - id: CVE-2026-84784
+    statement: "OpenSSL QUIC. The QUIC methods and listener API are not imported; the server uses TLS over TCP."
+  - id: CVE-2026-35191
+    statement: "OpenSSL QUIC. The QUIC methods and listener API are not imported; the server uses TLS over TCP."
+  - id: CVE-2026-54872
+    statement: "OpenSSL generic-curve ECDSA on non-NIST curves, non-default configuration. The default --ec-curves nist offers P-224, P-256, P-384 and P-521 only (not affected per Red Hat) and the default modern TLS policy lists no brainpool scheme or group. Reachable only with --ec-curves extended, or --tls-profile mozilla-intermediate with a brainpool server certificate. FIPS mode offers only the NIST curves."
+  - id: CVE-2026-54875
+    statement: "OpenSSL SM2 implementation for ARM64/RISC-V. On linux/amd64 the code is not built; on linux/arm64 it is present but the server never uses SM2, which is not one of the KMIP Recommended Curves it maps (src/crypto/ec.rs)."
+  - id: CVE-2026-77696
+    statement: "OpenSSL SM2. SM2 is not one of the KMIP Recommended Curves the server maps (src/crypto/ec.rs); keys on other curves are rejected and the server source never names SM2."
+  - id: CVE-2026-72897
+    statement: "OpenSSL SSL_set_SSL_CTX during a handshake. SSL_set_SSL_CTX is not imported; the server never switches SSL_CTX."
+  - id: CVE-2026-75805
+    statement: "OpenSSL CMP client. The OSSL_CMP functions are not imported."
+  - id: CVE-2026-75806
+    statement: "OpenSSL DTLS. The DTLS methods are not imported; the server uses TLS over TCP."

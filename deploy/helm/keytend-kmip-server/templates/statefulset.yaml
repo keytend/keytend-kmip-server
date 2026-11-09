@@ -1,0 +1,341 @@
+{{- /*
+Copyright 2026 Jeremiah Jordan
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -}}
+{{- include "kmip.validate" . }}
+{{- $fullname := include "kmip.fullname" . }}
+{{- $rotating := include "kmip.rotating" . }}
+{{- $backupClaim := include "kmip.backupVolumeClaim" . }}
+{{- $checkpoint := .Values.auditCheckpoint.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "kmip.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+spec:
+  serviceName: {{ $fullname }}-headless
+  replicas: {{ ternary 0 1 .Values.maintenance.enabled }}
+  # Parallel: with one replica the old pod still stops before the new one
+  # starts, but a pod that never became ready (a refused restore, a bad
+  # Secret) is replaced by the next upgrade instead of blocking it.
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      {{- include "kmip.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: server
+  template:
+    metadata:
+      labels:
+        {{- include "kmip.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: server
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if not .Values.policy.existingConfigMap }}
+        checksum/policy: {{ include "kmip.policyDocument" . | sha256sum }}
+        {{- end }}
+        {{- if .Values.metrics.annotations }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: /metrics
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "kmip.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      securityContext:
+        {{- include "kmip.podSecurityContext" . | nindent 8 }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- range . }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      affinity:
+        {{- if .Values.affinity }}
+        {{- toYaml .Values.affinity | nindent 8 }}
+        {{- else }}
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                {{- include "kmip.volumeGroupTerm" . | nindent 16 }}
+        {{- end }}
+      {{- if or .Values.restore.from $rotating }}
+      initContainers:
+        {{- if .Values.restore.from }}
+        # Verifies the backup and installs it; does nothing once restore.id is done.
+        - name: restore
+          image: {{ include "kmip.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - restore
+            - --from
+            - {{ ternary .Values.restore.from (printf "/backups/%s" (trimPrefix "/" .Values.restore.from)) (hasPrefix "/backups/" .Values.restore.from) | quote }}
+            - --id
+            - {{ .Values.restore.id | quote }}
+            - --database
+            - /data/kmip.sqlite
+            - --master-key
+            - /master/{{ .Values.masterKey.key }}
+            {{- if $checkpoint }}
+            - --audit-checkpoint
+            - /checkpoints/{{ .Values.auditCheckpoint.key }}
+            {{- end }}
+          securityContext:
+            {{- include "kmip.containerSecurityContext" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - {name: scratch, mountPath: /tmp}
+            - {name: data, mountPath: /data}
+            # Read-write: a read-only directory needs the backup's lock file.
+            - {name: backups, mountPath: /backups}
+            - {name: master, mountPath: /master, readOnly: true}
+            {{- if $checkpoint }}
+            - {name: checkpoint, mountPath: /checkpoints, readOnly: true}
+            {{- end }}
+        {{- end }}
+        {{- if $rotating }}
+        # Rotates the store from the previous key to masterKey (or reverts);
+        # does nothing once the store opens with the target key.
+        - name: rotate-master-key
+          image: {{ include "kmip.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - rotate-master-key
+            - --in-place
+            {{- if .Values.rotation.revert }}
+            - --revert
+            {{- end }}
+            - --database
+            - /data/kmip.sqlite
+            - --master-key
+            - /rotation/new/{{ .Values.masterKey.key }}
+            - --previous-master-key
+            - /rotation/previous/{{ .Values.masterKey.key }}
+            {{- if $checkpoint }}
+            - --audit-checkpoint
+            - /checkpoints/{{ .Values.auditCheckpoint.key }}
+            - --checkpoint-output
+            - /run/kmip/checkpoint.json
+            {{- end }}
+          securityContext:
+            {{- include "kmip.containerSecurityContext" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - {name: scratch, mountPath: /tmp}
+            - {name: data, mountPath: /data}
+            - {name: master-new, mountPath: /rotation/new, readOnly: true}
+            - {name: master-previous, mountPath: /rotation/previous, readOnly: true}
+            {{- if $checkpoint }}
+            - {name: checkpoint, mountPath: /checkpoints, readOnly: true}
+            - {name: run, mountPath: /run/kmip}
+            {{- end }}
+        {{- if $checkpoint }}
+        # Prints the checkpoint the server starts with, for publishing:
+        # kubectl logs <pod> -c checkpoint > checkpoint.json
+        - name: checkpoint
+          image: {{ include "kmip.helperImage" . }}
+          imagePullPolicy: {{ .Values.helperImage.pullPolicy }}
+          command: [cat, /run/kmip/checkpoint.json]
+          securityContext:
+            {{- include "kmip.containerSecurityContext" . | nindent 12 }}
+          resources:
+            limits: {cpu: 100m, memory: 32Mi}
+          volumeMounts:
+            - {name: run, mountPath: /run/kmip, readOnly: true}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: kmip
+          image: {{ include "kmip.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: [serve]
+          env:
+            - {name: KMIP_CERT, value: /tls/{{ include "kmip.tlsFile" (dict "root" . "name" "cert") }}}
+            - {name: KMIP_KEY, value: /tls/{{ include "kmip.tlsFile" (dict "root" . "name" "key") }}}
+            {{- if or .Values.tls.clientCA.existingSecret .Values.tls.clientCA.existingConfigMap }}
+            - {name: KMIP_CA, value: /client-ca/{{ .Values.tls.clientCA.key }}}
+            {{- else }}
+            - {name: KMIP_CA, value: /tls/{{ include "kmip.tlsFile" (dict "root" . "name" "ca") }}}
+            {{- end }}
+            - {name: KMIP_MASTER_KEY, value: /master/{{ .Values.masterKey.key }}}
+            - {name: KMIP_POLICY, value: /policy/{{ .Values.policy.key }}}
+            - {name: KMIP_DATABASE, value: /data/kmip.sqlite}
+            - {name: KMIP_LISTEN, value: "{{ .Values.server.bindAddress }}:5696"}
+            - {name: KMIP_HEALTH_LISTEN, value: "{{ .Values.server.bindAddress }}:8080"}
+            {{- if .Values.server.https.enabled }}
+            - {name: KMIP_HTTPS_LISTEN, value: "{{ .Values.server.bindAddress }}:5697"}
+            {{- end }}
+            {{- if $checkpoint }}
+            - {name: KMIP_AUDIT_CHECKPOINT, value: {{ include "kmip.checkpointPath" . }}}
+            {{- end }}
+            {{- if .Values.users.existingSecret }}
+            - {name: KMIP_USERS, value: /users/{{ .Values.users.key }}}
+            {{- end }}
+            {{- if or .Values.crl.existingSecret .Values.crl.existingConfigMap }}
+            - {name: KMIP_CRL, value: /crl/{{ .Values.crl.key }}}
+            {{- end }}
+            {{- if .Values.provisioning.existingSecret }}
+            - {name: KMIP_PROVISIONING_CA, value: /provisioning/tls.crt}
+            - {name: KMIP_PROVISIONING_CA_KEY, value: /provisioning/tls.key}
+            {{- end }}
+            {{- range $name, $value := .Values.server.env }}
+            - {name: {{ $name }}, value: {{ $value | toString | quote }}}
+            {{- end }}
+          ports:
+            - {name: kmip, containerPort: 5696}
+            {{- if .Values.server.https.enabled }}
+            - {name: https, containerPort: 5697}
+            {{- end }}
+            - {name: health, containerPort: 8080}
+          securityContext:
+            {{- include "kmip.containerSecurityContext" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          startupProbe:
+            httpGet: {path: /readyz, port: health}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ max 1 (ceil (divf .Values.probes.startup.budgetSeconds .Values.probes.startup.periodSeconds)) }}
+          readinessProbe:
+            httpGet: {path: /readyz, port: health}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+          livenessProbe:
+            httpGet: {path: /livez, port: health}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+          volumeMounts:
+            - {name: scratch, mountPath: /tmp}
+            - {name: data, mountPath: /data}
+            - {name: tls, mountPath: /tls, readOnly: true}
+            - {name: master, mountPath: /master, readOnly: true}
+            - {name: policy, mountPath: /policy, readOnly: true}
+            {{- if or .Values.tls.clientCA.existingSecret .Values.tls.clientCA.existingConfigMap }}
+            - {name: client-ca, mountPath: /client-ca, readOnly: true}
+            {{- end }}
+            {{- if $checkpoint }}
+            {{- if $rotating }}
+            - {name: run, mountPath: /run/kmip, readOnly: true}
+            {{- else }}
+            - {name: checkpoint, mountPath: /checkpoints, readOnly: true}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.users.existingSecret }}
+            - {name: users, mountPath: /users, readOnly: true}
+            {{- end }}
+            {{- if or .Values.crl.existingSecret .Values.crl.existingConfigMap }}
+            - {name: crl, mountPath: /crl, readOnly: true}
+            {{- end }}
+            {{- if .Values.provisioning.existingSecret }}
+            - {name: provisioning, mountPath: /provisioning, readOnly: true}
+            {{- end }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: scratch
+          emptyDir: {medium: Memory, sizeLimit: 64Mi}
+        - name: tls
+          secret: {secretName: {{ include "kmip.tlsSecret" . }}, defaultMode: 288}
+        # The key the server opens the store with.
+        - name: master
+          secret: {secretName: {{ include "kmip.serverMasterKeySecret" . }}, defaultMode: 288}
+        {{- if $rotating }}
+        - name: master-new
+          secret: {secretName: {{ .Values.masterKey.existingSecret }}, defaultMode: 288}
+        - name: master-previous
+          secret: {secretName: {{ .Values.rotation.previousMasterKeySecret }}, defaultMode: 288}
+        {{- end }}
+        - name: policy
+          configMap: {name: {{ include "kmip.policyConfigMap" . }}}
+        {{- if .Values.tls.clientCA.existingSecret }}
+        - name: client-ca
+          secret: {secretName: {{ .Values.tls.clientCA.existingSecret }}, defaultMode: 288}
+        {{- else if .Values.tls.clientCA.existingConfigMap }}
+        - name: client-ca
+          configMap: {name: {{ .Values.tls.clientCA.existingConfigMap }}}
+        {{- end }}
+        {{- if $checkpoint }}
+        - name: checkpoint
+          configMap: {name: {{ .Values.auditCheckpoint.configMap }}}
+        {{- if $rotating }}
+        - name: run
+          emptyDir: {medium: Memory, sizeLimit: 1Mi}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.users.existingSecret }}
+        - name: users
+          secret: {secretName: {{ .Values.users.existingSecret }}, defaultMode: 288}
+        {{- end }}
+        {{- if .Values.crl.existingSecret }}
+        - name: crl
+          secret: {secretName: {{ .Values.crl.existingSecret }}, defaultMode: 288}
+        {{- else if .Values.crl.existingConfigMap }}
+        - name: crl
+          configMap: {name: {{ .Values.crl.existingConfigMap }}}
+        {{- end }}
+        {{- if .Values.provisioning.existingSecret }}
+        # The provisioning CA key: owner and group read only (0440).
+        - name: provisioning
+          secret: {secretName: {{ .Values.provisioning.existingSecret }}, defaultMode: 288}
+        {{- end }}
+        {{- if $backupClaim }}
+        # Attached with the data volume, so both stay on the server's node.
+        - name: backups
+          persistentVolumeClaim: {claimName: {{ $backupClaim }}}
+        {{- end }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "kmip.selectorLabels" . | nindent 10 }}
+        {{- with .Values.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ ternary "" .Values.persistence.storageClass (eq "-" .Values.persistence.storageClass) | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}

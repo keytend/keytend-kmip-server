@@ -1,0 +1,24 @@
+{
+  "repository": "https://github.com/phsym/kmip-rs",
+  "release": "v0.6.0",
+  "version": "0.6.0",
+  "commit": "c2eefca13621561a9a7a536a8e8be5af325c4916",
+  "source_archive_url": "https://codeload.github.com/phsym/kmip-rs/tar.gz/refs/tags/v0.6.0",
+  "source_archive_sha256": "e3c9f0ff493e91da5b41db248252f5ad54e7e1c18accd3d65e45dd44bc26a8a6",
+  "license": "MIT OR Apache-2.0",
+  "license_files": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ],
+  "supported_protocol_versions": [
+    "1.0",
+    "1.1",
+    "1.2",
+    "1.3",
+    "1.4"
+  ],
+  "production_qualified": false,
+  "independent_maintenance_credit": false,
+  "maintainer_overlap": "phsym is the leading contributor to both this Rust implementation and OVH kmip-go; distinct codec/transport does not establish independent maintenance.",
+  "expected_native_sha256": "462a1d892408bdc86de0994d4c87a53bdd74f3f879aa4bb7862b27e7b8121b45"
+}

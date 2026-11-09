@@ -1,0 +1,34 @@
+keytend-kmip-server
+Copyright 2026 Jeremiah Jordan
+
+Original project code and documentation are licensed under the Apache License,
+Version 2.0. See LICENSE. Third-party works retain their own notices and licenses.
+
+An independent KMIP implementation. It is not endorsed or certified by OASIS.
+
+Numeric tag/operation/enumeration registries are extracted from the OASIS KMIP
+specifications. The standards and official test case documents remain copyright
+OASIS Open and subject to their own notices. Source URLs, editions and hashes are
+recorded in docs/specs/. Downloaded documents are not relicensed by this project.
+
+Interoperability tests fetch separately licensed software from OVH, Thales/
+Gemalto, OpenKMIP and NLnetLabs. Their copyrights and licenses remain with their
+respective owners. No client SDK implementation is included in the server image.
+See interop/clients.lock.json and the client Cargo/Go/Python lock files.
+
+The server uses OpenSSL and dependencies listed in Cargo.lock. Their licenses
+apply independently. The container image is built from Red Hat Universal Base
+Image 9 (ubi-micro) and contains Red Hat RPM packages (glibc, libgcc, OpenSSL,
+the RHEL 9 OpenSSL FIPS provider, crypto-policies, zlib and base filesystem
+packages). Their license texts are shipped under /usr/share/licenses in the
+image. Redistribution of the UBI content is subject to the Red Hat Universal
+Base Image End User License Agreement:
+https://www.redhat.com/en/about/red-hat-end-user-license-agreements#UBI
+
+Numerical ECDSA verification values in tests/ec-rfc6979.json are taken from
+RFC 6979 (T. Pornin, IETF Trust, 2013). The RFC text and its sample implementation
+are not included. These tests do not claim deterministic signature generation.
+
+Numerical HMAC known-answer values in tests/stream_crypto.rs are from RFC 4231
+(M. Nystrom, The Internet Society, 2005), https://www.rfc-editor.org/rfc/rfc4231.
+The RFC text and sample implementations are not included.

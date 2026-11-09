@@ -1,0 +1,349 @@
+# Copyright 2026 Jeremiah Jordan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Values for keytend-kmip-server, an experimental KMIP test server for CI
+# systems and KMIP client validation. One replica with an SQLite store on a
+# ReadWriteOnce volume. The chart creates no secrets: create the TLS, master-key
+# and (optionally) users Secrets yourself and name them here.
+# See docs/kubernetes.md for the workflows.
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: localhost/keytend-kmip-server
+  # Defaults to the chart's appVersion.
+  tag: ""
+  # sha256:... ; when set, the image is pulled by digest (tag is kept for readability).
+  digest: ""
+  pullPolicy: IfNotPresent
+  # Names of existing kubernetes.io/dockerconfigjson Secrets.
+  pullSecrets: []
+
+# Small helper image (busybox) for the volume helper and for printing the
+# audit checkpoint a master-key rotation writes. The server image has no shell.
+helperImage:
+  repository: docker.io/library/busybox
+  tag: "1.38"
+  digest: sha256:a46257e06c82ad85242d0d38077d0a52d9896389ca60a1a59d3463db586e5fa4
+  pullPolicy: IfNotPresent
+
+# Stop the server without uninstalling: the StatefulSet goes to 0 replicas and
+# the volume, Secrets and backups stay. Use it for node maintenance and to
+# inspect the volume with volumeHelper.
+maintenance:
+  enabled: false
+
+persistence:
+  # "" uses the cluster default; "-" sets storageClassName: "".
+  # The class must provide working flock locks and fsync (not NFS).
+  # Fixed after install: a StatefulSet cannot change its volume claim template.
+  storageClass: ""
+  size: 10Gi
+  accessModes: [ReadWriteOnce]
+  annotations: {}
+
+tls:
+  # Secret holding the server certificate chain, its key and (unless
+  # tls.clientCA is set) the CA bundle client certificates must chain to.
+  existingSecret: ""
+  # File names inside the Secret. Empty: server.pem, server.key and ca.pem, or
+  # tls.crt, tls.key and ca.crt with certManager.
+  files:
+    cert: ""
+    key: ""
+    ca: ""
+  # A separate client CA bundle (for example when cert-manager issues the
+  # server certificate from a different CA than the clients').
+  clientCA:
+    existingSecret: ""
+    existingConfigMap: ""
+    key: ca.pem
+  # Issue the server certificate with cert-manager (CRDs and an issuer must
+  # exist). The server reads its certificate at startup only: restart the pod
+  # after a renewal (for example with a reloader or a scheduled rollout restart).
+  certManager:
+    enabled: false
+    # Defaults to <fullname>-tls.
+    secretName: ""
+    issuerRef:
+      name: ""
+      kind: Issuer
+      group: cert-manager.io
+    # Added to <fullname>, <fullname>.<namespace>, <fullname>.<namespace>.svc and
+    # <fullname>.<namespace>.svc.<clusterDomain>.
+    dnsNames: []
+    ipAddresses: []
+    clusterDomain: cluster.local
+    duration: 2160h
+    renewBefore: 360h
+    privateKey:
+      algorithm: ECDSA
+      size: 256
+
+masterKey:
+  # Secret with the 32-byte key from `keytend-kmip-server generate-master-key`.
+  # Use versioned names (kmip-master-v1, kmip-master-v2, …): a new name restarts
+  # the pod, and a rotation needs both the old and the new Secret.
+  existingSecret: ""
+  key: master.key
+
+# Master-key rotation, run by an init container before the server starts
+# (`rotate-master-key --in-place`). Create the new Secret, set
+# masterKey.existingSecret to it and previousMasterKeySecret to the old one.
+# Every later start checks again and does nothing. Remove these values once
+# the rotation is confirmed (and, with an audit checkpoint, published).
+rotation:
+  previousMasterKeySecret: ""
+  # Put back the pre-rotation database (`--revert`); the server then uses the
+  # previous key. Writes since the rotation are lost.
+  revert: false
+
+# Restore a backup, run by an init container before the server starts
+# (`restore`). `from` is a file on the backup volume (backup.pvc, or
+# existingClaim below), for example backup-20261105T021500Z.sqlite; `id`
+# names this restore (letters, digits, '.', '_', '-'). Running again with the
+# same id and backup does nothing; another backup needs a new id. The backup
+# must open with masterKey (and pass the audit checkpoint, if enabled). Remove
+# these values once the restore is confirmed.
+restore:
+  from: ""
+  id: ""
+  # Restore from another PVC (mounted at /backups) instead of the chart's backup PVC.
+  existingClaim: ""
+
+auditCheckpoint:
+  # Start only on a store at or after the checkpoint in this ConfigMap
+  # (docs/audit-checkpoints.md). Keep the authoritative copy outside the cluster.
+  enabled: false
+  configMap: ""
+  key: checkpoint.json
+
+policy:
+  # The policy document: a JSON string or a YAML map (rendered as JSON) into a
+  # chart-managed ConfigMap. Changing it restarts the pod.
+  json: null
+  # Or the name of an existing ConfigMap (restart the pod after changing it).
+  existingConfigMap: ""
+  key: policy.json
+
+users:
+  # Secret holding a users file (docs/credentials.md#users-file).
+  existingSecret: ""
+  key: users.json
+
+# Client certificate revocation list; when set, revocation checks are required.
+crl:
+  existingSecret: ""
+  existingConfigMap: ""
+  key: crl.pem
+
+# Re-Provision (docs/re-provision.md): a Secret with the provisioning CA
+# certificate (tls.crt) and its private key (tls.key), mounted read-only at
+# /provisioning with mode 0440. Re-Provision is offered only when set. Use a
+# dedicated sub-CA, and put its certificate in the client CA bundle too
+# (tls.existingSecret ca.pem or tls.clientCA): the server refuses to start
+# otherwise.
+provisioning:
+  existingSecret: ""
+
+server:
+  # Address the listeners bind; "[::]" for IPv6-only or IPv6-first clusters.
+  bindAddress: 0.0.0.0
+  https:
+    enabled: true
+  # Further serve settings as environment variables (docs/configuration.md),
+  # for example KMIP_IDLE_TIMEOUT: "900". The chart sets the file, database
+  # and listener variables itself and refuses them here.
+  env: {}
+
+probes:
+  startup:
+    periodSeconds: 2
+    # The server verifies every record and the audit chain before it opens any
+    # port. Raise this when check-store on a recent backup takes more than
+    # about three quarters of it; the pod is restarted when it runs out.
+    budgetSeconds: 60
+  readiness:
+    periodSeconds: 5
+    timeoutSeconds: 3
+  liveness:
+    periodSeconds: 10
+    timeoutSeconds: 3
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: "2"
+    memory: 512Mi
+
+terminationGracePeriodSeconds: 30
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+# Server pod affinity. Empty: a preferred affinity to the backup and helper
+# pods, which share its ReadWriteOnce volumes.
+affinity: {}
+priorityClassName: ""
+
+# Extra volumes for the server pod and mounts for the server container, for
+# example a Validate trust anchor or a server-to-client endpoint's files.
+extraVolumes: []
+extraVolumeMounts: []
+
+serviceAccount:
+  create: true
+  # Defaults to <fullname> (or "default" when create is false).
+  name: ""
+  annotations: {}
+
+service:
+  # The client Service <fullname>. ClusterIP inside the cluster; LoadBalancer
+  # (or NodePort) for clients outside it. The load balancer must forward TCP so
+  # that TLS passes through: the server authenticates client certificates
+  # itself. Add the external name to the server certificate.
+  type: ClusterIP
+  annotations: {}
+  ports:
+    kmip: 5696
+    https: 5697
+  # LoadBalancer only.
+  loadBalancerClass: ""
+  loadBalancerSourceRanges: []
+  # Local keeps client source addresses (for networkPolicy.ipBlocks).
+  externalTrafficPolicy: ""
+  nodePorts:
+    kmip: null
+    https: null
+
+networkPolicy:
+  enabled: true
+  # Peers allowed to reach the KMIP ports, as NetworkPolicy peers. The default
+  # admits pods labelled access=keytend-kmip-server in namespaces labelled
+  # kmip-client=true.
+  clients:
+    - namespaceSelector:
+        matchLabels:
+          kmip-client: "true"
+      podSelector:
+        matchLabels:
+          access: keytend-kmip-server
+  # CIDRs allowed to reach the KMIP ports (clients behind a LoadBalancer).
+  ipBlocks: []
+  # Peers allowed to scrape /metrics on port 8080.
+  metrics:
+    - namespaceSelector:
+        matchLabels:
+          kmip-metrics: "true"
+      podSelector:
+        matchLabels:
+          access: keytend-kmip-server-metrics
+  # Egress rules for server-to-client Notify and Put (docs/server-to-client.md).
+  # Empty: no egress at all.
+  egress: []
+  # With egress rules, also allow DNS to these pods (CoreDNS on most clusters).
+  dns:
+    enabled: false
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: kube-system
+    podSelector:
+      matchLabels:
+        k8s-app: kube-dns
+
+# With one replica, a budget either blocks every voluntary eviction or none.
+# Off: `kubectl drain` evicts the pod (the server stops for a moment and
+# starts again where its volume can attach). On: drains wait until you stop
+# the server yourself (maintenance.enabled).
+podDisruptionBudget:
+  enabled: false
+  maxUnavailable: 0
+
+metrics:
+  # prometheus.io/* annotations on the pod.
+  annotations: true
+  podMonitor:
+    enabled: false
+    labels: {}
+    interval: 30s
+    scrapeTimeout: ""
+  prometheusRule:
+    # The rules of deploy/prometheus, for this release's job, namespace and
+    # volume, plus KmipBackupStale when backups are enabled.
+    enabled: false
+    labels: {}
+    # KmipBackupStale fires when the last successful backup is older than this.
+    backupMaxAgeSeconds: 93600
+
+backup:
+  # A CronJob on the server's node that runs `backup --output-dir /backups
+  # --retain N` into a retained PVC. Copy backups off the cluster as well:
+  # the PVC is in the same failure domain as the server.
+  enabled: true
+  schedule: "15 2 * * *"
+  timeZone: ""
+  retain: 7
+  startingDeadlineSeconds: 3600
+  activeDeadlineSeconds: 1800
+  backoffLimit: 1
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  pvc:
+    # Use an existing claim instead of creating <fullname>-backups.
+    existingClaim: ""
+    storageClass: ""
+    size: 20Gi
+    accessModes: [ReadWriteOnce]
+    # The created PVC is kept on `helm uninstall` (helm.sh/resource-policy: keep).
+    annotations: {}
+  # A backup Job before every upgrade and rollback; a failed backup fails the
+  # release before anything changes. Its backups count toward `retain` at the
+  # next scheduled run; the hook itself prunes nothing.
+  preUpgradeHook:
+    enabled: true
+    activeDeadlineSeconds: 900
+
+# A busybox Deployment on the server's node with the data volume at /data and
+# the backup volume at /backups, for `kubectl cp` and for removing
+# pre-restore-*/pre-rotation-* directories. Off unless you need it.
+volumeHelper:
+  enabled: false
+
+# `helm test` sends a KMIP Query over HTTPS with this client certificate and
+# requires Result Status Success. The Secret holds the client certificate and
+# key, and the CA that signed the server certificate; its certificate must
+# be in the policy with Query (24) allowed. Empty: no test.
+tests:
+  clientSecret: ""
+  files:
+    cert: client.pem
+    key: client.key
+    ca: ca.pem
+  # Name the server certificate lists; defaults to <fullname>.
+  serverName: ""
+  image:
+    repository: docker.io/curlimages/curl
+    tag: 8.23.0
+    digest: sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93
+    pullPolicy: IfNotPresent

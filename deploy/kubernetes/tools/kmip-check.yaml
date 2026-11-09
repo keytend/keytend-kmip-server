@@ -1,0 +1,68 @@
+# Copyright 2026 Jeremiah Jordan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# One HTTPS JSON Query (Query Server Information) from a client namespace,
+# to check a client certificate, the server name and the NetworkPolicy labels
+# (docs/kubernetes.md#install). It reads client.pem, client.key and ca.pem
+# (the CA that signed the server certificate) from the Secret orders-db-kmip in
+# the namespace orders; change both names for another client.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kmip-check
+  namespace: orders
+  labels:
+    access: keytend-kmip-server
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: curl
+      image: docker.io/curlimages/curl:8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93
+      args:
+        - --silent
+        - --show-error
+        - --fail
+        - --cacert
+        - /certs/ca.pem
+        - --cert
+        - /certs/client.pem
+        - --key
+        - /certs/client.key
+        - --header
+        - 'Content-Type: application/json'
+        - --data
+        - '{"tag":"RequestMessage","value":[{"tag":"RequestHeader","value":[{"tag":"ProtocolVersion","value":[{"tag":"ProtocolVersionMajor","type":"Integer","value":2},{"tag":"ProtocolVersionMinor","type":"Integer","value":1}]},{"tag":"BatchCount","type":"Integer","value":1}]},{"tag":"BatchItem","value":[{"tag":"Operation","type":"Enumeration","value":"Query"},{"tag":"RequestPayload","value":[{"tag":"QueryFunction","type":"Enumeration","value":"QueryServerInformation"}]}]}]}'
+        - https://keytend-kmip-server.keytend-kmip-server.svc.cluster.local:5697/kmip
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: [ALL]
+      volumeMounts:
+        - name: certs
+          mountPath: /certs
+          readOnly: true
+  volumes:
+    - name: certs
+      secret:
+        secretName: orders-db-kmip
+        defaultMode: 288   # 0440

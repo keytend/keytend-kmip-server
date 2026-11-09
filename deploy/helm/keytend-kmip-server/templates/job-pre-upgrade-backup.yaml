@@ -1,0 +1,51 @@
+{{- /*
+Copyright 2026 Jeremiah Jordan
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -}}
+{{- $fullname := include "kmip.fullname" . }}
+{{- /* Rendered only when both volumes already exist: before the first start, on
+the upgrade that turns backups on, and wherever lookup cannot see the cluster
+(helm template, GitOps renderers) the hook would wait for a missing PVC. */}}
+{{- $volumes := and (lookup "v1" "PersistentVolumeClaim" .Release.Namespace (include "kmip.dataClaim" .))
+                    (lookup "v1" "PersistentVolumeClaim" .Release.Namespace (include "kmip.backupClaim" .)) }}
+{{- if and .Values.backup.enabled .Values.backup.preUpgradeHook.enabled $volumes }}
+# A verified backup before every upgrade and rollback; if it fails, the release
+# fails before anything changes. It prunes nothing, tries every key the store
+# can be under (the output names the one that opened it), and does nothing
+# when the server has never created its database. The Job stays until the next
+# upgrade (or for a week), so its log names the backup:
+#   kubectl logs job/{{ $fullname }}-pre-upgrade-backup
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $fullname }}-pre-upgrade-backup
+  labels:
+    {{- include "kmip.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+  annotations:
+    helm.sh/hook: pre-upgrade,pre-rollback
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 604800
+  activeDeadlineSeconds: {{ .Values.backup.preUpgradeHook.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        {{- include "kmip.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backup
+    spec:
+      {{- include "kmip.backupPod" (dict "root" . "retain" 0 "ifExists" true "keys" (splitList "," (include "kmip.candidateKeys" .))) | nindent 6 }}
+{{- end }}

@@ -1,0 +1,70 @@
+{
+  "references": {
+    "client.crate": {
+      "url": "https://static.crates.io/crates/cosmian_kms_client/cosmian_kms_client-5.28.0.crate",
+      "sha256": "f104e035c22f539ad9635784db1d0218019d8881b9f418c2a768504a42bc2acb",
+      "bytes": 66510,
+      "ignored_cache_path": ".cache/cosmian-research/client.crate"
+    },
+    "kmip.crate": {
+      "url": "https://static.crates.io/crates/cosmian_kmip/cosmian_kmip-5.28.0.crate",
+      "sha256": "35f93c2446598f4d1384fd1ee707c653545f9b86113d6126aec0c602afa658b7",
+      "bytes": 314651,
+      "ignored_cache_path": ".cache/cosmian-research/kmip.crate"
+    },
+    "client.json": {
+      "url": "https://crates.io/api/v1/crates/cosmian_kms_client/5.28.0",
+      "sha256": "052ac73d1c8b9de62af658a1bfe25ab1e6785124ef04a8e86724353fb17fa291",
+      "bytes": 1619,
+      "ignored_cache_path": ".cache/cosmian-research/client.json"
+    },
+    "tag.json": {
+      "url": "https://api.github.com/repos/Cosmian/kms/git/ref/tags/5.28.0",
+      "sha256": "011f3d7f988a8b3374593a8de300d3db0b226b711b9abd2220bd4e9e64d9317e",
+      "bytes": 317,
+      "ignored_cache_path": ".cache/cosmian-research/tag.json"
+    },
+    "tag-deref.json": {
+      "url": "https://api.github.com/repos/Cosmian/kms/git/tags/cec59a003b9cfc4f253ca239fde42925988700fa",
+      "sha256": "54a075148d1c9575a4237f5783dcecc2ef730f89ac3a1bd2158434c8964bfc7e",
+      "bytes": 684,
+      "ignored_cache_path": ".cache/cosmian-research/tag-deref.json"
+    },
+    "LICENSE": {
+      "url": "https://raw.githubusercontent.com/Cosmian/kms/4ab3ee65829a903abb71f1298f400657fcee7ec9/LICENSE",
+      "sha256": "796d8352a85059f6c007a47e2a0596b3417c09caef034a64f8092890ab5cca74",
+      "bytes": 2993,
+      "ignored_cache_path": ".cache/cosmian-research/LICENSE"
+    },
+    "released-client.rs": {
+      "url": "https://raw.githubusercontent.com/Cosmian/kms/4ab3ee65829a903abb71f1298f400657fcee7ec9/crate/clients/client/src/kms_rest_client.rs",
+      "sha256": "6ddf62c2b3623d0c7f13233d2c9bd3a3d665c3badfcf860906d63eb21837791e",
+      "bytes": 50488,
+      "ignored_cache_path": ".cache/cosmian-research/released-client.rs"
+    },
+    "released-http.rs": {
+      "url": "https://raw.githubusercontent.com/Cosmian/kms/4ab3ee65829a903abb71f1298f400657fcee7ec9/crate/clients/client/src/http_client/client.rs",
+      "sha256": "9c7b7750989885a2c53871be355bc4d0b42195ec0123929f05296762f9ae7087",
+      "bytes": 27412,
+      "ignored_cache_path": ".cache/cosmian-research/released-http.rs"
+    },
+    "released-tls.rs": {
+      "url": "https://raw.githubusercontent.com/Cosmian/kms/4ab3ee65829a903abb71f1298f400657fcee7ec9/crate/clients/client/src/http_client/tls.rs",
+      "sha256": "7b5b6c4d4f65038080e3173809e9780e1f897ccdc79374785730dcfb840b3aac",
+      "bytes": 7260,
+      "ignored_cache_path": ".cache/cosmian-research/released-tls.rs"
+    },
+    "released-model-messages.rs": {
+      "url": "https://raw.githubusercontent.com/Cosmian/kms/4ab3ee65829a903abb71f1298f400657fcee7ec9/crate/kmip/src/kmip_0/kmip_messages.rs",
+      "sha256": "bcbcb470afa08d5822de17531bce9aac809e162bde9f11064c07c961bda36822",
+      "bytes": 22007,
+      "ignored_cache_path": ".cache/cosmian-research/released-model-messages.rs"
+    },
+    "released-operations.rs": {
+      "url": "https://raw.githubusercontent.com/Cosmian/kms/4ab3ee65829a903abb71f1298f400657fcee7ec9/crate/kmip/src/kmip_2_1/kmip_operations.rs",
+      "sha256": "df613fe2a817287ae01c9f408579067c886a6832b964bb54b82eba72f7eac489",
+      "bytes": 128667,
+      "ignored_cache_path": ".cache/cosmian-research/released-operations.rs"
+    }
+  }
+}

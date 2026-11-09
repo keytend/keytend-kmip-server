@@ -1,0 +1,377 @@
+{
+ "schema": 1,
+ "label": "corrected document",
+ "scope": "Local corrections of the KMIP 1.1/1.2 Test Cases notes, applied only by scripts/oasis_legacy_replay.py --corrected-documents and reported separately; the published notes, the strict legacy harness and the default replay are unchanged. Each correction names the clause that makes the published message wrong, or (destroyed_object_metadata_retained) substitutes the outcome the specification assigns to this server's permitted behavior, so the rest of the case can be checked.",
+ "corrections": [
+  {
+   "case": "TC-SJ-1-12",
+   "family": "note_split_key_response_omits_object_type",
+   "why": "insert the Object Type that KMIP 1.2 tables 221/223 make REQUIRED in Create/Join Split Key responses",
+   "edits": [
+    {
+     "message": 3,
+     "insert": {
+      "parent": "BatchItem/ResponsePayload",
+      "index": 0,
+      "element": "<ObjectType type=\"Enumeration\" value=\"SplitKey\"/>"
+     }
+    },
+    {
+     "message": 5,
+     "insert": {
+      "parent": "BatchItem/ResponsePayload",
+      "index": 0,
+      "element": "<ObjectType type=\"Enumeration\" value=\"SymmetricKey\"/>"
+     }
+    }
+   ]
+  },
+  {
+   "case": "TC-SJ-2-12",
+   "family": "note_split_key_response_omits_object_type",
+   "why": "insert the Object Type that KMIP 1.2 tables 221/223 make REQUIRED in Create/Join Split Key responses",
+   "edits": [
+    {
+     "message": 3,
+     "insert": {
+      "parent": "BatchItem/ResponsePayload",
+      "index": 0,
+      "element": "<ObjectType type=\"Enumeration\" value=\"SplitKey\"/>"
+     }
+    },
+    {
+     "message": 13,
+     "insert": {
+      "parent": "BatchItem/ResponsePayload",
+      "index": 0,
+      "element": "<ObjectType type=\"Enumeration\" value=\"SymmetricKey\"/>"
+     }
+    }
+   ]
+  },
+  {
+   "case": "TC-SJ-3-12",
+   "family": "note_split_key_response_omits_object_type",
+   "why": "insert the Object Type that KMIP 1.2 tables 221/223 make REQUIRED in Create/Join Split Key responses",
+   "edits": [
+    {
+     "message": 9,
+     "insert": {
+      "parent": "BatchItem/ResponsePayload",
+      "index": 0,
+      "element": "<ObjectType type=\"Enumeration\" value=\"SymmetricKey\"/>"
+     }
+    }
+   ]
+  },
+  {
+   "case": "TC-SJ-4-12",
+   "family": "note_split_key_response_omits_object_type",
+   "why": "insert the Object Type that KMIP 1.2 tables 221/223 make REQUIRED in Create/Join Split Key responses",
+   "edits": [
+    {
+     "message": 3,
+     "insert": {
+      "parent": "BatchItem/ResponsePayload",
+      "index": 0,
+      "element": "<ObjectType type=\"Enumeration\" value=\"SplitKey\"/>"
+     }
+    },
+    {
+     "message": 13,
+     "insert": {
+      "parent": "BatchItem/ResponsePayload",
+      "index": 0,
+      "element": "<ObjectType type=\"Enumeration\" value=\"SymmetricKey\"/>"
+     }
+    }
+   ]
+  },
+  {
+   "case": "KMIP-TC-1.1-12.1",
+   "family": "note_omits_operation_in_error_response",
+   "why": "insert Operation Query: KMIP 1.1 table 210 requires Operation \"if specified in Request Batch Item\"",
+   "edits": [
+    {
+     "message": 1,
+     "insert": {
+      "parent": "BatchItem",
+      "index": 0,
+      "element": "<Operation type=\"Enumeration\" value=\"Query\"/>"
+     }
+    }
+   ]
+  },
+  {
+   "case": "KMIP-TC-1.1-17.1",
+   "family": "note_get_attributes_duplicate_reason",
+   "why": "Invalid Message, as KMIP 1.1 table 261 assigns to a repeated Attribute Name (the 1.2 note TC-171-11 expects the same for the same 1.1 request)",
+   "edits": [
+    {
+     "message": 3,
+     "path": "BatchItem/ResultReason",
+     "from": "InvalidField",
+     "to": "InvalidMessage"
+    }
+   ]
+  },
+  {
+   "case": "KMIP-TC-1.1-15.2",
+   "family": "note_empty_placeholder_reason_superseded",
+   "why": "Item Not Found, as the 1.2 note (TC-152-11, the same 1.1 flow) and the 1.x Get error tables give for an unidentified object",
+   "edits": [
+    {
+     "message": 13,
+     "path": "BatchItem[2]/ResultReason",
+     "from": "InvalidField",
+     "to": "ItemNotFound"
+    }
+   ]
+  },
+  {
+   "case": "KMIP-TC-1.1-14.1",
+   "family": "note_preactive_wrapping_key",
+   "why": "as the 1.2 note revision TC-141/142 does: register the KEK with Activation Date $NOW-3600 and Revoke it before its Destroy; a Pre-Active object \"SHALL NOT be used for any cryptographic purpose\" (1.1 section 3.22) and an Active one cannot be destroyed (1.1 table 270)",
+   "edits": [
+    {
+     "message": 0,
+     "insert": {
+      "parent": "BatchItem/RequestPayload/TemplateAttribute",
+      "index": 99,
+      "element": "<Attribute><AttributeName type=\"TextString\" value=\"Activation Date\"/><AttributeValue type=\"DateTime\" value=\"$NOW-3600\"/></Attribute>"
+     }
+    },
+    {
+     "insert_exchange": {
+      "before_message": 10,
+      "request": "<RequestMessage><RequestHeader><ProtocolVersion><ProtocolVersionMajor type=\"Integer\" value=\"1\" /><ProtocolVersionMinor type=\"Integer\" value=\"1\" /></ProtocolVersion><BatchCount type=\"Integer\" value=\"1\"/></RequestHeader><BatchItem><Operation type=\"Enumeration\" value=\"Revoke\"/><RequestPayload><UniqueIdentifier type=\"TextString\" value=\"100182d5-72b8-47aa-8383-4d97d512e98a\"/><RevocationReason><RevocationReasonCode type=\"Enumeration\" value=\"Unspecified\"/></RevocationReason></RequestPayload></BatchItem></RequestMessage>",
+      "response": "<ResponseMessage><ResponseHeader><ProtocolVersion><ProtocolVersionMajor type=\"Integer\" value=\"1\" /><ProtocolVersionMinor type=\"Integer\" value=\"1\" /></ProtocolVersion><TimeStamp type=\"DateTime\" value=\"2012-04-27T08:14:42+00:00\"/><BatchCount type=\"Integer\" value=\"1\"/></ResponseHeader><BatchItem><Operation type=\"Enumeration\" value=\"Revoke\"/><ResultStatus type=\"Enumeration\" value=\"Success\"/><ResponsePayload><UniqueIdentifier type=\"TextString\" value=\"100182d5-72b8-47aa-8383-4d97d512e98a\"/></ResponsePayload></BatchItem></ResponseMessage>"
+     }
+    }
+   ]
+  },
+  {
+   "case": "KMIP-TC-1.1-14.2",
+   "family": "note_preactive_wrapping_key",
+   "why": "as the 1.2 note revision TC-141/142 does: register the KEK with Activation Date $NOW-3600 and Revoke it before its Destroy; a Pre-Active object \"SHALL NOT be used for any cryptographic purpose\" (1.1 section 3.22) and an Active one cannot be destroyed (1.1 table 270)",
+   "edits": [
+    {
+     "message": 0,
+     "insert": {
+      "parent": "BatchItem/RequestPayload/TemplateAttribute",
+      "index": 99,
+      "element": "<Attribute><AttributeName type=\"TextString\" value=\"Activation Date\"/><AttributeValue type=\"DateTime\" value=\"$NOW-3600\"/></Attribute>"
+     }
+    },
+    {
+     "insert_exchange": {
+      "before_message": 10,
+      "request": "<RequestMessage><RequestHeader><ProtocolVersion><ProtocolVersionMajor type=\"Integer\" value=\"1\" /><ProtocolVersionMinor type=\"Integer\" value=\"1\" /></ProtocolVersion><BatchCount type=\"Integer\" value=\"1\"/></RequestHeader><BatchItem><Operation type=\"Enumeration\" value=\"Revoke\"/><RequestPayload><UniqueIdentifier type=\"TextString\" value=\"f4b2b4c3-4c19-4ecf-827a-011ca6057d3e\"/><RevocationReason><RevocationReasonCode type=\"Enumeration\" value=\"Unspecified\"/></RevocationReason></RequestPayload></BatchItem></RequestMessage>",
+      "response": "<ResponseMessage><ResponseHeader><ProtocolVersion><ProtocolVersionMajor type=\"Integer\" value=\"1\" /><ProtocolVersionMinor type=\"Integer\" value=\"1\" /></ProtocolVersion><TimeStamp type=\"DateTime\" value=\"2012-04-27T08:14:43+00:00\"/><BatchCount type=\"Integer\" value=\"1\"/></ResponseHeader><BatchItem><Operation type=\"Enumeration\" value=\"Revoke\"/><ResultStatus type=\"Enumeration\" value=\"Success\"/><ResponsePayload><UniqueIdentifier type=\"TextString\" value=\"f4b2b4c3-4c19-4ecf-827a-011ca6057d3e\"/></ResponsePayload></BatchItem></ResponseMessage>"
+     }
+    }
+   ]
+  },
+  {
+   "case": "KMIP-TC-1.1-5.1",
+   "family": "note_fixed_dates_elapsed",
+   "why": "every fixed date becomes $NOW plus its offset from its exchange's Time Stamp, as the 1.2 note -11/-12 revisions express the same relations",
+   "edits": [
+    {
+     "rebase_dates": true
+    }
+   ]
+  },
+  {
+   "case": "KMIP-TC-1.1-9.2",
+   "family": "note_fixed_dates_elapsed",
+   "why": "every fixed date becomes $NOW plus its offset from its exchange's Time Stamp, as the 1.2 note -11/-12 revisions express the same relations",
+   "edits": [
+    {
+     "rebase_dates": true
+    }
+   ],
+   "fixture": "elapse_deactivation"
+  },
+  {
+   "case": "KMIP-TC-1.1-9.4",
+   "family": "note_fixed_dates_elapsed",
+   "why": "every fixed date becomes $NOW plus its offset from its exchange's Time Stamp, as the 1.2 note -11/-12 revisions express the same relations",
+   "edits": [
+    {
+     "rebase_dates": true
+    }
+   ]
+  },
+  {
+   "case": "TC-92-10",
+   "family": "note_fixed_dates_elapsed",
+   "why": "every fixed date becomes $NOW plus its offset from its exchange's Time Stamp, as the 1.2 note -11/-12 revisions express the same relations",
+   "edits": [
+    {
+     "rebase_dates": true
+    }
+   ],
+   "fixture": "elapse_deactivation"
+  },
+  {
+   "case": "KMIP-TC-1.1-3.1.4",
+   "family": "destroyed_object_metadata_retained",
+   "why": "Illegal Operation for Get of the destroyed key: this server keeps a destroyed object's attributes, and every 1.x Get Errors table (1.1 table 260, 1.2 table 301) gives Illegal Operation when \"the server only has attributes for this object\"",
+   "edits": [
+    {
+     "message": 19,
+     "path": "BatchItem/ResultReason",
+     "from": "ItemNotFound",
+     "to": "IllegalOperation"
+    }
+   ]
+  },
+  {
+   "case": "TC-314-10",
+   "family": "destroyed_object_metadata_retained",
+   "why": "Illegal Operation for Get of the destroyed key: this server keeps a destroyed object's attributes, and every 1.x Get Errors table (1.1 table 260, 1.2 table 301) gives Illegal Operation when \"the server only has attributes for this object\"",
+   "edits": [
+    {
+     "message": 19,
+     "path": "BatchItem/ResultReason",
+     "from": "ItemNotFound",
+     "to": "IllegalOperation"
+    }
+   ]
+  },
+  {
+   "case": "TC-314-11",
+   "family": "destroyed_object_metadata_retained",
+   "why": "Illegal Operation for Get of the destroyed key: this server keeps a destroyed object's attributes, and every 1.x Get Errors table (1.1 table 260, 1.2 table 301) gives Illegal Operation when \"the server only has attributes for this object\"",
+   "edits": [
+    {
+     "message": 19,
+     "path": "BatchItem/ResultReason",
+     "from": "ItemNotFound",
+     "to": "IllegalOperation"
+    }
+   ]
+  },
+  {
+   "case": "TC-314-12",
+   "family": "destroyed_object_metadata_retained",
+   "why": "Illegal Operation for Get of the destroyed key: this server keeps a destroyed object's attributes, and every 1.x Get Errors table (1.1 table 260, 1.2 table 301) gives Illegal Operation when \"the server only has attributes for this object\"",
+   "edits": [
+    {
+     "message": 19,
+     "path": "BatchItem/ResultReason",
+     "from": "ItemNotFound",
+     "to": "IllegalOperation"
+    }
+   ]
+  },
+  {
+   "case": "TC-312-11",
+   "family": "note_template_own_custom_attribute",
+   "why": "drop x-ID from the Template's own attributes: KMIP 1.1 section 2.2.6 lists Custom Attribute only among the attributes applicable to objects created using the Template",
+   "edits": [
+    {
+     "message": 0,
+     "remove": {
+      "parent": "BatchItem/RequestPayload/TemplateAttribute",
+      "attribute": "x-ID"
+     }
+    }
+   ]
+  },
+  {
+   "case": "TC-312-12",
+   "family": "note_template_lease_time",
+   "why": "drop Lease Time from the Template's attributes: KMIP 1.2 table 89 applies Lease Time to \"All Cryptographic Objects\", which a Template is not",
+   "edits": [
+    {
+     "message": 7,
+     "remove": {
+      "parent": "BatchItem/ResponsePayload",
+      "attribute": "Lease Time"
+     }
+    }
+   ]
+  },
+  {
+   "case": "TC-SJ-2-12",
+   "family": "note_get_response_wrong_identifier",
+   "why": "the Get of $UNIQUE_IDENTIFIER_4 is answered with that object's identifier: KMIP 1.2 Get Response Payload, Unique Identifier \"of the object\"; the response shows Key Part Identifier 4",
+   "edits": [
+    {
+     "message": 11,
+     "path": "BatchItem/ResponsePayload/UniqueIdentifier",
+     "from": "$UNIQUE_IDENTIFIER_1",
+     "to": "$UNIQUE_IDENTIFIER_4"
+    }
+   ]
+  },
+  {
+   "case": "TC-SJ-4-12",
+   "family": "note_get_response_wrong_identifier",
+   "why": "the Get of $UNIQUE_IDENTIFIER_4 is answered with that object's identifier: KMIP 1.2 Get Response Payload, Unique Identifier \"of the object\"; the response shows Key Part Identifier 4",
+   "edits": [
+    {
+     "message": 11,
+     "path": "BatchItem/ResponsePayload/UniqueIdentifier",
+     "from": "$UNIQUE_IDENTIFIER_1",
+     "to": "$UNIQUE_IDENTIFIER_4"
+    }
+   ]
+  },
+  {
+   "case": "TC-132-12",
+   "family": "certificate_serial_number_text_form",
+   "why": "Serial Number \"1\" as this server renders it: the Text String form is unspecified (1.2 table 69) and the same note expects \"1\" for the same certificate in TC-132-10/11; recorded so the rest of the case is checked",
+   "edits": [
+    {
+     "message": 11,
+     "path": "BatchItem/ResponsePayload/Attribute/AttributeValue/SerialNumber",
+     "from": "01",
+     "to": "1"
+    }
+   ]
+  },
+  {
+   "case": "TC-ECC-3-10",
+   "family": "note_register_missing_required_attributes",
+   "why": "add Cryptographic Algorithm ECDSA to the certificate Register: 1.0 table 115 / 1.1 table 129 require it, and before 1.2 no generic EC algorithm lets the server derive it",
+   "edits": [
+    {
+     "message": 4,
+     "insert": {
+      "parent": "BatchItem/RequestPayload/TemplateAttribute",
+      "index": 0,
+      "element": "<Attribute><AttributeName type=\"TextString\" value=\"Cryptographic Algorithm\"/><AttributeValue type=\"Enumeration\" value=\"ECDSA\"/></Attribute>"
+     }
+    }
+   ]
+  },
+  {
+   "case": "TC-ECC-3-11",
+   "family": "note_register_missing_required_attributes",
+   "why": "add Cryptographic Algorithm ECDSA to the certificate Register: 1.0 table 115 / 1.1 table 129 require it, and before 1.2 no generic EC algorithm lets the server derive it",
+   "edits": [
+    {
+     "message": 4,
+     "insert": {
+      "parent": "BatchItem/RequestPayload/TemplateAttribute",
+      "index": 0,
+      "element": "<Attribute><AttributeName type=\"TextString\" value=\"Cryptographic Algorithm\"/><AttributeValue type=\"Enumeration\" value=\"ECDSA\"/></Attribute>"
+     }
+    }
+   ]
+  },
+  {
+   "case": "KMIP-TC-1.1-9.5",
+   "family": "note_literal_server_timestamp",
+   "why": "dates become $NOW offsets from their exchange's Time Stamp: the published Last Change Date is the example server's clock reading and equals the request's Activation Date literal, so a comparator cannot tell it from an echo; the 1.2 note revision TC-95-11 writes $NOW",
+   "edits": [
+    {
+     "rebase_dates": true
+    }
+   ]
+  }
+ ]
+}

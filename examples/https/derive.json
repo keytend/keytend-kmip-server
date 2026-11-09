@@ -1,0 +1,21 @@
+{"tag": "RequestMessage", "value": [
+  {"tag": "RequestHeader", "value": [
+    {"tag": "ProtocolVersion", "value": [
+      {"tag": "ProtocolVersionMajor", "type": "Integer", "value": 2},
+      {"tag": "ProtocolVersionMinor", "type": "Integer", "value": 1}]},
+    {"tag": "BatchCount", "type": "Integer", "value": 1}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "DeriveKey"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "ObjectType", "type": "Enumeration", "value": "SymmetricKey"},
+      {"tag": "UniqueIdentifier", "type": "TextString", "value": "$KEY"},
+      {"tag": "DerivationMethod", "type": "Enumeration", "value": "HKDF"},
+      {"tag": "DerivationParameters", "value": [
+        {"tag": "CryptographicParameters", "value": [
+          {"tag": "HashingAlgorithm", "type": "Enumeration", "value": "SHA_256"}]},
+        {"tag": "Salt", "type": "ByteString", "value": "$SALT"},
+        {"tag": "DerivationData", "type": "ByteString", "value": "$INFO"}]},
+      {"tag": "Attributes", "value": [
+        {"tag": "CryptographicAlgorithm", "type": "Enumeration", "value": "AES"},
+        {"tag": "CryptographicLength", "type": "Integer", "value": 256},
+        {"tag": "CryptographicUsageMask", "type": "Integer", "value": "Encrypt|Decrypt"}]}]}]}]}

@@ -1,0 +1,163 @@
+{
+ "schema": 2,
+ "scope": "Explains every non-passing case of the Profiles 4.1 variation replay (default server configuration) by its first blocker. Families never change a status and grant no conformance credit. Workstreams: implementation (missing behavior), policy (a deliberate server configuration or harness non-perturbation rule), interpretation (open TC question, docs/interpretations.md), corpus (proven sample defect with a labelled corrected fixture).",
+ "families": [
+  {
+   "id": "triple-des-policy",
+   "workstream": "policy",
+   "status": "failed",
+   "detail": "3DES key (generation|import) is disabled by server policy",
+   "note": "3DES is off by default (--triple-des, docs/algorithms.md#3des). The Symmetric Key Foundry profile needs `enabled`; the 3DES-enabled replay is reported separately. CS-BC-M-4-12-3DES-13 also uses a single-DES-equivalent key that every policy refuses (docs/interpretations.md#a-single-des-equivalent-3des-test-key).",
+   "configuration": {
+    "report": "3des",
+    "setting": "KMIP_TRIPLE_DES=enabled"
+   },
+   "fips_incompatible": true
+  },
+  {
+   "id": "rng-seed-data-length-policy",
+   "workstream": "alternative",
+   "status": "failed",
+   "detail": "DataLength value mismatch",
+   "note": "CS-RNG-O-1, O-2 and O-3 send the same seed and list alternative outcomes (32, 16 or 0 bytes used); this server implements the O-3 outcome (seed ignored, Data Length 0), which the base text permits, and O-3 passes."
+  },
+  {
+   "id": "check-failure-payload",
+   "workstream": "interpretation",
+   "status": "failed",
+   "detail": "BatchItem unexpected response field ResponsePayload",
+   "note": "2.1 section 6.1.7 returns the denying attributes from a failed Check; BL-M-2/3 expect none (docs/interpretations.md#payload-of-a-failed-check)."
+  },
+  {
+   "id": "pss-sample-contradicts-default-table",
+   "workstream": "corpus",
+   "status": "failed",
+   "detail": "ValidityIndicator value mismatch; expected 1, received 2",
+   "cases": "CS-AC-M-2-(14|20|21|30)",
+   "note": "Proven corpus defect; corrected fixture passes (oasis-corpus-proofs.json)."
+  },
+  {
+   "id": "unverifiable-1x-digest",
+   "workstream": "policy",
+   "status": "unverified",
+   "detail": "digest at .*not available",
+   "note": "1.x offers only Get to fetch material, which clears Fresh that these traces read later; the harness leaves the digest unverified rather than perturb the trace."
+  },
+  {
+   "id": "random-iv-literal-sample",
+   "workstream": "corpus",
+   "status": "unexecuted",
+   "detail": "unbound variable \\$DATA_0",
+   "note": "Proven corpus defect; corrected fixture runs the case (oasis-corpus-proofs.json)."
+  },
+  {
+   "id": "interop-in-query",
+   "workstream": "policy",
+   "status": "failed",
+   "detail": "expected Operation Interop not present",
+   "note": "QS-M-1 lists Interop, which a production server must not offer (docs/interpretations.md#interop).",
+   "configuration": {
+    "report": "interop",
+    "setting": "KMIP_INTEROP_TEST_MODE=true (test events only; forbidden in production)"
+   }
+  },
+  {
+   "id": "extended-ec-curves",
+   "workstream": "policy",
+   "status": "failed",
+   "detail": "ResultStatus mismatch; reason=8; message='Unsupported EC curve'",
+   "cases": "CS-AC-M-3-ECC-13",
+   "note": "CS-AC-M-3-ECC-13 registers a secp256k1 key pair. The non-NIST curves (secp256k1, brainpool) are off by default (--ec-curves nist, docs/interpretations.md#supported-elliptic-curves); the extended-curves replay is reported separately.",
+   "configuration": {
+    "report": "ec",
+    "setting": "KMIP_EC_CURVES=extended"
+   }
+  },
+  {
+   "id": "chacha20poly1305-truncated-tag",
+   "workstream": "interpretation",
+   "status": "failed",
+   "detail": "Invalid ChaCha20-Poly1305 parameters|Unsupported Tag Length",
+   "cases": "CHACHA20POLY1305",
+   "note": "Truncated ChaCha20-Poly1305 tags are refused (docs/interpretations.md#result-reasons)."
+  },
+  {
+   "id": "pkcs11-ck-info",
+   "workstream": "interpretation",
+   "status": "failed",
+   "detail": "unexpected response field CorrelationValue|PKCS_11OutputParameters value mismatch",
+   "note": "C_GetInfo identity values and Correlation Value echo (docs/interpretations.md#pkcs11-correlation-value-and-c_getinfo)."
+  },
+  {
+   "id": "aes-ecb-sample-1.3",
+   "workstream": "corpus",
+   "status": "failed",
+   "detail": "Data value mismatch",
+   "cases": "CS-BC-M-6-13",
+   "note": "Proven corpus defect; corrected fixture passes."
+  },
+  {
+   "id": "omos-response-version-1.4",
+   "workstream": "corpus",
+   "status": "failed",
+   "detail": "ProtocolVersionMinor value mismatch; expected 3, received 4",
+   "note": "Proven corpus defect; corrected fixture passes."
+  },
+  {
+   "id": "obliterate-not-found-3.0",
+   "workstream": "interpretation",
+   "status": "failed",
+   "detail": "expected 1, received 55",
+   "note": "Draft Table 376 gives Object Not Found after Obliterate; BL-M-20-30 expects Item Not Found (docs/interpretations.md#result-reasons)."
+  },
+  {
+   "id": "shared-digest-placeholder-3.0",
+   "workstream": "corpus",
+   "status": "failed",
+   "detail": "expected Digest HashingAlgorithm not present",
+   "cases": "AKLC-O-1-30",
+   "note": "One placeholder names two different digests; corrected fixture passes."
+  },
+  {
+   "id": "triple-des-single-des-bundle",
+   "workstream": "interpretation",
+   "status": "failed",
+   "detail": "3DES key bundle must hold three distinct, non-weak DES keys",
+   "cases": "3DES",
+   "note": "With 3DES enabled, a bundle whose keys reduce it to single DES is still refused (docs/interpretations.md#a-single-des-equivalent-3des-test-key).",
+   "fips_incompatible": true
+  },
+  {
+   "id": "draft-3.0-credential-object-types",
+   "workstream": "implementation",
+   "status": "failed",
+   "detail": "missing \\['devicecredential', 'hashedpasswordcredential', 'onetimepasswordcredential'\\]",
+   "cases": "MSGENC-.*-30",
+   "note": "Draft 3.0 Device, One-Time Password and Hashed Password Credential objects are not implemented as System Objects yet."
+  },
+  {
+   "id": "fips-non-approved-mechanism",
+   "workstream": "policy",
+   "mode": "fips",
+   "status": "failed",
+   "detail": "message='[^']*FIPS mode",
+   "configuration": {
+    "report": "default",
+    "setting": "non-FIPS mode"
+   },
+   "note": "FIPS mode (KMIP_FIPS=true, docs/fips.md) refuses a non-approved mechanism with the reason its operation gives an unsupported one and a Result Message naming FIPS mode: ChaCha20, DSA, non-NIST curves, SHA-1 or short-key signature generation, RSASSA-PSS salts longer than the hash (the 1.3/1.4+ default salts), client-chosen AES-GCM encryption IVs, and the HASH/HMAC/ENCRYPT/SP 800-108/AWS derivation methods. Used only for the FIPS-mode variation report."
+  },
+  {
+   "id": "fips-split-key-not-offered",
+   "workstream": "policy",
+   "mode": "fips",
+   "status": "failed",
+   "detail": "expected Operation (CreateSplitKey|JoinSplitKey) not present|missing \\[[^\\]]*'(createsplitkey|joinsplitkey)'|expected ObjectType SplitKey not present",
+   "configuration": {
+    "report": "default",
+    "setting": "non-FIPS mode"
+   },
+   "note": "FIPS mode neither offers nor advertises Create Split Key, Join Split Key or the Split Key object type (no approved secret-sharing scheme), so Query listings that name them differ. Used only for the FIPS-mode variation report."
+  }
+ ]
+}

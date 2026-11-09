@@ -1,0 +1,120 @@
+# Copyright 2026 Jeremiah Jordan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Unit tests for keytend-kmip-server-rules.yaml:
+#   promtool test rules keytend-kmip-server-rules.test.yaml
+rule_files:
+  - keytend-kmip-server-rules.yaml
+evaluation_interval: 1m
+tests:
+  # The target is scraped but down.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="keytend-kmip-server", instance="kmip:8080"}'
+        values: '0x30'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: KmipServerDown
+        exp_alerts: []
+      - eval_time: 3m
+        alertname: KmipServerDown
+        exp_alerts:
+          - exp_labels: {job: keytend-kmip-server, instance: "kmip:8080"}
+            exp_annotations:
+              summary: Server down, not ready or not scraped (readiness includes the live-history check).
+      - eval_time: 14m
+        alertname: KmipLeaseOutageBudget
+        exp_alerts: []
+      - eval_time: 16m
+        alertname: KmipLeaseOutageBudget
+        exp_alerts:
+          - exp_labels: {job: keytend-kmip-server, instance: "kmip:8080"}
+            exp_annotations:
+              summary: Half of the default lease remainder is gone; lease-honouring clients stop in about 15 minutes.
+  # Up and ready, then service discovery drops the only target.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="keytend-kmip-server", instance="kmip:8080"}'
+        values: '1x4 stale'
+      - series: 'kmip_ready{job="keytend-kmip-server", instance="kmip:8080"}'
+        values: '1x4 stale'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: KmipServerDown
+        exp_alerts: []
+      - eval_time: 6m
+        alertname: KmipServerDown
+        exp_alerts: []
+      - eval_time: 8m
+        alertname: KmipServerDown
+        exp_alerts:
+          - exp_labels: {job: keytend-kmip-server}
+            exp_annotations:
+              summary: Server down, not ready or not scraped (readiness includes the live-history check).
+      - eval_time: 19m
+        alertname: KmipLeaseOutageBudget
+        exp_alerts: []
+      - eval_time: 21m
+        alertname: KmipLeaseOutageBudget
+        exp_alerts:
+          - exp_labels: {job: keytend-kmip-server}
+            exp_annotations:
+              summary: Half of the default lease remainder is gone; lease-honouring clients stop in about 15 minutes.
+  # No target was ever scraped.
+  - interval: 1m
+    input_series: []
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: KmipServerDown
+        exp_alerts:
+          - exp_labels: {job: keytend-kmip-server}
+            exp_annotations:
+              summary: Server down, not ready or not scraped (readiness includes the live-history check).
+      - eval_time: 16m
+        alertname: KmipLeaseOutageBudget
+        exp_alerts:
+          - exp_labels: {job: keytend-kmip-server}
+            exp_annotations:
+              summary: Half of the default lease remainder is gone; lease-honouring clients stop in about 15 minutes.
+  # Healthy: no outage alert.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="keytend-kmip-server", instance="kmip:8080"}'
+        values: '1x30'
+      - series: 'kmip_ready{job="keytend-kmip-server", instance="kmip:8080"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: KmipServerDown
+        exp_alerts: []
+      - eval_time: 30m
+        alertname: KmipLeaseOutageBudget
+        exp_alerts: []
+  # Connections near the limit for 10 minutes.
+  - interval: 1m
+    input_series:
+      - series: 'kmip_connections_active{job="keytend-kmip-server", instance="kmip:8080", listener="ttlv"}'
+        values: '60x20'
+      - series: 'kmip_connections_max{job="keytend-kmip-server", instance="kmip:8080"}'
+        values: '64x20'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: KmipConnectionCapacity
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: KmipConnectionCapacity
+        exp_alerts:
+          - exp_labels: {job: keytend-kmip-server, instance: "kmip:8080"}
+            exp_annotations:
+              summary: --max-connections is nearly exhausted; idle connections hold slots until --idle-timeout.

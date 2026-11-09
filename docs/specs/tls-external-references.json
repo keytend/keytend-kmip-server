@@ -1,0 +1,66 @@
+{
+  "interpretations": {
+    "rfc8422_5_3": "TLS1.2 ECDSA server certificate curve must be compatible with client supported curves; those rejections do not isolate key-exchange group policy.",
+    "rfc8446_9_1": "Application profiles can specify otherwise; mandatory implementation is distinct from enabling negotiation. KMIP closed lists do not require a TC exception to disable AES128GCM.",
+    "status": "RFC Editor identifies RFC9846 as obsoleting RFC8446 and RFC8422. This is recorded separately from the historical references in the pinned KMIP profiles. RFC9846 is retained for status/context, not fully analysed for qualification."
+  },
+  "qualification_credit": false,
+  "references": [
+    {
+      "fetched_at_utc": "2026-10-29T17:31:24.698493+00:00",
+      "final_url": "https://www.rfc-editor.org/rfc/rfc8446.txt",
+      "kind": "text",
+      "path": ".cache/tls-references/rfc8446.txt",
+      "rfc": 8446,
+      "sha256": "47871bc8820a2c3b6ea89f061055577058862cf543686b82d10131239702b3bd",
+      "url": "https://www.rfc-editor.org/rfc/rfc8446.txt"
+    },
+    {
+      "fetched_at_utc": "2026-10-29T17:31:25.368127+00:00",
+      "final_url": "https://www.rfc-editor.org/info/rfc8446/",
+      "kind": "status",
+      "path": ".cache/tls-references/rfc8446.info.html",
+      "rfc": 8446,
+      "sha256": "ef5038e11713e33e98c9a182c7057ceaff66088bddf7bdee4fc90b1fe8c99c84",
+      "url": "https://www.rfc-editor.org/info/rfc8446/"
+    },
+    {
+      "fetched_at_utc": "2026-10-29T17:31:25.521599+00:00",
+      "final_url": "https://www.rfc-editor.org/rfc/rfc8422.txt",
+      "kind": "text",
+      "path": ".cache/tls-references/rfc8422.txt",
+      "rfc": 8422,
+      "sha256": "cac45754399e5115342cf1d773a51ac5a77ad221e9336e43ceadd8f294712350",
+      "url": "https://www.rfc-editor.org/rfc/rfc8422.txt"
+    },
+    {
+      "fetched_at_utc": "2026-10-29T17:31:25.886401+00:00",
+      "final_url": "https://www.rfc-editor.org/info/rfc8422/",
+      "kind": "status",
+      "path": ".cache/tls-references/rfc8422.info.html",
+      "rfc": 8422,
+      "sha256": "c5a62fd4c963fd4aa69a1001411d4d57c2f939992c078154cc6848b06eb5b024",
+      "url": "https://www.rfc-editor.org/info/rfc8422/"
+    },
+    {
+      "fetched_at_utc": "2026-10-29T17:31:26.096465+00:00",
+      "final_url": "https://www.rfc-editor.org/rfc/rfc9846.txt",
+      "kind": "text",
+      "path": ".cache/tls-references/rfc9846.txt",
+      "rfc": 9846,
+      "sha256": "b1bee06a814f92ca4677c85b97519be53869b2bf8edc79ade955fb51c0402b17",
+      "url": "https://www.rfc-editor.org/rfc/rfc9846.txt"
+    },
+    {
+      "fetched_at_utc": "2026-10-29T17:31:27.007035+00:00",
+      "final_url": "https://www.rfc-editor.org/info/rfc9846/",
+      "kind": "status",
+      "path": ".cache/tls-references/rfc9846.info.html",
+      "rfc": 9846,
+      "sha256": "f07e1fff93f1c404623a94d4810a4d5e25e879a77dbd95fd02ac010d04cd37f9",
+      "url": "https://www.rfc-editor.org/info/rfc9846/"
+    }
+  ],
+  "schema": 1,
+  "scope": "External primary reference snapshots and status as of acquisition; pinned KMIP profile editions remain the normative analysis target"
+}

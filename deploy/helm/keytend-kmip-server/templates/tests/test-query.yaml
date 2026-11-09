@@ -1,0 +1,69 @@
+{{- /*
+Copyright 2026 Jeremiah Jordan
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -}}
+{{- if .Values.tests.clientSecret }}
+{{- $t := .Values.tests }}
+{{- $fullname := include "kmip.fullname" . }}
+# helm test: one KMIP Query (Query Server Information) over HTTPS with the
+# client certificate in tests.clientSecret. HTTP 200 also carries KMIP
+# failures, so the test requires Result Status Success in the response.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ $fullname }}-test-query
+  labels:
+    {{- include "kmip.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: test
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  restartPolicy: Never
+  serviceAccountName: {{ include "kmip.serviceAccountName" . }}
+  automountServiceAccountToken: false
+  securityContext:
+    {{- include "kmip.podSecurityContext" . | nindent 4 }}
+  containers:
+    - name: query
+      image: {{ include "kmip.imageRef" (dict "image" $t.image "default" "latest") }}
+      imagePullPolicy: {{ $t.image.pullPolicy }}
+      command: [sh, -c]
+      args:
+        - |
+          set -eu
+          out=$(curl --silent --show-error --fail --max-time 20 \
+            --cacert /certs/{{ $t.files.ca }} --cert /certs/{{ $t.files.cert }} --key /certs/{{ $t.files.key }} \
+            --header 'Content-Type: application/json' --data "$REQUEST" "$URL")
+          echo "$out"
+          statuses=$(echo "$out" | grep -o '"tag":"ResultStatus","type":"Enumeration","value":"[^"]*"' || true)
+          [ "$(echo "$statuses" | grep -c .)" = 1 ] || { echo "expected one Result Status" >&2; exit 1; }
+          case "$statuses" in *'"0x00000000"') ;; *) echo "KMIP Query failed: $statuses" >&2; exit 1 ;; esac
+          echo "$out" | grep -q '"tag":"VendorIdentification"' || { echo "no Vendor Identification" >&2; exit 1; }
+          echo "KMIP Query succeeded"
+      env:
+        - name: URL
+          value: https://{{ $t.serverName | default $fullname }}:{{ .Values.service.ports.https }}/kmip
+        - name: REQUEST
+          value: '{"tag":"RequestMessage","value":[{"tag":"RequestHeader","value":[{"tag":"ProtocolVersion","value":[{"tag":"ProtocolVersionMajor","type":"Integer","value":2},{"tag":"ProtocolVersionMinor","type":"Integer","value":1}]},{"tag":"BatchCount","type":"Integer","value":1}]},{"tag":"BatchItem","value":[{"tag":"Operation","type":"Enumeration","value":"Query"},{"tag":"RequestPayload","value":[{"tag":"QueryFunction","type":"Enumeration","value":"QueryServerInformation"}]}]}]}'
+      securityContext:
+        {{- include "kmip.containerSecurityContext" . | nindent 8 }}
+      resources:
+        limits: {cpu: 200m, memory: 64Mi}
+      volumeMounts:
+        - {name: certs, mountPath: /certs, readOnly: true}
+  volumes:
+    - name: certs
+      secret: {secretName: {{ $t.clientSecret }}, defaultMode: 288}
+{{- end }}

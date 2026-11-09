@@ -1,0 +1,79 @@
+{{- /*
+Copyright 2026 Jeremiah Jordan
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -}}
+{{- $fullname := include "kmip.fullname" . }}
+# Headless Service of the StatefulSet (stable pod DNS name).
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}-headless
+  labels:
+    {{- include "kmip.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+spec:
+  clusterIP: None
+  selector:
+    {{- include "kmip.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+  ports:
+    - {name: kmip, port: 5696, targetPort: kmip}
+    {{- if .Values.server.https.enabled }}
+    - {name: https, port: 5697, targetPort: https}
+    {{- end }}
+---
+# The address clients use: <fullname>.<namespace>.svc, or a load balancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "kmip.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- if eq .Values.service.type "LoadBalancer" }}
+  {{- with .Values.service.loadBalancerClass }}
+  loadBalancerClass: {{ . }}
+  {{- end }}
+  {{- with .Values.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if and .Values.service.externalTrafficPolicy (has .Values.service.type (list "LoadBalancer" "NodePort")) }}
+  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
+  {{- end }}
+  selector:
+    {{- include "kmip.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+  ports:
+    - name: kmip
+      port: {{ .Values.service.ports.kmip }}
+      targetPort: kmip
+      {{- if and .Values.service.nodePorts.kmip (has .Values.service.type (list "LoadBalancer" "NodePort")) }}
+      nodePort: {{ .Values.service.nodePorts.kmip }}
+      {{- end }}
+    {{- if .Values.server.https.enabled }}
+    - name: https
+      port: {{ .Values.service.ports.https }}
+      targetPort: https
+      {{- if and .Values.service.nodePorts.https (has .Values.service.type (list "LoadBalancer" "NodePort")) }}
+      nodePort: {{ .Values.service.nodePorts.https }}
+      {{- end }}
+    {{- end }}

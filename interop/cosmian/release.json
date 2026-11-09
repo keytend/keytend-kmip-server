@@ -1,0 +1,11 @@
+{
+  "version": "5.28.0",
+  "commit": "4ab3ee65829a903abb71f1298f400657fcee7ec9",
+  "license": "BUSL-1.1; isolated non-production test only; no production qualification",
+  "kms_crates": {
+    "cosmian_kms_client": "f104e035c22f539ad9635784db1d0218019d8881b9f418c2a768504a42bc2acb",
+    "cosmian_kmip": "35f93c2446598f4d1384fd1ee707c653545f9b86113d6126aec0c602afa658b7",
+    "cosmian_kms_access": "13a175dd5b13d213697d048cdb11eef1aa7f0e0bef83c5eaf459437b505b7bbf",
+    "cosmian_kms_client_utils": "e8b1cc3b2239ba9adaa523dce514bde026eaa4f7ece4d47f3b05e074664b4cc2"
+  }
+}

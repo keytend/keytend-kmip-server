@@ -1,0 +1,23 @@
+{"tag": "RequestMessage", "value": [
+  {"tag": "RequestHeader", "value": [
+    {"tag": "ProtocolVersion", "value": [
+      {"tag": "ProtocolVersionMajor", "type": "Integer", "value": 2},
+      {"tag": "ProtocolVersionMinor", "type": "Integer", "value": 1}]},
+    {"tag": "BatchCount", "type": "Integer", "value": 3}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "Activate"},
+    {"tag": "UniqueBatchItemID", "type": "ByteString", "value": "01"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "UniqueIdentifier", "type": "TextString", "value": "$ID"}]}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "Revoke"},
+    {"tag": "UniqueBatchItemID", "type": "ByteString", "value": "02"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "UniqueIdentifier", "type": "TextString", "value": "$ID"},
+      {"tag": "RevocationReason", "value": [
+        {"tag": "RevocationReasonCode", "type": "Enumeration", "value": "CessationOfOperation"}]}]}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "Destroy"},
+    {"tag": "UniqueBatchItemID", "type": "ByteString", "value": "03"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "UniqueIdentifier", "type": "TextString", "value": "$ID"}]}]}]}

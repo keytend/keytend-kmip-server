@@ -1,0 +1,12 @@
+[
+  {
+    "version": "1.4",
+    "protocol_versions": [
+      "1.0"
+    ],
+    "filename": "TC-DERIVEKEY-1-10.xml",
+    "url": "https://docs.oasis-open.org/kmip/testcases/v1.4/cnprd01/test-cases/kmip-v1.4/TC-DERIVEKEY-1-10.xml",
+    "sha256": "3d665e0a47adfafd009d6860f2ce28cc689ba2894a0d8c870129e39b0e3e1964",
+    "description": "Official legacy HASH Derive Key case, published with the 1.4 test cases and using 1.0 wire messages; not included in the profile ZIP."
+  }
+]

@@ -1,0 +1,1788 @@
+{
+ "schema": 1,
+ "scope": "Per-case ledger for the separately labelled full replay of the KMIP 1.1 and 1.2 Test Cases Committee Notes (scripts/oasis_legacy_replay.py) under the Profiles 4.1 variations. Every one of the 155 cases has a status; every non-pass has a family (with its kind and governing 1.x spec or profile text) and a reason from the run. It does not alter the strict legacy ledger (legacy-inventory.json) or its historical reports, and it grants no conformance credit.",
+ "notice": "Case identifiers and section references identify content of the OASIS KMIP Test Cases 1.1 CN01 and 1.2 CN01, which remain under the OASIS copyright and IPR notice. Statuses, families and reasons are original work under Apache-2.0.",
+ "fixtures": {
+  "dual_client": {
+   "label": "Client-B is a second mTLS connection with the same client certificate (same principal) as Client-A"
+  },
+  "elapse_deactivation": {
+   "label": "wait until 121 s after exchange 1, then reconnect with the same client certificate, before exchange 3 (the note sets Deactivation Date $NOW+120 and then expects State Deactivated)",
+   "wait": {
+    "before_exchange": 3,
+    "after_exchange": 1,
+    "seconds": 121
+   }
+  },
+  "header_credentials": {
+   "label": "the server is started with a users file (--users) that provisions, for the client certificate's principal, the notes' users Fred/password1 and Barney/secret2 and devices serNum123456/secret and serNum101010/passwd (with all of their published identifiers); the file holds only salted scrypt verifiers. Without it every header credential fails; the client principal uses the client_identity \"credential\" policy option, so each verified user or device is its own client (Profiles 1.2 section 3.1.3)",
+   "credentials": {
+    "users": [
+     {
+      "username": "Fred",
+      "password": "password1"
+     },
+     {
+      "username": "Barney",
+      "password": "secret2"
+     }
+    ],
+    "devices": [
+     {
+      "name": "serNum123456",
+      "device_serial_number": "serNum123456",
+      "device_identifier": "devID2233",
+      "network_identifier": "netID9000",
+      "machine_identifier": "machineID1",
+      "media_identifier": "mediaID313",
+      "password": "secret"
+     },
+     {
+      "name": "serNum101010",
+      "device_serial_number": "serNum101010",
+      "device_identifier": "devID4444",
+      "network_identifier": "netID9",
+      "machine_identifier": "machineID1111",
+      "media_identifier": "mediaID0000",
+      "password": "passwd"
+     }
+    ]
+   },
+   "client_identity": "credential"
+  }
+ },
+ "configurations": {
+  "3des": {
+   "label": "legacy three-key 3DES enabled for Create, Re-key and Encrypt (off by default; docs/algorithms.md#3des)",
+   "setting": "KMIP_TRIPLE_DES=enabled",
+   "environment": {
+    "KMIP_TRIPLE_DES": "enabled"
+   }
+  },
+  "lease-0": {
+   "label": "no maximum lease: new objects store Lease Time 0 (\"no lease interval is effective\", 1.x section 4.17); default 3600 s",
+   "setting": "KMIP_MAX_LEASE_SECONDS=0",
+   "environment": {
+    "KMIP_MAX_LEASE_SECONDS": "0"
+   }
+  },
+  "lease-16": {
+   "label": "maximum lease of 16 s on new objects; default 3600 s",
+   "setting": "KMIP_MAX_LEASE_SECONDS=16",
+   "environment": {
+    "KMIP_MAX_LEASE_SECONDS": "16"
+   }
+  },
+  "client-endpoint": {
+   "label": "the client principal has a client_endpoint for server-to-client Notify/Put (harness mTLS listener, as in the profile replay); Query then lists Notify and Put",
+   "setting": "a client_endpoint for Notify and Put in the policy file",
+   "client_endpoint": true
+  },
+  "ec-extended": {
+   "label": "the non-NIST curves secp256k1 and brainpoolP256-512 r1/t1 offered to KMIP operations (off by default: --ec-curves nist, docs/interpretations.md#supported-elliptic-curves)",
+   "setting": "KMIP_EC_CURVES=extended",
+   "environment": {
+    "KMIP_EC_CURVES": "extended"
+   }
+  }
+ },
+ "families": {
+  "tdes_generation_refused": {
+   "kind": "server_policy",
+   "workstream": "configuration",
+   "description": "Create of a 168-bit 3DES key is refused with Feature Not Supported (\"3DES key generation is disabled by server policy\"). With KMIP_TRIPLE_DES=enabled the cases pass.",
+   "spec": "3DES is off by default (docs/algorithms.md#3des). 3DES generation is required only by the 1.1 symmetric-key foundry profiles (Profiles 1.1 sections 5.4/5.5), which this server does not claim by default.",
+   "configuration": "3des"
+  },
+  "lease_time_zero": {
+   "kind": "server_policy",
+   "workstream": "configuration",
+   "description": "Obtain Lease returns the server maximum (default 3600 s); the note shows Lease Time 0, which this server returns with KMIP_MAX_LEASE_SECONDS=0.",
+   "spec": "KMIP 1.x section 4.17 Obtain Lease: the lease is determined by the server (\"If the returned value of the lease time is zero, then the server is indicating that no lease interval is effective\"). Lease Time is not among the Profiles 4.1.1 variable values, so the comparator keeps it exact.",
+   "configuration": "lease-0"
+  },
+  "lease_time_sixteen": {
+   "kind": "server_policy",
+   "workstream": "configuration",
+   "description": "Obtain Lease returns the server maximum (default 3600 s); the note shows 16 s for the first key, which this server returns with KMIP_MAX_LEASE_SECONDS=16.",
+   "spec": "KMIP 1.x section 4.17: the lease time is determined by the server.",
+   "configuration": "lease-16"
+  },
+  "lease_time_example_server_values": {
+   "kind": "server_capability_set",
+   "workstream": "unverifiable",
+   "description": "The note shows the example server's per-object leases: 16 s for the original key and 0 for its replacement. This server gives every new object the same configured maximum, so no single setting reproduces both values.",
+   "spec": "KMIP 1.x section 3.20 Lease Time: \"A server SHALL store in this attribute the maximum Lease Time it is able to serve\"; the value is server policy."
+  },
+  "note_literal_server_timestamp": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The published Last Change Date is the example server's clock reading and equals a request date literal, so the comparator (which keeps a response date that echoes a request date exact) cannot treat it as server-generated.",
+   "spec": "KMIP 1.1 note section 1: \"server-generated timestamps ... change dynamically\"; the 1.2 note revision (TC-95-11) writes $NOW."
+  },
+  "example_server_query_with_notify_put": {
+   "kind": "server_capability_set",
+   "workstream": "configuration",
+   "description": "Query Operations lists Notify and Put (and Poll, Cancel) as the example server did; this server lists Notify and Put only for a principal with a configured client endpoint, and then the case passes.",
+   "spec": "KMIP 1.x section 5: Notify and Put are sent \"using information known to the server via unspecified configuration or administrative mechanisms\"; Query lists only what is offered (docs/certificates.md#certify-and-re-certify).",
+   "configuration": "client-endpoint"
+  },
+  "example_server_vendor_extensions": {
+   "kind": "server_capability_set",
+   "workstream": "unverifiable",
+   "description": "Query Extension List/Map expects the example server's vendor extensions ACME LOCATION and ACME ZIP CODE. This server defines no vendor extension and correctly returns none; no other server can reproduce the published list.",
+   "spec": "KMIP 1.1 section 4.25 Query: Extension Information describes the extensions the server supports. 1.2 note section 2: test cases \"depend on a specific configuration of a KMIP server\"."
+  },
+  "asynchronous_server_decides": {
+   "kind": "server_policy",
+   "workstream": "alternative",
+   "description": "With Asynchronous Indicator True the note's example server deferred Locate/Archive (Operation Pending, then Poll/Cancel). This server defers only Create Key Pair and Re-key Key Pair batches and answers the others synchronously, which the specification permits.",
+   "spec": "KMIP 1.1 section 6.8: \"the server decides which operations are performed synchronously or asynchronously\"; section 7.2: \"The batched responses MAY contain a mixture of synchronous and asynchronous responses.\""
+  },
+  "certify_needs_named_issuer": {
+   "kind": "server_policy",
+   "workstream": "deviation",
+   "description": "Certify and Re-certify are implemented, but the issuer must be named by a Certificate Link to a caller-owned CA certificate. The note assumes the example server's own CA; this server deliberately never picks or holds a CA (docs/certificates.md#certify-and-re-certify).",
+   "spec": "KMIP 1.0 section 4.6: Certify \"requires that the key management system have access to a certification authority (CA)\"; the CA is not specified."
+  },
+  "rsa_1024_refused": {
+   "kind": "server_policy",
+   "workstream": "deviation",
+   "description": "Create Key Pair for a 1024-bit RSA key is refused with Invalid Field (\"RSA must be 2048, 3072 or 4096 bits\"). Generation below 2048 bits is deliberately not offered under any setting.",
+   "spec": "KMIP 1.x requires no RSA modulus size; key-size limits are server policy. NIST SP 800-131A Rev. 2 disallows generating RSA-1024 keys. 1.2 note section 2: support \"depends on a server being configured in a manner consistent with the test case assumptions\"."
+  },
+  "encrypted_pkcs8_material": {
+   "kind": "server_policy",
+   "workstream": "deviation",
+   "description": "The note registers a password-encrypted PKCS#8 EncryptedPrivateKeyInfo (pbeWithSHAAnd3-KeyTripleDES-CBC) with Key Format Type PKCS#8 and no password; the server validates private-key material and refuses it with Invalid Field.",
+   "spec": "KMIP 1.x defines PKCS#8 by reference to RFC 5208 and offers no field for a PBE password; verified offline with pyca/cryptography (\"Password was not given but private key is encrypted\"). A server that stores opaque bytes would accept it; validating material is a deliberate choice."
+  },
+  "credential_users_share_principal": {
+   "kind": "server_policy",
+   "workstream": "deviation",
+   "description": "Header credentials verify and, with the client_identity \"credential\" fixture, each user is its own client: the second user (Barney) can no longer read the first user's (Fred's) key. The server answers Item Not Found, hiding that another client's object exists, where the note expects Permission Denied under the \"default\" policy. Revealing existence to other clients would weaken tenant isolation, so this deliberate policy difference is kept (docs/objects.md#operation-policy-name-kmip-1x).",
+   "spec": "KMIP 1.1/1.2 section 3.18.2: under the default policy secret objects are \"Allowed to creator only\", and \"the creator SHALL be as defined in [KMIP-Prof]\". Profiles 1.2 section 3.1.3 derives the client identity from the channel identity together with the credentials; Profiles 1.1 leaves the combination \"outside the scope of this specification\". Per-credential ownership is not implemented (docs/credentials.md, docs/objects.md#operation-policy-name-kmip-1x)."
+  },
+  "group_member_fresh_not_generated": {
+   "kind": "server_policy",
+   "workstream": "alternative",
+   "description": "Locate with Group Member Fresh on a group with no fresh member returns no identifier: the server does not generate objects on the fly. The note expects a newly generated fresh object in the \"default\" group of an empty server.",
+   "spec": "KMIP 1.1/1.2 section 4.9: \"If there are no more fresh objects in the group, the server MAY choose to generate a new object on the fly based on server policy.\""
+  },
+  "destroyed_object_metadata_retained": {
+   "kind": "server_policy",
+   "workstream": "alternative",
+   "description": "Get of a destroyed key: the note expects Item Not Found (its example server removed the object). This server keeps a destroyed object's attributes, for which every 1.x Get Errors table assigns Illegal Operation; with that outcome substituted the rest of the case passes.",
+   "spec": "KMIP 1.1 table 260 / 1.2 table 301 Get Errors: \"Object exists and is not a Template, but the server only has attributes for this object\" -> Illegal Operation. Retaining metadata after Destroy is permitted (1.x section 4.21)."
+  },
+  "note_register_missing_required_attributes": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The note registers a certificate (or PGP key) without attributes that the Register attribute-requirements table makes mandatory; the server refuses with Missing Data.",
+   "spec": "KMIP 1.0 Table 115, 1.1 Table 129, 1.2 Table 144: \"If a Managed Cryptographic Object is registered, then the following attributes SHALL be included ...\": Cryptographic Algorithm and Length (omissible only when encapsulated in the Key Block, which a Certificate has not), Certificate Length (1.1+, certificates), Cryptographic Usage Mask (Yes)."
+  },
+  "certificate_serial_number_text_form": {
+   "kind": "server_capability_set",
+   "workstream": "unverifiable",
+   "description": "The deprecated Certificate Identifier Serial Number is a Text String whose form is unspecified. The notes disagree: the 1.1 note and TC-132-10/11 use decimal (\"1\"), TC-132-12 and TC-ECC-3-10 hexadecimal (\"01\", \"DADA16A58D2924D9\"). This server writes decimal, so the hexadecimal samples cannot be matched.",
+   "spec": "KMIP 1.0 table 52, 1.1 table 62, 1.2 table 69: Serial Number, Text String; no encoding is given. 1.1+ adds X.509 Certificate Identifier with a Byte String serial."
+  },
+  "note_response_describes_other_certificate": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The expected X.509 Certificate Identifier/Issuer/Subject name a secp256k1 certificate with another serial, while the certificate the note registers is the secp256r1 one; the server reports the registered certificate.",
+   "spec": "KMIP 1.1 section 3.13: the X.509 Certificate Identifier is taken from the Issuer and Serial Number fields of the certificate."
+  },
+  "note_split_key_response_omits_object_type": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The note's Create Split Key / Join Split Key responses omit Object Type; the server includes it.",
+   "spec": "KMIP 1.2 Table 221 (Create Split Key Response Payload) and Table 223 (Join Split Key Response Payload): \"Object Type, see 3.3 | Yes | Type of object created.\""
+  },
+  "note_get_response_wrong_identifier": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The note answers a Get of $UNIQUE_IDENTIFIER_4 with $UNIQUE_IDENTIFIER_1 although the returned split key is part 4.",
+   "spec": "KMIP 1.2 Get Response Payload: Unique Identifier \"of the object\"."
+  },
+  "note_omits_operation_in_error_response": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The note's Response Too Large batch item omits Operation; the server includes it.",
+   "spec": "KMIP 1.1 section 7.1 Response Batch Item Structure: \"Operation | Yes, if specified in Request Batch Item\"; the request batch item specifies Query."
+  },
+  "note_preactive_wrapping_key": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The note wraps a key with a KEK registered without an Activation Date (Pre-Active); the server refuses with Permission Denied. The 1.2 note revision (TC-141/142) activates the KEK first.",
+   "spec": "KMIP 1.1 section 3.22 State: a Pre-Active object \"SHALL NOT be used for any cryptographic purpose\". The correction also revokes the KEK before its Destroy, as TC-141/142 do (1.1 table 270: an Active object cannot be destroyed)."
+  },
+  "note_fixed_dates_elapsed": {
+   "kind": "note_time_dependent",
+   "workstream": "document",
+   "description": "The note uses fixed 2009-2020 dates (Activation, Deactivation, Protect Stop) whose intended relation to the current time has expired, so object states differ from those the note recorded.",
+   "spec": "KMIP 1.x section 3.22 State: Active becomes Deactivated when the Deactivation Date is reached; Protect Stop Date bounds protection use (section 3.26). The 1.2-note -11/-12 revisions use $NOW-relative dates."
+  },
+  "note_1_0_past_activation_date": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "A 1.0 request sets an Activation Date in the past; the note keeps that date. KMIP 1.0 requires the server to set it to the time the request was received (or fail), so the dates derived from it differ (Re-key: Process Start Date then precedes the Activation Date).",
+   "spec": "KMIP 1.0 section 3.17: \"the server SHALL set the Activation Date attribute to the time when the operation is received, or fail the request\"; 1.1 changed the rule (docs/protocol/activation.rs)."
+  },
+  "note_empty_placeholder_reason_superseded": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "After a Locate that matches nothing, the 1.1 note expects Invalid Field for the batched Get without identifier. The 1.2 note (TC-152-11, the same flow in 1.1) expects Item Not Found, which the server returns.",
+   "spec": "KMIP 1.1 section 4.9: later batched operations \"fail\"; the only 1.x error-table row for an unidentified object is Item Not Found (1.1 table 260)."
+  },
+  "note_get_attributes_duplicate_reason": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The 1.1 note answers a Get Attributes repeating an Attribute Name with Invalid Field. The 1.2 note (TC-171-11, the same 1.1 request) and the 1.1 specification use Invalid Message, which the server returns.",
+   "spec": "KMIP 1.1 section 11.13 table 261 (1.2 table 302): \"The same Attribute Name is present more than once\" -> Operation Failed, Invalid Message."
+  },
+  "note_template_own_custom_attribute": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "A 1.1 request registers a Template whose own attributes include the custom attribute x-ID; the server refuses it (\"Attribute does not apply to a Template object\").",
+   "spec": "KMIP 1.1 section 2.2.6: \"Attributes applicable to the Template itself are: Unique Identifier, Object Type, Name, Initial Date, Archive Date, and Last Change Date\"; Custom Attribute is listed among the attributes applicable to objects created using the Template. (1.2 drops that list; the server accepts it there.)"
+  },
+  "note_template_lease_time": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The note lists Lease Time among a Template's attributes; the server gives a Template none.",
+   "spec": "KMIP 1.2 table 89 Lease Time: \"Applies to Object Types: All Cryptographic Objects\"; a Template is not a Cryptographic Object."
+  },
+  "unregistered_tag_document_defect": {
+   "kind": "note_defect",
+   "workstream": "document",
+   "description": "The published request carries tag 0x014242, outside the 42/54 tag ranges; the case cannot be replayed as published and is not rewritten.",
+   "spec": "KMIP 1.1 section 9.1.1.1: the first tag byte SHALL be 42 or 54 hex; section 9.1.3.1 places 000000-420000 in the (Unused) range."
+  },
+  "server_to_client_operation": {
+   "kind": "not_applicable",
+   "workstream": "unverifiable",
+   "description": "Notify/Put exchanges are server-to-client messages. The server implements them for a configured client endpoint, but the replay does not compare the messages it would send with the note's; every client-to-server exchange of the case ran and passed.",
+   "spec": "KMIP 1.x section 5.1 Notify: \"only ever sent by a server to a client via means outside of the normal client request/response protocol, using information known to the server via unspecified configuration or administrative mechanisms\"; 5.2 Put likewise."
+  },
+  "transparent_private_key_material_unverifiable": {
+   "kind": "comparator_difference",
+   "workstream": "unverifiable",
+   "description": "Every exchange passes, but the comparator cannot independently verify the returned Transparent RSA Private Key fields (no recognised object type for that key material), so the case stays unverified rather than passed.",
+   "spec": "Profiles 1.3+ section 4.1 variable output: generated key material must be checked independently, never copied from the sample."
+  },
+  "untriaged": {},
+  "extended_ec_curves": {
+   "kind": "server_policy",
+   "workstream": "configuration",
+   "description": "Register or Create Key Pair of a secp256k1 key is refused with Feature Not Supported (\"Unsupported EC curve\"). With KMIP_EC_CURVES=extended the cases pass.",
+   "spec": "Supporting a curve is optional: the Cryptographic Domain Parameters are OPTIONAL fields (1.0-1.4 section 3.7) and an unsupported optional feature is Feature Not Supported (section 6.10). The non-NIST curves are opt-in (docs/interpretations.md#supported-elliptic-curves).",
+   "configuration": "ec-extended"
+  }
+ },
+ "summary": {
+  "passed": 78,
+  "unverified": 3,
+  "failed": 66,
+  "partial": 6,
+  "document_defect": 2
+ },
+ "cases": [
+  {
+   "id": "KMIP-TC-1.1-3.1.1",
+   "messages_sha256": "edef52d6525e07b7b5fe9f7bff84227a1fd5f2bff7bddbd6275e8c66279096ee",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-3.1.2",
+   "messages_sha256": "feec9539117e4e1a2607d34610f8ec1da7888dc274816061c31f3d7d5d0c4d1d",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-3.1.3",
+   "messages_sha256": "79581d1040f723b971d2c41d404107365d6f6b6b36f23dd813f11fa1898a16ba",
+   "status": "failed",
+   "family": "tdes_generation_refused",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=8; message='3DES key generation is disabled by server policy'",
+   "reported": "skipped (configuration: passes with KMIP_TRIPLE_DES=enabled)",
+   "evidence": {
+    "3des": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-3.1.4",
+   "messages_sha256": "a9bbcba18a526430bbd586533723201f53c1e3e7a00758500f3de71b3c5a0104",
+   "status": "failed",
+   "family": "destroyed_object_metadata_retained",
+   "exchange": 9,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 1, received 11",
+   "reported": "not applicable (alternative outcome)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-3.1.5",
+   "messages_sha256": "8a9423f6ca919b1b9e39c3be500ebe91516fa6c8e935a1028cc1e1062bbb484b",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-3.2",
+   "messages_sha256": "4a4cf06325ccaa5a174dafef13bf8deb234e9187f669d6cf1930052bfc8dc923",
+   "status": "failed",
+   "family": "asynchronous_server_decides",
+   "exchange": 1,
+   "reason": "/BatchItem ResultStatus mismatch; reason=None; message=None",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "KMIP-TC-1.1-4.1",
+   "messages_sha256": "5acd3096bc67f46762877538ae975dbc21c47a40783c19c51b0a160734e58d21",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-5.1",
+   "messages_sha256": "9582ecc4e556b821773bac87c66d1cf9cafea6fa305b79b011aa0453a189a5b1",
+   "status": "failed",
+   "family": "note_fixed_dates_elapsed",
+   "exchange": 5,
+   "reason": "/BatchItem ResultStatus mismatch; reason=12; message='Object cannot currently apply cryptographic protection'",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-6.1",
+   "messages_sha256": "ddb55d80a49122180df55b5c299ddcfcb6eb3de0d0057b57118a1f88d4938cd9",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-7.1",
+   "messages_sha256": "c44c36b678ba4893c07e0a2ef1a9273c1715d1bfcfb38b5a6e19770bf39765f7",
+   "status": "document_defect",
+   "family": "unregistered_tag_document_defect",
+   "exchange": null,
+   "reason": "message 0 (request): tag 0x014242 in the section 9.1.3.1 (Unused) range 000000-420000 violates KMIP 1.1 section 9.1.1.1 (first tag byte SHALL be 42 or 54 hex), so it is neither a KMIP nor an Extensions (540000-54FFFF) tag; the case prose names tag 0x540001",
+   "observed": "as-published request answered with Result Status OperationFailed, Result Reason InvalidMessage, Result Message 'Malformed TTLV request'",
+   "reported": "document defect (no passing correction)"
+  },
+  {
+   "id": "KMIP-TC-1.1-7.2",
+   "messages_sha256": "2a4311ee361a06cae333f79bc872fcdf2524d8276ab1d732ae858be04a4defa4",
+   "status": "document_defect",
+   "family": "unregistered_tag_document_defect",
+   "exchange": null,
+   "reason": "message 0 (request): tag 0x014242 in the section 9.1.3.1 (Unused) range 000000-420000 violates KMIP 1.1 section 9.1.1.1 (first tag byte SHALL be 42 or 54 hex), so it is neither a KMIP nor an Extensions (540000-54FFFF) tag; the case prose names tag 0x540001",
+   "observed": "as-published request answered with Result Status OperationFailed, Result Reason InvalidMessage, Result Message 'Malformed TTLV request'",
+   "reported": "document defect (no passing correction)"
+  },
+  {
+   "id": "KMIP-TC-1.1-8.1",
+   "messages_sha256": "560d17f7cadad045858d14db950c918970b8822a3f21fb7be196e5efdf07286b",
+   "status": "failed",
+   "family": "rsa_1024_refused",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=7; message='RSA must be 2048, 3072 or 4096 bits'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "KMIP-TC-1.1-8.2",
+   "messages_sha256": "42fb4e95ff25f3e0a6e84331f56bd19851fd7a693b8f8d8bc0cd314d000ee976",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-9.1",
+   "messages_sha256": "9b4f99321d4212efb03b665d550b161f100119c2d55e05d86d59a01a65e976bb",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-9.2",
+   "messages_sha256": "12f7e4ef7456495235cc42b762c596e01a5600aeabca91f52d68b8e1a9e7049c",
+   "status": "failed",
+   "family": "note_fixed_dates_elapsed",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload expected Attribute State not present",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-9.3",
+   "messages_sha256": "0f9cf6cc10bd4879c4dcb98f73ba6c307e01e11dc55589230bff5e62a49819e8",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-9.4",
+   "messages_sha256": "11ca2c3211c323200056173fb2c1e6f165cb847c9c499a3ce0e576deddaff801",
+   "status": "failed",
+   "family": "note_fixed_dates_elapsed",
+   "exchange": 7,
+   "reason": "/ResponseMessage/ResponseHeader/BatchCount value mismatch; expected 2, received 1",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-9.5",
+   "messages_sha256": "0975bba1d48cbc7e9dfaa237be62ef3630a58cae1d84cd95e666f428988f01af",
+   "status": "failed",
+   "family": "lease_time_zero",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload/LeaseTime value mismatch; expected 0, received 3600",
+   "reported": "skipped (configuration: passes with KMIP_MAX_LEASE_SECONDS=0 and a corrected document)",
+   "evidence": {
+    "lease-0": {
+     "status": "failed",
+     "detail": "/ResponseMessage/BatchItem/ResponsePayload/LastChangeDate value mismatch; expected 1335514468, received 1793366034",
+     "exchange": 2,
+     "family": "note_literal_server_timestamp"
+    },
+    "lease-0+corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-10.1",
+   "messages_sha256": "7ecb22c8a228a33665a4dbf4bc2ef7061dea9167aa9d22c82a7935e19297b57a",
+   "status": "failed",
+   "family": "asynchronous_server_decides",
+   "exchange": 3,
+   "reason": "/BatchItem ResultStatus mismatch; reason=None; message=None",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "KMIP-TC-1.1-11.1",
+   "messages_sha256": "ff47bf23d933eaf6423ca4ca8e0155b5a72bface55b911675e93f20571715550",
+   "status": "failed",
+   "family": "credential_users_share_principal",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 12, received 1",
+   "fixture": "header_credentials",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "KMIP-TC-1.1-11.2",
+   "messages_sha256": "be12e68364ee7218a8e3ee8d04cfc40435e05bfa468fee7af77fbdbb15722559",
+   "status": "failed",
+   "family": "credential_users_share_principal",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 12, received 1",
+   "fixture": "header_credentials",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "KMIP-TC-1.1-12.1",
+   "messages_sha256": "9c7aab31f88365aa26184fcbd7a23bffaaca60f7cca29887a5e8533147cf943a",
+   "status": "failed",
+   "family": "note_omits_operation_in_error_response",
+   "exchange": 0,
+   "reason": "/ResponseMessage/BatchItem unexpected response field Operation",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-12.2",
+   "messages_sha256": "23b248be4b54e4745a2bc229683b89da888af595683945f0e47e0fa742bf5a60",
+   "status": "failed",
+   "family": "example_server_vendor_extensions",
+   "exchange": 0,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload /ExtensionInformation: expected at least 2 fields, received 0; missing ['structure', 'structure']",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "KMIP-TC-1.1-13.1",
+   "messages_sha256": "de128c3db0e6816005e1fe0f55bea71a4b6e68ceb54d4276d20c9fb3d47a19cd",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-13.2",
+   "messages_sha256": "a5f1696a5c6e70468660f03d4d3106c8b9c479761f0eefd2e16e3ed41ea1bbaa",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-13.3",
+   "messages_sha256": "23dafab07adc06c3f4ea145b573a4845ada45f2c95b2d7bb311520003b12c779",
+   "status": "unverified",
+   "family": "transparent_private_key_material_unverifiable",
+   "exchange": null,
+   "reason": "key-material at /ResponseMessage/BatchItem/ResponsePayload/PrivateKey/KeyBlock/KeyValue/KeyMaterial/Modulus: object type unknown for key material; key-material at /ResponseMessage/BatchItem/ResponsePayload/PrivateKey/KeyBlock/KeyValue/KeyMaterial/PrivateExponent: object type unknown for key material; key-material at /ResponseMessage/BatchItem/ResponsePayload/PrivateKey/KeyBlock/KeyValue/KeyMateria",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "KMIP-TC-1.1-13.4",
+   "messages_sha256": "94a77ec69f7097ec68ec0e4a9ee6e8f03d6fe3cc65c735b138c7b81a91cd5f1b",
+   "status": "failed",
+   "family": "certify_needs_named_issuer",
+   "exchange": 3,
+   "reason": "/BatchItem ResultStatus mismatch; reason=12; message='Certify requires a Certificate Link to a caller-owned issuing CA certificate'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "KMIP-TC-1.1-14.1",
+   "messages_sha256": "611ca0a2d3cbb0fcda95f6f1dd6e2a85c11db9d53dccb81294b734f288bc4ab2",
+   "status": "failed",
+   "family": "note_preactive_wrapping_key",
+   "exchange": 2,
+   "reason": "/BatchItem ResultStatus mismatch; reason=12; message='Key lifecycle state forbids this operation'",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-14.2",
+   "messages_sha256": "c20b31b8daa977eb4475185a456fa73199a9c70b094e7d5f3c8366f4ba569b28",
+   "status": "failed",
+   "family": "note_preactive_wrapping_key",
+   "exchange": 2,
+   "reason": "/BatchItem ResultStatus mismatch; reason=12; message='Key lifecycle state forbids this operation'",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-15.1",
+   "messages_sha256": "2ffbe53931d4de2705082b2b0f6e51450aa499cee5a621be3d20be57d72440fb",
+   "status": "failed",
+   "family": "group_member_fresh_not_generated",
+   "exchange": 0,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload/UniqueIdentifier expected 1 fields, received 0; expected ['$LEGACY_UID_0'], received []",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "KMIP-TC-1.1-15.2",
+   "messages_sha256": "e4536614e5d151df3f62179a68a3a1c82e61409fe1883e16bb58aa39f2c94ab0",
+   "status": "failed",
+   "family": "note_empty_placeholder_reason_superseded",
+   "exchange": 6,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 7, received 1",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-15.3",
+   "messages_sha256": "abb6e833125a87d8b19cbf5bb239a5121012cd580bdebd22d1c7db8c75c0c8e9",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-16.1",
+   "messages_sha256": "a0832e053eb02095e0cdb8c9f58e972fc017adb121a24494586ea18e11df13e6",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-17.1",
+   "messages_sha256": "b7d7fd6df96d2d61f5aad2b32218edf46e590be9bda8af1668b0ed7fe3078464",
+   "status": "failed",
+   "family": "note_get_attributes_duplicate_reason",
+   "exchange": 1,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 7, received 4",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "KMIP-TC-1.1-18.1",
+   "messages_sha256": "c2ae539d5faadcaf1ba6ec621b3d25b19203309886e725d0f55e32f1bc6f8445",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "KMIP-TC-1.1-18.2",
+   "messages_sha256": "f65aee59408d0a6806c8f16caf64f258fa2bf0ba9b45f812082088a8c414fc4d",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-311-10",
+   "messages_sha256": "b1fa3f844acec9ed011c66fdd23162b9728beddcbe76693c295a67c63ef378c5",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-312-10",
+   "messages_sha256": "8408451a89368df254588e0280b8f9add7c57980c1effe084b2d71169e96b116",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-313-10",
+   "messages_sha256": "6e1407ab39ec690efe2c83bef855842bce56f41918bb7ebc11ea6b4e3ba9b48f",
+   "status": "failed",
+   "family": "tdes_generation_refused",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=8; message='3DES key generation is disabled by server policy'",
+   "reported": "skipped (configuration: passes with KMIP_TRIPLE_DES=enabled)",
+   "evidence": {
+    "3des": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-314-10",
+   "messages_sha256": "135724e85d92e12dfbc5c3ac69fef6ca80481308ea743953b9da10ac55628323",
+   "status": "failed",
+   "family": "destroyed_object_metadata_retained",
+   "exchange": 9,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 1, received 11",
+   "reported": "not applicable (alternative outcome)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-315-10",
+   "messages_sha256": "ef9de4e06635a9fee73011d1ae0ae2c06ee4e16d8f5f7287a73607324fad2db6",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-32-10",
+   "messages_sha256": "bcff8f4befb4d37ddab663554113d5446c40d66e1600cd1848f4a11add7ea660",
+   "status": "failed",
+   "family": "asynchronous_server_decides",
+   "exchange": 1,
+   "reason": "/BatchItem ResultStatus mismatch; reason=None; message=None",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "TC-41-10",
+   "messages_sha256": "b40c88363ce4780a36e2f9aeb329a7cec98e41bb6161e3c18f8c9415f826c646",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-51-10",
+   "messages_sha256": "b37be21fd18ebc46bcf26768804b9a5a3f523fa3faf698b9fa0930a05ed448a8",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-61-10",
+   "messages_sha256": "ef67de54695164de27528dc2c286690a4c883ebac10823a4fd60fa9cc7e6d2e6",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-71-10",
+   "messages_sha256": "b38921240a9d9d04266a032b1961dd8d8d2c20ffdde84b90ac34de25a3ea425f",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-72-10",
+   "messages_sha256": "530f418eb466148f8b0679c06e7c22214267bf03b17d91b4a001d2cbef42f546",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-81-10",
+   "messages_sha256": "16061af8a9dc87250174e54ff943ba6778c97926c566db71d63b662d0ccfefbb",
+   "status": "failed",
+   "family": "rsa_1024_refused",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=7; message='RSA must be 2048, 3072 or 4096 bits'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-82-10",
+   "messages_sha256": "9819e6a52a45372f6e5e6852c2c5d3603e6b4a057ffcb546e57da4009ef9e907",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-91-10",
+   "messages_sha256": "bae221a25a958628ca22dadfe47d79bcf5ff37dd069beba71b3e3f725be8a7ae",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-92-10",
+   "messages_sha256": "fb92e833ffba0a00054857f9b4ebe20e78d17e648da7434edb2ec711c42c0a20",
+   "status": "failed",
+   "family": "note_fixed_dates_elapsed",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload expected Attribute State not present",
+   "reported": "document defect (no passing correction)",
+   "evidence": {
+    "corrected": {
+     "status": "failed",
+     "detail": "/ResponseMessage/BatchItem/ResponsePayload expected Attribute Activation Date not present",
+     "exchange": 5,
+     "family": "note_1_0_past_activation_date"
+    }
+   }
+  },
+  {
+   "id": "TC-93-10",
+   "messages_sha256": "1b352582afe7ed8a126e6209a2497d73e47f7364047601552e9cde66954b4ab8",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-94-10",
+   "messages_sha256": "7ef2a68cf0dc0b8e9f10834828e4cbe4557394020ff5fc9f8c466de50eb40610",
+   "status": "failed",
+   "family": "note_1_0_past_activation_date",
+   "exchange": 2,
+   "reason": "/BatchItem ResultStatus mismatch; reason=7; message='Deactivation Date precedes Activation Date'",
+   "reported": "document defect (no passing correction)"
+  },
+  {
+   "id": "TC-95-10",
+   "messages_sha256": "b7c5f3e2af5432d393441fcf154a96367c45f9566f48130bb3ac8fb91513315e",
+   "status": "failed",
+   "family": "lease_time_sixteen",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload/LeaseTime value mismatch; expected 16, received 3600",
+   "reported": "skipped (unverifiable)",
+   "evidence": {
+    "lease-16": {
+     "status": "failed",
+     "detail": "/ResponseMessage/BatchItem/ResponsePayload/LeaseTime value mismatch; expected 0, received 16",
+     "exchange": 8,
+     "family": "lease_time_example_server_values"
+    }
+   }
+  },
+  {
+   "id": "TC-101-10",
+   "messages_sha256": "5e84b772438eef8ff37b6046a37f293dfc19ee06d5a77a00dbef3a28759bf0d6",
+   "status": "failed",
+   "family": "asynchronous_server_decides",
+   "exchange": 3,
+   "reason": "/BatchItem ResultStatus mismatch; reason=None; message=None",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "TC-111-10",
+   "messages_sha256": "8d9c2b5cb061b93e4dddbf3b0e14ab2c9e0c903557b0fe83e493db470887ab14",
+   "status": "failed",
+   "family": "credential_users_share_principal",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 12, received 1",
+   "fixture": "header_credentials",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-121-10",
+   "messages_sha256": "285ffd7cb4e2c00fa70db013ab868cfa43e1bf00db035ca1bb4e73031aa1525c",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-131-10",
+   "messages_sha256": "f4c0352394dc3613fb74a209d58a8a8e2dc9ffd91bc342314e3c0e0c0316c271",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-132-10",
+   "messages_sha256": "2a0c4c35391565d89a8f6037b80b10c4d293a96bcb6a543cae8ce6d7d1ee1ff1",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-134-10",
+   "messages_sha256": "7c1519c6993897728f61db93d84bca48e3587834c2246a8fd964404b4a2dbc19",
+   "status": "failed",
+   "family": "certify_needs_named_issuer",
+   "exchange": 3,
+   "reason": "/BatchItem ResultStatus mismatch; reason=12; message='Certify requires a Certificate Link to a caller-owned issuing CA certificate'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-NP-1-10",
+   "messages_sha256": "b167ead97a214558ba6b5dce7b94c6763281430f87b4a1bb7bbe33b84cffd56d",
+   "status": "partial",
+   "family": "server_to_client_operation",
+   "exchange": null,
+   "reason": "server-to-client exchanges [1] not executed; all client-to-server exchanges passed",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-NP-2-10",
+   "messages_sha256": "4a5ab202d89298308648a1a1fc55966ab57d463471f253678f9553048116036b",
+   "status": "partial",
+   "family": "server_to_client_operation",
+   "exchange": null,
+   "reason": "server-to-client exchanges [1, 3, 5, 7] not executed; all client-to-server exchanges passed",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-ECC-1-10",
+   "messages_sha256": "0f980adce93b77dbf8c4314f922a826c076400c1382b9950e37e0c6ed99ec8c5",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-ECC-2-10",
+   "messages_sha256": "bd3d4ba4d5b86021592a215e68401fa82a0ea794de8dbada6f0fae74d7d48fda",
+   "status": "failed",
+   "family": "encrypted_pkcs8_material",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=7; message='Invalid EC material'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-ECC-3-10",
+   "messages_sha256": "d257ac4af057f2375d082aed86aeac9b999928ca016e7b9a8b7affc32a08167f",
+   "status": "failed",
+   "family": "note_register_missing_required_attributes",
+   "exchange": 2,
+   "reason": "/BatchItem ResultStatus mismatch; reason=6; message='Legacy EC certificates require an explicit public-key algorithm'",
+   "reported": "skipped (unverifiable)",
+   "evidence": {
+    "corrected": {
+     "status": "failed",
+     "detail": "/ResponseMessage/BatchItem/ResponsePayload expected Attribute Certificate Identifier not present",
+     "exchange": 5,
+     "family": "certificate_serial_number_text_form"
+    }
+   }
+  },
+  {
+   "id": "TC-311-11",
+   "messages_sha256": "d0476d87f9ebecf67e26e563e1ef34a370f7f2ed4431b3006d15b945ef7f9d2a",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-312-11",
+   "messages_sha256": "c83ca03883df66836fb2f987dbb6986992f7ce3ff7f6d5d7860ed7d8c578a8f7",
+   "status": "failed",
+   "family": "note_template_own_custom_attribute",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=7; message='Attribute does not apply to a Template object'",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-313-11",
+   "messages_sha256": "54d834e8eed61182a055e1c19da9f18dacddd474cde06219461dceb3309c03f4",
+   "status": "failed",
+   "family": "tdes_generation_refused",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=8; message='3DES key generation is disabled by server policy'",
+   "reported": "skipped (configuration: passes with KMIP_TRIPLE_DES=enabled)",
+   "evidence": {
+    "3des": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-314-11",
+   "messages_sha256": "9bd4f9c7bd732a63973ee126ef6c08505732969b3494addbf3a149a162a0b4ef",
+   "status": "failed",
+   "family": "destroyed_object_metadata_retained",
+   "exchange": 9,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 1, received 11",
+   "reported": "not applicable (alternative outcome)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-315-11",
+   "messages_sha256": "26d4c2613ee8bc43d15806b7aa2ea0978735ca47ed9e1ff2246af02349562cba",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-32-11",
+   "messages_sha256": "49b313fec0b13aa0bd9f26af12b4ae76f243dc874f0eefe046ba77b90bcfda7b",
+   "status": "failed",
+   "family": "asynchronous_server_decides",
+   "exchange": 1,
+   "reason": "/BatchItem ResultStatus mismatch; reason=None; message=None",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "TC-41-11",
+   "messages_sha256": "dcb6fc5736e24d050d74088350fc806912d01c467a3fbb8f40844b7df3b96fb5",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-51-11",
+   "messages_sha256": "a711e6504929494a9d6fe27f17c1b0de095f1cb1b9ad37011ca06e133e253010",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-61-11",
+   "messages_sha256": "0204074710b1c4ab74200667bb4d094accfc56ecd7a9bfd41f0e027f289e8aa3",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-71-11",
+   "messages_sha256": "fbad34d1f516f5dd76d6391171bb1cce3a7f3cfbe473918692e0920399368ce4",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-72-11",
+   "messages_sha256": "ff4d73b911b063193dc3bc7083ff179739615f72dcc53bc7b97629e2dc4f4bbb",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-81-11",
+   "messages_sha256": "9264340bf09de252ffef5ba3e18aa62d723ebd74f3700303a56f99b699a02592",
+   "status": "failed",
+   "family": "rsa_1024_refused",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=7; message='RSA must be 2048, 3072 or 4096 bits'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-82-11",
+   "messages_sha256": "3da1cad158b4931ca78f7f26826ce249dd554a6ec4819988289a6db253a568b9",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-91-11",
+   "messages_sha256": "c1fb174680584d2fcf748f24716ab0e89e0e58c9d1f1f6a6abc7890f662655b0",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-92-11",
+   "messages_sha256": "da57a772a16b41498bcf15887f1770f1c64ba14f77371910d8b6182ec9610946",
+   "status": "passed",
+   "fixture": "elapse_deactivation",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-93-11",
+   "messages_sha256": "a743ea549f52a5303e98a4e78fbbdd6ac07c8cf3ac8d4c301e2a9ece68bd0fb9",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-94-11",
+   "messages_sha256": "4360ac6bc9360740229d2a744667e0b9e8d967f6b981e05d6b097e4835c8aecb",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-95-11",
+   "messages_sha256": "2b1c7d52da42b2e5606adf3088cabcd7144d9471d2633a63c168fb161be3aeb7",
+   "status": "failed",
+   "family": "lease_time_zero",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload/LeaseTime value mismatch; expected 0, received 3600",
+   "reported": "skipped (configuration: passes with KMIP_MAX_LEASE_SECONDS=0)",
+   "evidence": {
+    "lease-0": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-101-11",
+   "messages_sha256": "644aeae13fcee1bac41d6e7e47502cdc31e16190f88f0c6b295edd79c60b72a7",
+   "status": "failed",
+   "family": "asynchronous_server_decides",
+   "exchange": 3,
+   "reason": "/BatchItem ResultStatus mismatch; reason=None; message=None",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "TC-111-11",
+   "messages_sha256": "862f1c704224d5a8f1b5129ba0504f21a1223ac9f5b860d24a97719f9fd387fe",
+   "status": "failed",
+   "family": "credential_users_share_principal",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 12, received 1",
+   "fixture": "header_credentials",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-112-11",
+   "messages_sha256": "b9cd24a875c41d35278943c55f98486e2c393433aa416f00796ce622755caf3c",
+   "status": "failed",
+   "family": "credential_users_share_principal",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 12, received 1",
+   "fixture": "header_credentials",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-121-11",
+   "messages_sha256": "2008fd72cee3e29bc08a86302a1446c4547c601d79688df86f28ca7c08d010e6",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-122-11",
+   "messages_sha256": "5bb3fa27925768584e34682e1e077a196146d2130ab453f76b9d5f51302cdca4",
+   "status": "failed",
+   "family": "example_server_vendor_extensions",
+   "exchange": 0,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload /ExtensionInformation: expected at least 2 fields, received 0; missing ['structure', 'structure']",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-131-11",
+   "messages_sha256": "f09ca163c28353a2c150fd2da520f0282336e1cd6f7f915a83fcf721f35fc27e",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-132-11",
+   "messages_sha256": "a756baf5772278f3a95eb1118620aa7592779fa41e21c23d7937da8b931d65e2",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-133-11",
+   "messages_sha256": "9c668fa7b2cbc2d235e1a9a0a9fe79e5bebc11049d8ff968cffcc4df55e985a2",
+   "status": "unverified",
+   "family": "transparent_private_key_material_unverifiable",
+   "exchange": null,
+   "reason": "key-material at /ResponseMessage/BatchItem/ResponsePayload/PrivateKey/KeyBlock/KeyValue/KeyMaterial/Modulus: object type unknown for key material; key-material at /ResponseMessage/BatchItem/ResponsePayload/PrivateKey/KeyBlock/KeyValue/KeyMaterial/PrivateExponent: object type unknown for key material; key-material at /ResponseMessage/BatchItem/ResponsePayload/PrivateKey/KeyBlock/KeyValue/KeyMateria",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-134-11",
+   "messages_sha256": "1abf12d31bf990664c8df00538937b0a06e9f9862d54c989a0a35f663caa2682",
+   "status": "failed",
+   "family": "certify_needs_named_issuer",
+   "exchange": 3,
+   "reason": "/BatchItem ResultStatus mismatch; reason=12; message='Certify requires a Certificate Link to a caller-owned issuing CA certificate'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-141-11",
+   "messages_sha256": "3803fc3c9bcc96a1aefcec21983780b0f782943cd97cb58e3df617cb439ec86f",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-142-11",
+   "messages_sha256": "8e7b540b688dec277dda7213d932e6267b8aae6ee36009b8a6e529d604adbf81",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-151-11",
+   "messages_sha256": "3f665346cfef81b2bc24b140eadf5dfe78cbca2b4ea0327b151e55e8d31a7f60",
+   "status": "failed",
+   "family": "group_member_fresh_not_generated",
+   "exchange": 0,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload/UniqueIdentifier expected 1 fields, received 0; expected ['$UNIQUE_IDENTIFIER_0'], received []",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "TC-152-11",
+   "messages_sha256": "fd65b29c5c20198c73950477f6f8f62b75497fd286b5fc1ec12dca32f8cb6393",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-153-11",
+   "messages_sha256": "89883c63caf8bf33d326a117e65e3c7320e978a11fb9ddd820869ffd1bbbd426",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-161-11",
+   "messages_sha256": "c67720193e2f78ceefa4143b75879d12ec5f57d767e92fb8c7efe3d6cc2d72d8",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-171-11",
+   "messages_sha256": "cebf0e97b5fd5538cb6a75b832a5c2176527f07253f9623db83ecba4bf934c51",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-181-11",
+   "messages_sha256": "1ecc64a942b524695a98bbec93c1e61966f1761c03329d6648527ceb8a230741",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-182-11",
+   "messages_sha256": "ce8fb3d76d41481cfc055c19df9f3ebfe6e394ff05afda9d7958c7e04f518a56",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-NP-1-11",
+   "messages_sha256": "8eb1a06d34a0991193c8da8e948969242a26c97d5141a567f2270309e0494f62",
+   "status": "partial",
+   "family": "server_to_client_operation",
+   "exchange": null,
+   "reason": "server-to-client exchanges [1] not executed; all client-to-server exchanges passed",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-NP-2-11",
+   "messages_sha256": "492eb86e77af90716e594cfe07c8d6b7e728bed206060ffacd46f4efad708211",
+   "status": "partial",
+   "family": "server_to_client_operation",
+   "exchange": null,
+   "reason": "server-to-client exchanges [1, 3, 5, 7] not executed; all client-to-server exchanges passed",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-ECC-1-11",
+   "messages_sha256": "2973fb829c00146e3e109d7556254a2d089be0afc04971605709d8e0f365ba6e",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-ECC-2-11",
+   "messages_sha256": "78d5b8174abf66e2ceb9e77129fea0901778d3c12875d0dbd882d8c21ddc17ff",
+   "status": "failed",
+   "family": "encrypted_pkcs8_material",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=7; message='Invalid EC material'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-ECC-3-11",
+   "messages_sha256": "9c7c7bca5c86dfa91670c06ca2ab87e5796c73c11ada04efbad2688d93014d07",
+   "status": "failed",
+   "family": "note_register_missing_required_attributes",
+   "exchange": 2,
+   "reason": "/BatchItem ResultStatus mismatch; reason=6; message='Legacy EC certificates require an explicit public-key algorithm'",
+   "reported": "document defect (no passing correction)",
+   "evidence": {
+    "corrected": {
+     "status": "failed",
+     "detail": "/ResponseMessage/BatchItem/ResponsePayload expected Attribute X.509 Certificate Identifier not present",
+     "exchange": 5,
+     "family": "note_response_describes_other_certificate"
+    }
+   }
+  },
+  {
+   "id": "TC-311-12",
+   "messages_sha256": "0804e9b68ccacb5785a34430ee8fd9397bdb888f7739e43ca64ce59a38c03679",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-312-12",
+   "messages_sha256": "299b4857f0dfa0c4677be2c634c7cc1cb7d62d692f9c921cd1dd99f022c4a073",
+   "status": "failed",
+   "family": "note_template_lease_time",
+   "exchange": 3,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload /Attribute: expected at least 7 fields, received 6; missing ['initialdate', 'lastchangedate', 'leasetime', 'name', 'objecttype', 'uniqueidentifier', 'xid']",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-313-12",
+   "messages_sha256": "6712d77f3af15fa25b7f77a6788989c5f53de0bd49b16c8eb9edf99ef910d3fe",
+   "status": "failed",
+   "family": "tdes_generation_refused",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=8; message='3DES key generation is disabled by server policy'",
+   "reported": "skipped (configuration: passes with KMIP_TRIPLE_DES=enabled)",
+   "evidence": {
+    "3des": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-314-12",
+   "messages_sha256": "a66f9cdab04770d663b161833c119ec739a3a6b4660a50f5fad4f376c92717d6",
+   "status": "failed",
+   "family": "destroyed_object_metadata_retained",
+   "exchange": 9,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 1, received 11",
+   "reported": "not applicable (alternative outcome)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-315-12",
+   "messages_sha256": "1092199a0dac55f769770194ccfdf08c028298007b0c8e22f2677b97545f513d",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-32-12",
+   "messages_sha256": "6d841c431a5013627205e5073acc442a2e82af34f2edfb4ca6925d73de40b40f",
+   "status": "failed",
+   "family": "asynchronous_server_decides",
+   "exchange": 1,
+   "reason": "/BatchItem ResultStatus mismatch; reason=None; message=None",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "TC-41-12",
+   "messages_sha256": "68235a96c3a1aced0d81175ce2b13a24c813c4b6016c933d430f15cb8a0d818e",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-51-12",
+   "messages_sha256": "a41d901fa8bcda7012be7c061716cd22e1d015f28f4453562caf2ea36c0634ff",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-61-12",
+   "messages_sha256": "ec867824d61539646abd470aeff07b8a05d6877543201405e5ab885c5f3be12b",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-71-12",
+   "messages_sha256": "6d705da79d73406bd53f2d75a5e157d428ce455d1804fe7f8d804dce2a2db49e",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-72-12",
+   "messages_sha256": "28bd9bbea3c886ce6bbb96ecc216bf0c27a7206a2646292f202ad96b89147ca6",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-81-12",
+   "messages_sha256": "bbc8441995b9c63d9ec72b75ae7a96145c19a339be6d8b2ccaca93dbc347b294",
+   "status": "failed",
+   "family": "rsa_1024_refused",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=7; message='RSA must be 2048, 3072 or 4096 bits'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-82-12",
+   "messages_sha256": "67b4372739c74dcb30125dbae2a8b58f7742ff334e53d9c82f93a238541562ce",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-91-12",
+   "messages_sha256": "0f212f1b04421bb3408e101578d2dfc7598e777940bad5ef94c446dd4ac69ac7",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-92-12",
+   "messages_sha256": "d66615380b9ab253f1f43d2415104bca387d08f1a9a25f6ddfca614824e0226c",
+   "status": "passed",
+   "fixture": "elapse_deactivation",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-93-12",
+   "messages_sha256": "a9436ba6b25cc68fd288a2c4591f1b3d224ba1b8eaba45e66de44f8c9db8bf69",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-94-12",
+   "messages_sha256": "6dc9a9f36bdd54ed04bab2bb789bb4849697a58c6e44d41df60c8a2e216ba016",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-95-12",
+   "messages_sha256": "e20a88dcf92c44fd5247b6e3a8ca2c2007ae9c295aa4af9e922b750760ff3e1b",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-101-12",
+   "messages_sha256": "9487593edafcbdf695ae249166e045c926d9af79ca861e2796ee5e19d12fdd18",
+   "status": "failed",
+   "family": "asynchronous_server_decides",
+   "exchange": 3,
+   "reason": "/BatchItem ResultStatus mismatch; reason=None; message=None",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "TC-111-12",
+   "messages_sha256": "4901d02306d22c19b7257158ac16dcc3833ac41b77054f1b9433d0c57bfa184e",
+   "status": "failed",
+   "family": "credential_users_share_principal",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 12, received 1",
+   "fixture": "header_credentials",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-112-12",
+   "messages_sha256": "300ed6a25f18a745e3aa966c190f4a6720cdcab704b1cb54f2fc813c02340564",
+   "status": "failed",
+   "family": "credential_users_share_principal",
+   "exchange": 2,
+   "reason": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 12, received 1",
+   "fixture": "header_credentials",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-121-12",
+   "messages_sha256": "57ea567e522701b46267c4a1d1c5514a1d8c070c9dd1c8d5cdb3b009669e5887",
+   "status": "failed",
+   "family": "example_server_query_with_notify_put",
+   "exchange": 1,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload expected Operation Notify not present; received Create, CreateKeyPair, Register, Rekey, DeriveKey, Certify, Recertify, Locate, Check, Get, GetAttributes, GetAttributeList, AddAttribute, ModifyAttribute, DeleteAttribute, ObtainLease, GetUsageAllocation, Activate, Revoke, Destroy, Archive, Recover, Validate, Query, Cancel, Poll, RekeyKeyPair, DiscoverVersio",
+   "reported": "skipped (configuration: passes with a client_endpoint for Notify and Put in the policy file)",
+   "evidence": {
+    "client-endpoint": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-122-12",
+   "messages_sha256": "24295089418cef074cc961d86199df20fe48cbbe2eaa3f1b48089379dce5cdc1",
+   "status": "failed",
+   "family": "example_server_vendor_extensions",
+   "exchange": 0,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload /ExtensionInformation: expected at least 2 fields, received 0; missing ['structure', 'structure']",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-131-12",
+   "messages_sha256": "5cae40efcf6178fcc3a107a155a6fb4b52ae93370d8b764726eaef61375480be",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-132-12",
+   "messages_sha256": "f3193c32accab001eb51ed26160cc6d68dfc39ffca6de91e3a6b424c02c0e1f6",
+   "status": "failed",
+   "family": "certificate_serial_number_text_form",
+   "exchange": 5,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload expected Attribute Certificate Identifier not present",
+   "reported": "skipped (unverifiable)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-133-12",
+   "messages_sha256": "905c37aa5ded95f3228ac2b77f892248513055340ca69867ec74f7209b267b96",
+   "status": "unverified",
+   "family": "transparent_private_key_material_unverifiable",
+   "exchange": null,
+   "reason": "key-material at /ResponseMessage/BatchItem/ResponsePayload/PrivateKey/KeyBlock/KeyValue/KeyMaterial/Modulus: object type unknown for key material; key-material at /ResponseMessage/BatchItem/ResponsePayload/PrivateKey/KeyBlock/KeyValue/KeyMaterial/PrivateExponent: object type unknown for key material; key-material at /ResponseMessage/BatchItem/ResponsePayload/PrivateKey/KeyBlock/KeyValue/KeyMateria",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-134-12",
+   "messages_sha256": "d9cdcbd7597345a7dbc3e8e42fdcc93f68cd89a83f807e3ff18fc4e438aec8de",
+   "status": "failed",
+   "family": "certify_needs_named_issuer",
+   "exchange": 3,
+   "reason": "/BatchItem ResultStatus mismatch; reason=12; message='Certify requires a Certificate Link to a caller-owned issuing CA certificate'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-141-12",
+   "messages_sha256": "b8acfb3f9556faae159c627009e5627ee7ff3d43bf25f07fb2fb77aaa1a549ee",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-142-12",
+   "messages_sha256": "92990d52ad169e40ce69b140d58acda25543d69ee57ad2c52992c9aacfd27c02",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-151-12",
+   "messages_sha256": "f66dee71e5c8c7a239d7df4dd54ac7af464494dac2ca0f1fdf9fa21c5fc33be6",
+   "status": "failed",
+   "family": "group_member_fresh_not_generated",
+   "exchange": 0,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload/UniqueIdentifier expected 1 fields, received 0; expected ['$UNIQUE_IDENTIFIER_0'], received []",
+   "reported": "not applicable (alternative outcome)"
+  },
+  {
+   "id": "TC-152-12",
+   "messages_sha256": "4e72efe701f6a74806abdf1923c2b0f4436d5136c6f75ba86df0f5e59bc16f26",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-153-12",
+   "messages_sha256": "7e7a0e33587efe5de6c47136ccc71681c709869935398d1ea3281f4a5fa24147",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-161-12",
+   "messages_sha256": "e121f3a6ea933350c0d30c7f7cb1cc6ae0a65ae5528dbefbb0d0af5325f0187f",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-171-12",
+   "messages_sha256": "730a7d7a387b13b917074fa3cb3ff62ab25571edcf84dd308669ce6f72cf9b0b",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-181-12",
+   "messages_sha256": "0b451b6e46e9e8b2a155cb29d14484bd4ee5fa60f23d6ec6ee42b7710d9e7ca2",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-182-12",
+   "messages_sha256": "c144455d22339925d3648081c407788696939d1c225c898f6829901a56a957a0",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-NP-1-12",
+   "messages_sha256": "78679e634327c20cb83a4138c0315720a26536d42038b60f1b4ec78fadfa250c",
+   "status": "partial",
+   "family": "server_to_client_operation",
+   "exchange": null,
+   "reason": "server-to-client exchanges [1] not executed; all client-to-server exchanges passed",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-NP-2-12",
+   "messages_sha256": "9e367dcf53425e8f488bc216d1f5742c5c2cf4877a3a6b75fa0b50a5279e900e",
+   "status": "partial",
+   "family": "server_to_client_operation",
+   "exchange": null,
+   "reason": "server-to-client exchanges [1, 3, 5, 7] not executed; all client-to-server exchanges passed",
+   "reported": "skipped (unverifiable)"
+  },
+  {
+   "id": "TC-ECC-1-12",
+   "messages_sha256": "429db218a6a9e4db4bc86769fbc716fa2d9726a9e7ff83096e43fcabb1192d24",
+   "status": "failed",
+   "family": "extended_ec_curves",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=8; message='Unsupported EC curve'",
+   "reported": "skipped (configuration: passes with KMIP_EC_CURVES=extended)",
+   "evidence": {
+    "ec-extended": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-ECC-2-12",
+   "messages_sha256": "6fc002a045dd67aa5052dc5bdae17e98ef1a7ca73bdc137c56904cf694851d4a",
+   "status": "failed",
+   "family": "encrypted_pkcs8_material",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=7; message='Invalid EC material'",
+   "reported": "documented deviation"
+  },
+  {
+   "id": "TC-ECC-3-12",
+   "messages_sha256": "1c08b81f45a3dd0268545523987c8c698e11c9a056bd62a1848a128ef5af3de5",
+   "status": "failed",
+   "family": "extended_ec_curves",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=8; message='Unsupported EC curve'",
+   "reported": "skipped (configuration: passes with KMIP_EC_CURVES=extended)",
+   "evidence": {
+    "ec-extended": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-PGP-1-12",
+   "messages_sha256": "1eee761012cb4c5dc8e91c17b3259d95f948c3679cabe11fb59699e923a82db6",
+   "status": "failed",
+   "family": "note_register_missing_required_attributes",
+   "exchange": 0,
+   "reason": "/BatchItem ResultStatus mismatch; reason=6; message='PGP algorithm, length, usage mask and signature metadata are required'",
+   "reported": "document defect (no passing correction)"
+  },
+  {
+   "id": "TC-MDO-1-12",
+   "messages_sha256": "1611d6955356401a32fb86fc5983db8031c5684b9282c83d1d2c7a4190c45009",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-MDO-2-12",
+   "messages_sha256": "d6d9bca3baf9d60a88cfb9e9cb1f872005d5714a8de97a087e755439a673c2fa",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-MDO-3-12",
+   "messages_sha256": "6371c016baf25062b2a6146aa852bdca821df804757d968fff49466965cc95a9",
+   "status": "passed",
+   "reported": "passed"
+  },
+  {
+   "id": "TC-SJ-1-12",
+   "messages_sha256": "a851d0ce3e6d089cc3ed84a5a9a41f3e81988ca3a9b0dc1852a7863ba30c23f4",
+   "status": "failed",
+   "family": "note_split_key_response_omits_object_type",
+   "exchange": 1,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload unexpected response field ObjectType",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-SJ-2-12",
+   "messages_sha256": "dd5d9067beb3a7bcdeef413f6da1a4d62735fb915373203973f677a761868641",
+   "status": "failed",
+   "family": "note_split_key_response_omits_object_type",
+   "exchange": 1,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload unexpected response field ObjectType",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-SJ-3-12",
+   "messages_sha256": "d936dc3ba520fb325cc9a3029f9c1f852d793acfdc36c28971b9c4de2e169776",
+   "status": "failed",
+   "family": "note_split_key_response_omits_object_type",
+   "exchange": 4,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload unexpected response field ObjectType",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  },
+  {
+   "id": "TC-SJ-4-12",
+   "messages_sha256": "69bbb37d4f07bbf2e9cdd961c84c23ba9502a129d241d6ae37072e3fcdd11a26",
+   "status": "failed",
+   "family": "note_split_key_response_omits_object_type",
+   "exchange": 1,
+   "reason": "/ResponseMessage/BatchItem/ResponsePayload unexpected response field ObjectType",
+   "reported": "passed (corrected document)",
+   "evidence": {
+    "corrected": {
+     "status": "passed"
+    }
+   }
+  }
+ ],
+ "reported_counts": {
+  "document defect (no passing correction)": 6,
+  "documented deviation": 18,
+  "not applicable (alternative outcome)": 15,
+  "passed": 78,
+  "passed (corrected document)": 14,
+  "skipped (configuration: passes with KMIP_EC_CURVES=extended)": 2,
+  "skipped (configuration: passes with KMIP_MAX_LEASE_SECONDS=0 and a corrected document)": 1,
+  "skipped (configuration: passes with KMIP_MAX_LEASE_SECONDS=0)": 1,
+  "skipped (configuration: passes with KMIP_TRIPLE_DES=enabled)": 4,
+  "skipped (configuration: passes with a client_endpoint for Notify and Put in the policy file)": 1,
+  "skipped (unverifiable)": 15
+ },
+ "evidence_runs": {
+  "corrected": {
+   "selection": [
+    "TC-SJ-1-12",
+    "TC-SJ-2-12",
+    "TC-SJ-3-12",
+    "TC-SJ-4-12",
+    "KMIP-TC-1.1-12.1",
+    "KMIP-TC-1.1-17.1",
+    "KMIP-TC-1.1-15.2",
+    "KMIP-TC-1.1-14.1",
+    "KMIP-TC-1.1-14.2",
+    "KMIP-TC-1.1-5.1",
+    "KMIP-TC-1.1-9.2",
+    "KMIP-TC-1.1-9.4",
+    "TC-92-10",
+    "KMIP-TC-1.1-3.1.4",
+    "TC-314-10",
+    "TC-314-11",
+    "TC-314-12",
+    "TC-312-11",
+    "TC-312-12",
+    "TC-132-12",
+    "TC-ECC-3-10",
+    "TC-ECC-3-11"
+   ],
+   "runtime_binary_sha256": "9ea85f5af983aa91b7d1692b7c27264b60fdc69095cfd461ca8b59a6b2ab58c6",
+   "corrections_sha256": "b8f6da8ba491e0b6047aeaa3f2d1d59a2c9c78b7db6834175f06a4746df8c38e",
+   "finished_utc": "2026-10-30T13:17:56.793630+00:00",
+   "summary": {
+    "passed": 19,
+    "unverified": 0,
+    "failed": 3,
+    "partial": 0,
+    "document_defect": 0
+   }
+  },
+  "3des": {
+   "selection": [
+    "KMIP-TC-1.1-3.1.3",
+    "TC-313-10",
+    "TC-313-11",
+    "TC-313-12"
+   ],
+   "runtime_binary_sha256": "9ea85f5af983aa91b7d1692b7c27264b60fdc69095cfd461ca8b59a6b2ab58c6",
+   "corrections_sha256": "b8f6da8ba491e0b6047aeaa3f2d1d59a2c9c78b7db6834175f06a4746df8c38e",
+   "finished_utc": "2026-10-30T13:13:53.377417+00:00",
+   "summary": {
+    "passed": 4,
+    "unverified": 0,
+    "failed": 0,
+    "partial": 0,
+    "document_defect": 0
+   }
+  },
+  "lease-0": {
+   "selection": [
+    "KMIP-TC-1.1-9.5",
+    "TC-95-11"
+   ],
+   "runtime_binary_sha256": "9ea85f5af983aa91b7d1692b7c27264b60fdc69095cfd461ca8b59a6b2ab58c6",
+   "corrections_sha256": "b8f6da8ba491e0b6047aeaa3f2d1d59a2c9c78b7db6834175f06a4746df8c38e",
+   "finished_utc": "2026-10-30T13:13:55.117937+00:00",
+   "summary": {
+    "passed": 1,
+    "unverified": 0,
+    "failed": 1,
+    "partial": 0,
+    "document_defect": 0
+   }
+  },
+  "lease-0+corrected": {
+   "selection": [
+    "KMIP-TC-1.1-9.5"
+   ],
+   "runtime_binary_sha256": "9ea85f5af983aa91b7d1692b7c27264b60fdc69095cfd461ca8b59a6b2ab58c6",
+   "corrections_sha256": "b8f6da8ba491e0b6047aeaa3f2d1d59a2c9c78b7db6834175f06a4746df8c38e",
+   "finished_utc": "2026-10-30T13:13:56.741311+00:00",
+   "summary": {
+    "passed": 1,
+    "unverified": 0,
+    "failed": 0,
+    "partial": 0,
+    "document_defect": 0
+   }
+  },
+  "lease-16": {
+   "selection": [
+    "TC-95-10"
+   ],
+   "runtime_binary_sha256": "9ea85f5af983aa91b7d1692b7c27264b60fdc69095cfd461ca8b59a6b2ab58c6",
+   "corrections_sha256": "b8f6da8ba491e0b6047aeaa3f2d1d59a2c9c78b7db6834175f06a4746df8c38e",
+   "finished_utc": "2026-10-30T13:13:58.385675+00:00",
+   "summary": {
+    "passed": 0,
+    "unverified": 0,
+    "failed": 1,
+    "partial": 0,
+    "document_defect": 0
+   }
+  },
+  "client-endpoint": {
+   "selection": [
+    "TC-121-12"
+   ],
+   "runtime_binary_sha256": "9ea85f5af983aa91b7d1692b7c27264b60fdc69095cfd461ca8b59a6b2ab58c6",
+   "corrections_sha256": "b8f6da8ba491e0b6047aeaa3f2d1d59a2c9c78b7db6834175f06a4746df8c38e",
+   "finished_utc": "2026-10-30T13:14:00.023582+00:00",
+   "summary": {
+    "passed": 1,
+    "unverified": 0,
+    "failed": 0,
+    "partial": 0,
+    "document_defect": 0
+   }
+  },
+  "ec-extended": {
+   "selection": [
+    "TC-ECC-1-12",
+    "TC-ECC-3-12"
+   ],
+   "runtime_binary_sha256": "09f51c1b092abd3abe87b917ed541469c1a0a9936efdd27761f4d3ff9a6714ad",
+   "corrections_sha256": "b8f6da8ba491e0b6047aeaa3f2d1d59a2c9c78b7db6834175f06a4746df8c38e",
+   "finished_utc": "2026-11-01T16:25:08.583891+00:00",
+   "summary": {
+    "passed": 2,
+    "unverified": 0,
+    "failed": 0,
+    "partial": 0,
+    "document_defect": 0
+   }
+  }
+ }
+}

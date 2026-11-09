@@ -1,0 +1,172 @@
+{
+  "client": "keytend-kmip",
+  "repository": "keytend/keytend-kmip-java",
+  "tag": "v0.9.1",
+  "version": "0.9.1",
+  "commit": "036e1c561d4b2e4ec3ea6cc10a794b5fed6a95b4",
+  "java_release": 17,
+  "asset": "keytend-kmip-0.9.1.zip",
+  "asset_bytes": 11222898,
+  "asset_sha256": "e7b456ea7d4fc32b8ae54a4f730fdc78b463de1a9a52019903e6e2366b37269e",
+  "checksum_sha256": "e1e1a61ad9fb7ff54c3c995702963476a4c8a749884a051c5a5822030440c175",
+  "sums_sha256": "0a6264fadd037b48ee84f1fe1c043960776429d59d14ca8c751e3245bccc7d0c",
+  "url": "https://github.com/keytend/keytend-kmip-java/releases/download/v0.9.1/keytend-kmip-0.9.1.zip",
+  "openpgp": {
+    "primary": "3A84912AFBE7D2B04EBA2A8A51E65DD49C6F987F",
+    "signed": [
+      "keytend-kmip-0.9.1.zip",
+      "SHA256SUMS"
+    ],
+    "note": "each .asc must verify against signing/keytend-release-key.asc with the release key as primary"
+  },
+  "sdk_jar": "lib/keytend-kmip-0.9.1.jar",
+  "integration_jar": "lib/keytend-kmip-integration-0.9.1.jar",
+  "runtime_jars": [
+    "lib/slf4j-api-2.0.20.jar",
+    "lib/jackson-core-3.2.4.jar"
+  ],
+  "artifacts": [
+    {
+      "path": "lib/keytend-kmip-0.9.1.jar",
+      "sha256": "a52c2cb52ebb0e99e17409978e8a7947ea1a225ea4c4a2e1e4772fdca5db1c9d",
+      "bytes": 2299024
+    },
+    {
+      "path": "lib/keytend-kmip-0.9.1-sources.jar",
+      "sha256": "bcbd9876705a0a405251fd1fa416f51762ffdd93d852e95231c5b8e52e9370fc",
+      "bytes": 1682598
+    },
+    {
+      "path": "lib/keytend-kmip-0.9.1-javadoc.jar",
+      "sha256": "7dfc744a59094602b9725d312fe32c24393dc87adc1146140709118baf62022d",
+      "bytes": 1421278
+    },
+    {
+      "path": "lib/keytend-kmip-micrometer-0.9.1.jar",
+      "sha256": "2327c6406abc4ea3e7c44e8378f6eb86a59ebd888353ffd427f192dfd8d3e1c2",
+      "bytes": 30933
+    },
+    {
+      "path": "lib/keytend-kmip-micrometer-0.9.1-sources.jar",
+      "sha256": "5fb6e319451e9dca1c4cf69e2a72dd7616bbc0cf82e4b0ef54fda5e15837b2ce",
+      "bytes": 25214
+    },
+    {
+      "path": "lib/keytend-kmip-micrometer-0.9.1-javadoc.jar",
+      "sha256": "83e9281263ddc2f97919fb04edd7dae098de6e20b08a3ac09bf4e5ad99cef73d",
+      "bytes": 100731
+    },
+    {
+      "path": "lib/keytend-kmip-opentelemetry-0.9.1.jar",
+      "sha256": "b9582a2042c337a946f805036ba3c52e646c96da77910a61a7aa1e6c64eca4b9",
+      "bytes": 41001
+    },
+    {
+      "path": "lib/keytend-kmip-opentelemetry-0.9.1-sources.jar",
+      "sha256": "23da04f0c09a7fd2bdd7fbaba1ea347600349cd096e34389f767df89650223a2",
+      "bytes": 32570
+    },
+    {
+      "path": "lib/keytend-kmip-opentelemetry-0.9.1-javadoc.jar",
+      "sha256": "d4f3fae646f81cfa25c7027229bd88e944f93b306c96c69827e1dca51a6b5605",
+      "bytes": 106037
+    },
+    {
+      "path": "lib/keytend-kmip-cli-0.9.1.jar",
+      "sha256": "c3acd4e0117a4f1b5c14edf792d6b9ee49aa6ca9d6a4b1dc9fc127e79ee73908",
+      "bytes": 163290
+    },
+    {
+      "path": "lib/keytend-kmip-cli-0.9.1-sources.jar",
+      "sha256": "095209d13248e88a13c8e7870eff188eeacd54a0fbebb5cf4d277951a348e5d9",
+      "bytes": 86831
+    },
+    {
+      "path": "lib/keytend-kmip-cli-0.9.1-javadoc.jar",
+      "sha256": "e656aad47182a1a6af82ef044e7f52448d89012d6fe7387cfff26fb5c6df50bf",
+      "bytes": 87508
+    },
+    {
+      "path": "lib/keytend-kmip-integration-0.9.1.jar",
+      "sha256": "8422dc01ba1a3db199cc03c0f6702b8e1269b6c7f80c80007812b35fe7160ea3",
+      "bytes": 240933
+    },
+    {
+      "path": "lib/keytend-kmip-integration-0.9.1-sources.jar",
+      "sha256": "3f05e6234f0d2bffbd9ab5704273d647ceaf32a05f37b67dfd51520a6c358cb2",
+      "bytes": 119222
+    },
+    {
+      "path": "lib/keytend-kmip-integration-0.9.1-javadoc.jar",
+      "sha256": "faae14cadd92e0c600eecf0b2cebe99d57e0beaff4e9e1e44f6f86cc7dca8220",
+      "bytes": 152283
+    },
+    {
+      "path": "lib/jackson-core-3.2.4.jar",
+      "sha256": "494b9f5fccf008042d5a72c5bf00629b144c0ba7362a9864cbb02234c9772651",
+      "bytes": 613344
+    },
+    {
+      "path": "lib/picocli-4.7.7.jar",
+      "sha256": "f86e30fffd10d2b13b8caa8d4b237a7ee61f2ffccf5b1941de718b765d235bf8",
+      "bytes": 417640
+    },
+    {
+      "path": "lib/slf4j-api-2.0.20.jar",
+      "sha256": "7e1446499b359675d8aabe6af2de86b85e72ae8a2a932c0b40d0e5ba57097439",
+      "bytes": 70255
+    },
+    {
+      "path": "lib/slf4j-simple-2.0.20.jar",
+      "sha256": "8e701404786a4f87219d39d4853c86dfe4e86ae99376a39749df6c08e75022e0",
+      "bytes": 15705
+    },
+    {
+      "path": "lib/keytend-kmip-0.9.1-cyclonedx.json",
+      "sha256": "274d4d5a7c00c1754bbced4b0d19d1696d38f2402e1efdba321b7ac2b9ed4834",
+      "bytes": 8125
+    },
+    {
+      "path": "lib/keytend-kmip-micrometer-0.9.1-cyclonedx.json",
+      "sha256": "c4f904d301e2b9bd75d9e68c7d2790a5e816b3060c2a8274359fa06e463467af",
+      "bytes": 19911
+    },
+    {
+      "path": "lib/keytend-kmip-opentelemetry-0.9.1-cyclonedx.json",
+      "sha256": "e3ea83072de491bb126298a1853acc6aff7d650141e2d739a4790bcea1a68b67",
+      "bytes": 14789
+    },
+    {
+      "path": "lib/keytend-kmip-cli-0.9.1-cyclonedx.json",
+      "sha256": "5a5d953cdc82c9e0d9687e78b87cd66c61ab993eb3755599e9ebd0c91aba23f5",
+      "bytes": 15571
+    },
+    {
+      "path": "lib/keytend-kmip-integration-0.9.1-cyclonedx.json",
+      "sha256": "9143fd2c2f9385e6fb71cd58e3d0ae446f315475ab28c17b4834812e4afc30ff",
+      "bytes": 13281
+    }
+  ],
+  "previous": {
+    "version": "0.9",
+    "tag": "v0.9",
+    "commit": "6fc27dc2bdd954546936d8d4004e110d5df6ad9b",
+    "asset": "keytend-kmip-0.9.zip",
+    "asset_bytes": 11181935,
+    "asset_sha256": "4a6c0f3805ef8656be4d0be5caacb3fce2c3935ff7b161d6cb1863955b97f79b",
+    "url": "https://github.com/keytend/keytend-kmip-java/releases/download/v0.9/keytend-kmip-0.9.zip",
+    "sdk_jar": "keytend-kmip-0.9/lib/keytend-kmip-0.9.jar",
+    "sdk_jar_sha256": "c70d5ab19b4215160979c63029f841d5f9e6ea4061453e0067489431a0607d2d",
+    "sdk_jar_bytes": 2296596,
+    "scope": "JAVA-07 (upgrade and rollback): -Dkmip.catalog.previousArtifact"
+  },
+  "h2": {
+    "group": "com.h2database",
+    "artifact": "h2",
+    "version": "2.4.240",
+    "url": "https://repo1.maven.org/maven2/com/h2database/h2/2.4.240/h2-2.4.240.jar",
+    "sha256": "29b70e427cc1c40cdc376283adbb0cc62853073797bb5fe5761f81fe73d57ce0",
+    "sha1": "686180ad33981ad943fdc0ab381e619b2c2fdfe5",
+    "scope": "test-only: the catalog's consumer database cases"
+  }
+}

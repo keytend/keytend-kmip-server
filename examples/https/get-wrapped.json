@@ -1,0 +1,17 @@
+{"tag": "RequestMessage", "value": [
+  {"tag": "RequestHeader", "value": [
+    {"tag": "ProtocolVersion", "value": [
+      {"tag": "ProtocolVersionMajor", "type": "Integer", "value": 2},
+      {"tag": "ProtocolVersionMinor", "type": "Integer", "value": 1}]},
+    {"tag": "BatchCount", "type": "Integer", "value": 1}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "Get"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "UniqueIdentifier", "type": "TextString", "value": "$ID"},
+      {"tag": "KeyWrappingSpecification", "value": [
+        {"tag": "WrappingMethod", "type": "Enumeration", "value": "Encrypt"},
+        {"tag": "EncryptionKeyInformation", "value": [
+          {"tag": "UniqueIdentifier", "type": "TextString", "value": "$KEK"},
+          {"tag": "CryptographicParameters", "value": [
+            {"tag": "BlockCipherMode", "type": "Enumeration", "value": "NISTKeyWrap"}]}]},
+        {"tag": "EncodingOption", "type": "Enumeration", "value": "NoEncoding"}]}]}]}]}

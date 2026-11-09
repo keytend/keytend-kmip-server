@@ -1,0 +1,69 @@
+{{- /*
+Copyright 2026 Jeremiah Jordan
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -}}
+{{- if .Values.volumeHelper.enabled }}
+# A shell on the server's volumes (the server image has none): /data (read-write)
+# and /backups. For kubectl cp and for removing pre-restore-* and pre-rotation-*
+# directories. Turn it off again when done.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kmip.fullname" . }}-volume-helper
+  labels:
+    {{- include "kmip.labels" . | nindent 4 }}
+    app.kubernetes.io/component: volume-helper
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "kmip.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: volume-helper
+  template:
+    metadata:
+      labels:
+        {{- include "kmip.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: volume-helper
+    spec:
+      serviceAccountName: {{ include "kmip.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        {{- include "kmip.podSecurityContext" . | nindent 8 }}
+      {{- include "kmip.coScheduled" . | nindent 6 }}
+      containers:
+        - name: helper
+          image: {{ include "kmip.helperImage" . }}
+          imagePullPolicy: {{ .Values.helperImage.pullPolicy }}
+          command: [sleep, "86400"]
+          securityContext:
+            {{- include "kmip.containerSecurityContext" . | nindent 12 }}
+          resources:
+            limits: {cpu: 200m, memory: 64Mi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+            {{- if .Values.backup.enabled }}
+            - {name: backups, mountPath: /backups}
+            {{- end }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "kmip.dataClaim" . }}
+        {{- if .Values.backup.enabled }}
+        - name: backups
+          persistentVolumeClaim:
+            claimName: {{ include "kmip.backupClaim" . }}
+        {{- end }}
+{{- end }}

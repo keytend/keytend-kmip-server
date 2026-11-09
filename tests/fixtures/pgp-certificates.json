@@ -1,0 +1,50 @@
+{
+  "generator": "gpg (GnuPG) 2.4.7",
+  "purpose": "Public transferable-key fixtures, never secret exports; EC fixtures include an ECDH subkey. No v3 key generation.",
+  "fixtures": {
+    "dsa2048": {
+      "armored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQMuBGrcJaoRCADbHHZiRK6fImA2czzcOIpuDCA4Yn6TCDr1MI49Tj3v13S6neaG\nIxpuSNaBKFxtYrLwbr2LCMLwjYaoaJuAIuRsX8CFg3apeQ/rXoJwjthCRXwoH7/w\nfGZ7Hnjpf9ho44XPzezoaTbPPJWz2xdfY3Ly478+38p58Oi94o2ror+yrz56u11B\n6IQPOv6K0dcPYxyOLR1ooRBqKgZo6k6Ujx9NWFZQNryLD6Oe9UqoJKOKJ3NeZUT0\nD7fJJjy0NXrtNqpYOViGDwOM47mQaEAGRJWip+tEFo2JtaM1GwasM/QxMaAnLhj5\ns2IR0p/vQchTgJDRh2Y8CMioclN2WaZUIw7XAQC345MbcOp12wKPu5mNVdgbNq+s\nXaDOAYe3CHUoDb7U4QgAmJURpjlHWl1F3DhUuWOIydWRvGysx8bngdJ6Rl0pexLO\njAvrNIhKKxiNNLXH3RsqScoJDFeFrNpi20xFr+Ri/L+NjNg/wUYOnE3Cx4h1pKQe\nWsJAOgOhQY+s20c8KYUW21rVvCYuWsGNfnXtWL0yKXWlXdSnwvVXdVVZ/JihYR3z\nuuMbVCfbStsDFny6MtQ82n9JyjHxC97LhFqIAmZF8TtbgR2fMBozyOKTW5jc7u+F\nFedBSRNdKSqpRTYzfBuy1ViIAw8/hZmeaDpKuHYTSoM5SoB6W6RQ334ytmYMVu96\nc3jyzgxAjaeGZn4QaBd4aL/NLpXqdUBmuG/aJK4K1QgAlZpTjL7pYNGxAdtsUYIj\nyhJiDdVuwgp5x7N2QOGoyaYbCRB2XzCx8WBj3aLmUbSBI+n/SkZyp8MFvrFizM20\n+jybvDGBSH199jq2a2RtAeBQMih+EXl7KJAnwBeEIvh2s9RqYhjCtC+lvHviqjqe\nJHTL+AcwZC4hA1XSMDg7+amBksZJgZoEkNHZhnAX7NKOqtZ5mkuBMfFq2Y6yNcpB\nPR+OUtXTv5Sji5W/+wbBRv01T7yETBAtyGamOfl45aMS16552sSrGa+MU2v/mpaf\npixibNuINYLURvEF0rJv1CryTt5Bjb3vkBSlaczqi1J3IAiDEQMLjwC9jxL5Khtr\nIrQvUnVzdHkgS01JUCBkc2EyMDQ4IDxmaXh0dXJlQHJ1c3R5LWttaXAuaW52YWxp\nZD6IkAQTEQgAOBYhBGgplTNO57BazcwPZ6OHJuqu/JnyBQJq3CWqAhsDBQsJCAcC\nBhUKCQgLAgQWAgMBAh4BAheAAAoJEKOHJuqu/JnyGakA/0sQyeZiFxnk9a/O2RS3\nzQ0IaOZPLbYXib+DcOdYAfsaAP9Q80edQimvUKIco21UU7NKTlOQvucqq7mUWqqY\np468MA==\n=T8MR\n-----END PGP PUBLIC KEY BLOCK-----\n",
+      "fingerprint": "682995334EE7B05ACDCC0F67A38726EAAEFC99F2",
+      "sha256": "d1abb28ed2e8fd0e4f6e15165e34844b6f985261806d6209c39bc9b361c324a5",
+      "algorithm": 5,
+      "bits": 2048,
+      "signature_algorithms": [
+        11
+      ],
+      "generator_verified_signatures": 1
+    },
+    "p256": {
+      "armored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmFIEatwlqhMIKoZIzj0DAQcCAwR30BJQ5pmVVCEZMfcjoWZ4zWC38PFASiEoG3zI\nKJRfFjG74rkfQaHJx6TloT+t9BXHXuqvFWEhn52XQFxBSvKPtCxSdXN0eSBLTUlQ\nIHAyNTYgPGZpeHR1cmVAcnVzdHkta21pcC5pbnZhbGlkPoiQBBMTCAA4FiEECKdr\n5EKSorDxkDzIc3Xi+Y/AwBEFAmrcJaoCGwMFCwkIBwIGFQoJCAsCBBYCAwECHgEC\nF4AACgkQc3Xi+Y/AwBFQ5QD+JYNtyPr+OhiUTEgaYO5YZhapUkoklIkCrLBTPKS7\neu8BAJ2CKYJU6bSwnTt7HPcCD3ZT4kMu2vY+KK1PpTpFaX/kuFYEatwlqhIIKoZI\nzj0DAQcCAwQlZVKj+9oUHowaT8QMKLaNXFfHECZqx1tvBPNUgcv5rEYiPmkJPIw2\nCrsRfdJk4XRfDswW1Wmza8KES1Up7Rz3AwEIB4h4BBgTCAAgFiEECKdr5EKSorDx\nkDzIc3Xi+Y/AwBEFAmrcJaoCGwwACgkQc3Xi+Y/AwBHHxwEA4Td1OnVOJ7apgNfX\nUgpTmrSJLCtAdp9RQi2oW35wVUMA/1h3tjISK7iEQdjcSIyEp55GdOz0rYYwOVtk\nd+McHZeE\n=gUbU\n-----END PGP PUBLIC KEY BLOCK-----\n",
+      "fingerprint": "08A76BE44292A2B0F1903CC87375E2F98FC0C011",
+      "sha256": "ab5c7a7f0b168586043ef62918070234db1f282d57421cd18846354c74e5d095",
+      "algorithm": 6,
+      "bits": 256,
+      "signature_algorithms": [
+        14
+      ],
+      "generator_verified_signatures": 2
+    },
+    "p384": {
+      "armored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmG8EatwlqhMFK4EEACIDAwQXhtuEP8yye4j6fOE+33OK03gqmgXNhN3dzLjJrh0J\nWvZk3++UyE0qkrBYEY16Dv5SXpp933/Sk5JiOMpJrJ7tiYzsUbKCu4W+Sm8febrK\nIyn1qnWn5QhtfCiizDVrAIq0LFJ1c3R5IEtNSVAgcDM4NCA8Zml4dHVyZUBydXN0\neS1rbWlwLmludmFsaWQ+iLAEExMJADgWIQQv/WTFHhU+wegGfymK5w2eV+L/YQUC\natwlqgIbAwULCQgHAgYVCgkICwIEFgIDAQIeAQIXgAAKCRCK5w2eV+L/YdMtAX0V\nt1GArSfNSHyTXbwK7PRcBq8SNCGS/bAFwMubTofkUNTkoNDGcUO/RAfhJ8sdT9EB\nfid7hYZbmGHUpuUL6sxeUHCZvP6hjo3wvUZj/5y2xqyzRXgxqGRfagPSDapp6yn2\nM7hzBGrcJaoSBSuBBAAiAwMEbnpaTdN82t1yE5++yh+lsHp/NFjYTjWGCQThwdvT\n+XbWhu22r8cckJcxwZljd9wILLMxb3Yp2WvFQYf2jRpQmH2tMJ5R90cQm3nggZgs\n8P40f9d8CVMB77kPHcdeLWoeAwEJCYiYBBgTCQAgFiEEL/1kxR4VPsHoBn8piucN\nnlfi/2EFAmrcJaoCGwwACgkQiucNnlfi/2F+jQGAp6bmo4HUOWqhQsAUIch+gjNw\nrwJ+61/3F7g563M508syHJThzwoSxMRuP38YSh80AYDuAWF7xncvH/RMOR+RikUD\nu3V7flOt8SY+bWGGMNu1YOCal7k2fQf2PQ2R4YBB3to=\n=XPJN\n-----END PGP PUBLIC KEY BLOCK-----\n",
+      "fingerprint": "2FFD64C51E153EC1E8067F298AE70D9E57E2FF61",
+      "sha256": "a413c3f9ff9885b6e34258e49d26004306c2f240837a61baa911f14333eb4f47",
+      "algorithm": 6,
+      "bits": 384,
+      "signature_algorithms": [
+        15
+      ],
+      "generator_verified_signatures": 2
+    },
+    "p521": {
+      "armored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmJMEatwlqhMFK4EEACMEIwQAZxw3fj5SVlH1TFZ9CXfhdcIGTaDs3+ffITqWkxBK\n4GCM+FWlJX48KjSa548r3SHWtbyYFtF9L7CO5dMJEEuFRlUARzwchm2Rg3zGzVG0\nq7d0VeHdHPKOPADuZd/B4uGNvaU9NhtOuZEad2pAszyFmxoD4yr3yxOIvdVjhdUh\ndQl7EnS0LFJ1c3R5IEtNSVAgcDUyMSA8Zml4dHVyZUBydXN0eS1rbWlwLmludmFs\naWQ+iNMEExMKADgWIQT/eSqphzUorikGRLXPFwHiTU5SNAUCatwlqgIbAwULCQgH\nAgYVCgkICwIEFgIDAQIeAQIXgAAKCRDPFwHiTU5SNAVNAgkBz5/eBfrEE2B8Av9I\ndz6ftY+LhdBeQX7P1NjdgnVVUYz7naYo+Ucilkx2z2XASLc9AQ54b3j+jUl/CHGX\nR3CU55oCCOJM/WFVwssBDWfsNMNbVSYy3c/+p47E4DrIlWXDGBeCVqIXa18B5aDL\nIYHOQBRtsC6cmOMWd3w6AXynwfvZVqUMuJcEatwlqhIFK4EEACMEIwQAWvdrILCJ\nqYsFfIcrrH014upFi4OxJvq+ChrjCgzDPtXjOefMCqok6MMg7bu4XPFqb0tPFvV7\nlMZi21wFH3M0fMQAaNVcLB6XGqZQQFawt+Erf3CtvNTGAW91N0Tv9oLubmsLg0Xz\nTtvMPa0wFeQaBaxWxpPlhds6S4N+4UoCIBYgUD4DAQoJiLsEGBMKACAWIQT/eSqp\nhzUorikGRLXPFwHiTU5SNAUCatwlqgIbDAAKCRDPFwHiTU5SNPM7AgkBmH4CjJac\n/icX6P/vANDCXtHlq9vUYd/MTJIXn5jOGvPRYd4sJnWna2H8i2XETxkYnm9Bms1H\n5LHeinZPPpA7lHsCCLj16YZhZPydv5zzcoTB0jUAoyhRVNYJiItOtb4rUvGMEfEk\nrwKgIFAQ41luRPWNXc3IloQyfFEpGdw2Pusl+B5m\n=mt5Q\n-----END PGP PUBLIC KEY BLOCK-----\n",
+      "fingerprint": "FF792AA9873528AE290644B5CF1701E24D4E5234",
+      "sha256": "dcf76a18ceb77e5f5a88ec74c1e2e6341c70e5c8369e196e97b2bcdc85fb9c82",
+      "algorithm": 6,
+      "bits": 521,
+      "signature_algorithms": [
+        16
+      ],
+      "generator_verified_signatures": 2
+    }
+  }
+}

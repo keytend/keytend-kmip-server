@@ -1,0 +1,46 @@
+# Copyright 2026 Jeremiah Jordan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# The server's own OpenSSL configuration in the UBI 9 image (docs/ubi9-image.md,
+# "OpenSSL configuration"). The image sets OPENSSL_CONF to this file, so the
+# server does not read /etc/pki/tls/openssl.cnf and the RHEL system crypto
+# policy (/etc/crypto-policies) it includes. That keeps default mode the same
+# as the native build, whose Debian openssl.cnf sets no TLS defaults and
+# activates no provider:
+#
+# - No ssl_conf section: libssl keeps its built-in defaults. The server sets
+#   protocol versions, cipher suites, groups, signature algorithms and the
+#   security level for every TLS context itself (src/tls_profile.rs,
+#   src/fips.rs); the RHEL DEFAULT policy would otherwise add TLS 1.2 minimums,
+#   @SECLEVEL=2 and its own signature and group lists where the server does not.
+# - No providers section: the default provider is loaded on first use, as on
+#   the native build. In FIPS mode the server loads the "fips" and "base"
+#   providers itself before any other OpenSSL use (src/fips.rs), which turns
+#   that fallback off, so only FIPS implementations can be fetched. RHEL's
+#   libcrypto loads the FIPS provider from the system file only; with this
+#   file, FIPS mode is the server's (--fips, KMIP_FIPS or a FIPS host kernel).
+# - rh-allow-sha1-signatures = yes: RHEL's libcrypto refuses SHA-1 in
+#   signatures unless this property is set (the DEFAULT policy leaves it
+#   unset). Upstream OpenSSL, and so the native build, allows them. Whether a
+#   SHA-1 signature may be made or checked is the server's decision: in FIPS
+#   mode it refuses SHA-1 signing and keeps SHA-1 verification as legacy use
+#   (SP 800-131A Rev. 2, docs/fips.md).
+openssl_conf = openssl_init
+config_diagnostics = 1
+
+[openssl_init]
+alg_section = evp_properties
+
+[evp_properties]
+rh-allow-sha1-signatures = yes

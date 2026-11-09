@@ -1,0 +1,17 @@
+{"tag": "RequestMessage", "value": [
+  {"tag": "RequestHeader", "value": [
+    {"tag": "ProtocolVersion", "value": [
+      {"tag": "ProtocolVersionMajor", "type": "Integer", "value": 2},
+      {"tag": "ProtocolVersionMinor", "type": "Integer", "value": 1}]},
+    {"tag": "BatchCount", "type": "Integer", "value": 1}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "CreateKeyPair"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "CommonAttributes", "value": [
+        {"tag": "CryptographicAlgorithm", "type": "Enumeration", "value": "RSA"},
+        {"tag": "CryptographicLength", "type": "Integer", "value": 3072},
+        {"tag": "ActivationDate", "type": "DateTime", "value": "2026-01-01T00:00:00Z"}]},
+      {"tag": "PrivateKeyAttributes", "value": [
+        {"tag": "CryptographicUsageMask", "type": "Integer", "value": "Sign"}]},
+      {"tag": "PublicKeyAttributes", "value": [
+        {"tag": "CryptographicUsageMask", "type": "Integer", "value": "Verify"}]}]}]}]}

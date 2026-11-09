@@ -1,0 +1,18 @@
+{
+  "ovh": {
+    "repo": "https://github.com/ovh/kmip-go",
+    "commit": "525ef10d124636b888f8588d4cd5d69d0522af6b"
+  },
+  "thales": {
+    "repo": "https://github.com/ThalesGroup/kmip-go",
+    "commit": "5b93a22192a60f09ea6081b3c066a4a8eddafe30"
+  },
+  "PyKMIP": {
+    "repo": "https://github.com/OpenKMIP/PyKMIP",
+    "commit": "481563735cc96eb9f7b363df3c24b2ea68b9353f"
+  },
+  "libkmip": {
+    "repo": "https://github.com/OpenKMIP/libkmip",
+    "commit": "66119416e2c89ab182343900418cecafe02b6e8d"
+  }
+}

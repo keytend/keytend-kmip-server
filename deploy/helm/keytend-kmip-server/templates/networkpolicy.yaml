@@ -1,0 +1,92 @@
+{{- /*
+Copyright 2026 Jeremiah Jordan
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -}}
+{{- if .Values.networkPolicy.enabled }}
+{{- $np := .Values.networkPolicy }}
+# Default deny for the server pod: KMIP ports from the listed clients, the
+# metrics port from the listed scrapers, egress only as configured.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kmip.fullname" . }}
+  labels:
+    {{- include "kmip.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "kmip.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: server
+  policyTypes: [Ingress, Egress]
+  ingress:
+    {{- if or $np.clients $np.ipBlocks .Values.tests.clientSecret }}
+    - from:
+        {{- with $np.clients }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- range $np.ipBlocks }}
+        - ipBlock: {cidr: {{ . | quote }}}
+        {{- end }}
+        {{- if .Values.tests.clientSecret }}
+        # The helm test pod.
+        - podSelector:
+            matchLabels:
+              {{- include "kmip.selectorLabels" . | nindent 14 }}
+              app.kubernetes.io/component: test
+        {{- end }}
+      ports:
+        - {protocol: TCP, port: 5696}
+        {{- if .Values.server.https.enabled }}
+        - {protocol: TCP, port: 5697}
+        {{- end }}
+    {{- end }}
+    {{- with $np.metrics }}
+    - from:
+        {{- toYaml . | nindent 8 }}
+      ports:
+        - {protocol: TCP, port: 8080}
+    {{- end }}
+  egress:
+    {{- with $np.egress }}
+    {{- toYaml . | nindent 4 }}
+    {{- if $np.dns.enabled }}
+    - to:
+        - namespaceSelector:
+            {{- toYaml $np.dns.namespaceSelector | nindent 12 }}
+          podSelector:
+            {{- toYaml $np.dns.podSelector | nindent 12 }}
+      ports:
+        - {protocol: UDP, port: 53}
+        - {protocol: TCP, port: 53}
+    {{- end }}
+    {{- else }} []
+    {{- end }}
+---
+# Backup and helper pods need no network at all.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "kmip.fullname" . }}-maintenance
+  labels:
+    {{- include "kmip.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "kmip.selectorLabels" . | nindent 6 }}
+    matchExpressions:
+      - {key: app.kubernetes.io/component, operator: In, values: [backup, volume-helper]}
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress: []
+{{- end }}

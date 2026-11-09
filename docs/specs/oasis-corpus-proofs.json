@@ -1,0 +1,208 @@
+{
+ "schema": 1,
+ "scope": "Server-independent proofs over the pinned profile archives; published vectors unchanged.",
+ "tool": "pyca/cryptography",
+ "proofs": [
+  {
+   "family": "shared-digest-placeholder-3.0",
+   "shows": "One placeholder names the SHA-256 digests of both the private and the public key, which are different objects with different key material; the trace itself uses distinct placeholders for their Short Unique Identifiers.",
+   "evidence": {
+    "trace": "3.0|test-cases/kmip-v3.0/optional/AKLC-O-1-30.xml",
+    "uses": [
+     {
+      "message": 3,
+      "object": "$UNIQUE_IDENTIFIER_0",
+      "placeholder": "$DIGEST_VALUE"
+     },
+     {
+      "message": 7,
+      "object": "$UNIQUE_IDENTIFIER_0",
+      "placeholder": "$DIGEST_VALUE"
+     },
+     {
+      "message": 9,
+      "object": "$UNIQUE_IDENTIFIER_1",
+      "placeholder": "$DIGEST_VALUE"
+     },
+     {
+      "message": 13,
+      "object": "$UNIQUE_IDENTIFIER_1",
+      "placeholder": "$DIGEST_VALUE"
+     }
+    ]
+   }
+  },
+  {
+   "family": "aes-ecb-sample-1.3",
+   "shows": "AES-128-ECB of the trace plaintext under the trace key differs from the 1.3 sample and equals the 1.4 sample.",
+   "evidence": [
+    {
+     "trace": "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-6-13.xml",
+     "computed": "d9bcce11b0b437b90239552df3a360c9",
+     "trace_expects": "fd912d102dbb482f6f6e91bd57119095",
+     "agrees": false
+    },
+    {
+     "trace": "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-6-14.xml",
+     "computed": "d9bcce11b0b437b90239552df3a360c9",
+     "trace_expects": "d9bcce11b0b437b90239552df3a360c9",
+     "agrees": true
+    }
+   ]
+  },
+  {
+   "family": "pss-sample-contradicts-default-table",
+   "shows": "The sample PSS signature verifies only with MGF1-SHA-256 and a 222-byte salt. The Cryptographic Parameters defaults are MGF1-SHA-1 and a salt of the MGF hash block size (64 bytes); no default reading (20, 32 or 64 bytes, either MGF hash) verifies.",
+   "evidence": [
+    {
+     "trace": "1.4|test-cases/kmip-v1.4/mandatory/CS-AC-M-2-14.xml",
+     "verifies": {
+      "MGF1-SHA1 salt 20": false,
+      "MGF1-SHA1 salt 32": false,
+      "MGF1-SHA1 salt 64": false,
+      "MGF1-SHA1 salt 222": false,
+      "MGF1-SHA256 salt 20": false,
+      "MGF1-SHA256 salt 32": false,
+      "MGF1-SHA256 salt 64": false,
+      "MGF1-SHA256 salt 222": true
+     }
+    },
+    {
+     "trace": "2.0|test-cases/kmip-v2.0/mandatory/CS-AC-M-2-20.xml",
+     "verifies": {
+      "MGF1-SHA1 salt 20": false,
+      "MGF1-SHA1 salt 32": false,
+      "MGF1-SHA1 salt 64": false,
+      "MGF1-SHA1 salt 222": false,
+      "MGF1-SHA256 salt 20": false,
+      "MGF1-SHA256 salt 32": false,
+      "MGF1-SHA256 salt 64": false,
+      "MGF1-SHA256 salt 222": true
+     }
+    },
+    {
+     "trace": "2.1|test-cases/kmip-v2.1/mandatory/CS-AC-M-2-21.xml",
+     "verifies": {
+      "MGF1-SHA1 salt 20": false,
+      "MGF1-SHA1 salt 32": false,
+      "MGF1-SHA1 salt 64": false,
+      "MGF1-SHA1 salt 222": false,
+      "MGF1-SHA256 salt 20": false,
+      "MGF1-SHA256 salt 32": false,
+      "MGF1-SHA256 salt 64": false,
+      "MGF1-SHA256 salt 222": true
+     }
+    },
+    {
+     "trace": "3.0|test-cases/kmip-v3.0/mandatory/CS-AC-M-2-30.xml",
+     "verifies": {
+      "MGF1-SHA1 salt 20": false,
+      "MGF1-SHA1 salt 32": false,
+      "MGF1-SHA1 salt 64": false,
+      "MGF1-SHA1 salt 222": false,
+      "MGF1-SHA256 salt 20": false,
+      "MGF1-SHA256 salt 32": false,
+      "MGF1-SHA256 salt 64": false,
+      "MGF1-SHA256 salt 222": true
+     }
+    }
+   ]
+  },
+  {
+   "family": "random-iv-literal-sample",
+   "shows": "1.3, 1.4 and 2.0 traces use $DATA_0 in a request before any response binds it (the Random IV Encrypt response is a literal); the 2.1 trace binds it.",
+   "evidence": [
+    {
+     "trace": "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-13-13.xml",
+     "unbound_use_at_exchange": 2
+    },
+    {
+     "trace": "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-13-14.xml",
+     "unbound_use_at_exchange": 2
+    },
+    {
+     "trace": "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-13-20.xml",
+     "unbound_use_at_exchange": 2
+    },
+    {
+     "trace": "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-13-21.xml",
+     "unbound_use_at_exchange": null
+    }
+   ]
+  },
+  {
+   "family": "omos-response-version-1.4",
+   "shows": "Every request is 1.4 and one response is labelled 1.3; the 1.3 copy of the trace has the same structure.",
+   "evidence": {
+    "trace": "1.4|test-cases/kmip-v1.4/optional/OMOS-O-1-14.xml",
+    "messages": [
+     [
+      "RequestMessage",
+      4
+     ],
+     [
+      "ResponseMessage",
+      4
+     ],
+     [
+      "RequestMessage",
+      4
+     ],
+     [
+      "ResponseMessage",
+      3
+     ]
+    ]
+   }
+  },
+  {
+   "family": "chacha20poly1305-truncated-tag",
+   "shows": "The truncated tags the trace expects to succeed are prefixes of the valid 16-byte RFC 8439 tag; the question is whether KMIP permits truncation, not the bytes.",
+   "evidence": {
+    "trace": "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-CHACHA20POLY1305-1-21.xml",
+    "full_tag": "1ae10b594f09e26a7e902ecbd0600691",
+    "truncated": [
+     {
+      "exchange": 6,
+      "tag_bytes": 12,
+      "tag": "1ae10b594f09e26a7e902ecb"
+     }
+    ]
+   }
+  },
+  {
+   "family": "aead-tag-length-reason",
+   "shows": "General Failure, which the traces expect for Tag Length 1, is not listed for Encrypt in any edition. Invalid Field (the server reason) is listed in 2.0-3.0; the 1.4 Encrypt error table lists neither.",
+   "evidence": [
+    {
+     "version": "1.4",
+     "section_chars": 4416,
+     "errors_table": "Table 353: Encrypt Errors",
+     "general_failure_listed": false,
+     "invalid_field_listed": false
+    },
+    {
+     "version": "2.0",
+     "section_chars": 4244,
+     "errors_table": "Table 201: Encrypt Errors",
+     "general_failure_listed": false,
+     "invalid_field_listed": true
+    },
+    {
+     "version": "2.1",
+     "section_chars": 4245,
+     "errors_table": "Table 216: Encrypt Errors",
+     "general_failure_listed": false,
+     "invalid_field_listed": true
+    },
+    {
+     "version": "3.0",
+     "section_chars": 4153,
+     "errors_table": null,
+     "general_failure_listed": false,
+     "invalid_field_listed": true
+    }
+   ]
+  }
+ ]
+}

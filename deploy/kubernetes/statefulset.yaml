@@ -1,0 +1,141 @@
+# Copyright 2026 Jeremiah Jordan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: keytend-kmip-server
+  namespace: keytend-kmip-server
+spec:
+  serviceName: keytend-kmip-server
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keytend-kmip-server
+  template:
+    metadata:
+      labels:
+        app: keytend-kmip-server
+      # /metrics on the health listener (docs/metrics.md); the NetworkPolicy
+      # admits scrapers labelled for it.
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+        prometheus.io/path: /metrics
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: kmip
+          image: localhost/keytend-kmip-server:0.10.0-rc.1
+          imagePullPolicy: IfNotPresent
+          args: [serve]
+          env:
+            - name: KMIP_CERT
+              value: /tls/server.pem
+            - name: KMIP_KEY
+              value: /tls/server.key
+            - name: KMIP_CA
+              value: /tls/ca.pem
+            - name: KMIP_MASTER_KEY
+              value: /master/master.key
+            - name: KMIP_POLICY
+              value: /policy/policy.json
+            - name: KMIP_DATABASE
+              value: /data/kmip.sqlite
+            - name: KMIP_HTTPS_LISTEN
+              value: 0.0.0.0:5697
+          ports:
+            - name: kmip
+              containerPort: 5696
+            - name: https
+              containerPort: 5697
+            - name: health
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: '2'
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            periodSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: health
+            periodSeconds: 10
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: scratch
+              mountPath: /tmp
+            - name: data
+              mountPath: /data
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+            - name: master
+              mountPath: /master
+              readOnly: true
+            - name: policy
+              mountPath: /policy
+              readOnly: true
+      volumes:
+        - name: scratch
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
+        - name: tls
+          secret:
+            secretName: keytend-kmip-server-tls
+            defaultMode: 288
+        - name: master
+          secret:
+            secretName: keytend-kmip-server-master
+            defaultMode: 288
+        - name: policy
+          configMap:
+            name: keytend-kmip-server-policy
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources:
+          requests:
+            storage: 10Gi

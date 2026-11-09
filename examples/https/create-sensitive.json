@@ -1,0 +1,15 @@
+{"tag": "RequestMessage", "value": [
+  {"tag": "RequestHeader", "value": [
+    {"tag": "ProtocolVersion", "value": [
+      {"tag": "ProtocolVersionMajor", "type": "Integer", "value": 2},
+      {"tag": "ProtocolVersionMinor", "type": "Integer", "value": 1}]},
+    {"tag": "BatchCount", "type": "Integer", "value": 1}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "Create"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "ObjectType", "type": "Enumeration", "value": "SymmetricKey"},
+      {"tag": "Attributes", "value": [
+        {"tag": "CryptographicAlgorithm", "type": "Enumeration", "value": "AES"},
+        {"tag": "CryptographicLength", "type": "Integer", "value": 256},
+        {"tag": "CryptographicUsageMask", "type": "Integer", "value": "Encrypt|Decrypt"},
+        {"tag": "Sensitive", "type": "Boolean", "value": true}]}]}]}]}

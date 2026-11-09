@@ -1,0 +1,18 @@
+{"tag": "RequestMessage", "value": [
+  {"tag": "RequestHeader", "value": [
+    {"tag": "ProtocolVersion", "value": [
+      {"tag": "ProtocolVersionMajor", "type": "Integer", "value": 2},
+      {"tag": "ProtocolVersionMinor", "type": "Integer", "value": 1}]},
+    {"tag": "BatchCount", "type": "Integer", "value": 1}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "SignatureVerify"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "UniqueIdentifier", "type": "TextString", "value": "$KEY"},
+      {"tag": "CryptographicParameters", "value": [
+        {"tag": "PaddingMethod", "type": "Enumeration", "value": "PSS"},
+        {"tag": "HashingAlgorithm", "type": "Enumeration", "value": "SHA_256"},
+        {"tag": "MaskGenerator", "type": "Enumeration", "value": "MGF1"},
+        {"tag": "MaskGeneratorHashingAlgorithm", "type": "Enumeration", "value": "SHA_256"},
+        {"tag": "SaltLength", "type": "Integer", "value": 32}]},
+      {"tag": "Data", "type": "ByteString", "value": "$DATA"},
+      {"tag": "SignatureData", "type": "ByteString", "value": "$SIG"}]}]}]}

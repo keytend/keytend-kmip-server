@@ -1,0 +1,142 @@
+{
+ "schema": 1,
+ "label": "corrected fixture",
+ "scope": "Local corrections of proven corpus defects (docs/specs/oasis-corpus-proofs.json). Applied only by the variation harness with --corrected-fixtures and reported separately; the published vectors and their results are unchanged. Interpretation questions get no corrected fixture.",
+ "edits": [
+  {
+   "case": "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-6-13.xml",
+   "message": 3,
+   "path": "BatchItem/ResponsePayload/Data",
+   "from": "fd912d102dbb482f6f6e91bd57119095",
+   "to": "d9bcce11b0b437b90239552df3a360c9",
+   "family": "aes-ecb-sample-1.3",
+   "why": "independently computed AES-128-ECB; equals the 1.4 sample"
+  },
+  {
+   "case": "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-6-13.xml",
+   "message": 4,
+   "path": "BatchItem/RequestPayload/Data",
+   "from": "fd912d102dbb482f6f6e91bd57119095",
+   "to": "d9bcce11b0b437b90239552df3a360c9",
+   "family": "aes-ecb-sample-1.3",
+   "why": "the Decrypt input echoes the corrected ciphertext"
+  },
+  {
+   "case": "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-13-13.xml",
+   "message": 3,
+   "path": "BatchItem/ResponsePayload/Data",
+   "from": "e768203ba72b6e157daaad34b1e791d8e88457dc147942f01bfaff7b28a3cdde2203d4d5a4c7928ba9e9cc78b66a6546",
+   "to": "$DATA_0",
+   "family": "random-iv-literal-sample",
+   "why": "bind the Random IV ciphertext as the 2.1 trace does"
+  },
+  {
+   "case": "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-13-13.xml",
+   "message": 3,
+   "path": "BatchItem/ResponsePayload/IVCounterNonce",
+   "from": "FF020304050607080910111213141516",
+   "to": "$IV_COUNTER_NONCE",
+   "family": "random-iv-literal-sample",
+   "why": "bind the server-generated IV as the 2.1 trace does"
+  },
+  {
+   "case": "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-13-14.xml",
+   "message": 3,
+   "path": "BatchItem/ResponsePayload/Data",
+   "from": "e768203ba72b6e157daaad34b1e791d8e88457dc147942f01bfaff7b28a3cdde2203d4d5a4c7928ba9e9cc78b66a6546",
+   "to": "$DATA_0",
+   "family": "random-iv-literal-sample",
+   "why": "bind the Random IV ciphertext as the 2.1 trace does"
+  },
+  {
+   "case": "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-13-14.xml",
+   "message": 3,
+   "path": "BatchItem/ResponsePayload/IVCounterNonce",
+   "from": "FF020304050607080910111213141516",
+   "to": "$IV_COUNTER_NONCE",
+   "family": "random-iv-literal-sample",
+   "why": "bind the server-generated IV as the 2.1 trace does"
+  },
+  {
+   "case": "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-13-20.xml",
+   "message": 3,
+   "path": "BatchItem/ResponsePayload/Data",
+   "from": "e768203ba72b6e157daaad34b1e791d8e88457dc147942f01bfaff7b28a3cdde2203d4d5a4c7928ba9e9cc78b66a6546",
+   "to": "$DATA_0",
+   "family": "random-iv-literal-sample",
+   "why": "bind the Random IV ciphertext as the 2.1 trace does"
+  },
+  {
+   "case": "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-13-20.xml",
+   "message": 3,
+   "path": "BatchItem/ResponsePayload/IVCounterNonce",
+   "from": "FF020304050607080910111213141516",
+   "to": "$IV_COUNTER_NONCE",
+   "family": "random-iv-literal-sample",
+   "why": "bind the server-generated IV as the 2.1 trace does"
+  },
+  {
+   "case": "3.0|test-cases/kmip-v3.0/optional/AKLC-O-1-30.xml",
+   "message": 9,
+   "path": "BatchItem/ResponsePayload/Attributes/Digest/DigestValue",
+   "from": "$DIGEST_VALUE",
+   "to": "$DIGEST_VALUE_1",
+   "family": "shared-digest-placeholder-3.0",
+   "why": "give the public key digest its own placeholder"
+  },
+  {
+   "case": "3.0|test-cases/kmip-v3.0/optional/AKLC-O-1-30.xml",
+   "message": 13,
+   "path": "BatchItem/ResponsePayload/Attributes/Digest/DigestValue",
+   "from": "$DIGEST_VALUE",
+   "to": "$DIGEST_VALUE_1",
+   "family": "shared-digest-placeholder-3.0",
+   "why": "give the public key digest its own placeholder"
+  },
+  {
+   "case": "1.4|test-cases/kmip-v1.4/optional/OMOS-O-1-14.xml",
+   "message": 3,
+   "path": "ResponseHeader/ProtocolVersion/ProtocolVersionMinor",
+   "from": "3",
+   "to": "4",
+   "family": "omos-response-version-1.4",
+   "why": "the response to a 1.4 request in a 1.4 trace"
+  },
+  {
+   "case": "1.4|test-cases/kmip-v1.4/mandatory/CS-AC-M-2-14.xml",
+   "message": 2,
+   "path": "BatchItem/RequestPayload/SignatureData",
+   "from": "2925ebf8c6c9d0585c36a44491dd28f8ffd1098d2275a505a0eba7af452e9496472fd5c4a515d1c0db16c7c59ef76863b571cbf498fb8178ffeb75667e6e51b9b9bbf09d55bba54b42acb947aa5a81dc62751727d7cad4616c0c0bf1dd666f8266f24262c5fa9cbbdc424ef5f5e345e633d111e66eb4afc4001bb02e158b2d5d4573c614655f21a688bee0e9dbde6a58324c08f42ae69697e0c51803f9de6b3df242d2915d9b1a8110ad28143ab7855ef92ede48971b484172de3b0b8957f493a74b3372ee2200f2233607735f90d0b180968ab20d74841fd3dba4fb1f225ea5c6c87f99c2a238db72a536e68be202a092cd032337d451477e568f9a48b638cb",
+   "to": "3f1e231f86bbe735f2785b4acbea985509e030059e470747cbd3d1fdfb04ca73fc42cdaa200ea2e38e760b703ff9457e96615e355f53a1d2728757bd7834082e5eb0e29a885acf240c2baa8e125153674ab795a84848ab7d8f2c43ff6d7a7a591b59da8f87ce3fbbaf237fe3ee403231a5147d1832496ef587215c8f78d6b515939f36be569e6d0ab9fb8b671805689808ad93efcb43dc41f9b85c6a5f95a4e55413070a4b7d442f54fa276a13ae7bf3450226f1274648ef20c3d488b905fc275f867d670562113c84e7551f7c4f8e5ddffa9675a88b194a27d2faf1fb4e5990e617941836f26de50e79976f4fdde2b62f7fac5026ea96689c00172a2d4833e7",
+   "family": "pss-sample-contradicts-default-table",
+   "why": "PSS signature under the stated defaults (MGF1-SHA-1, 64-byte salt) by the sibling CS-AC-M-1 private key; later Invalid exchanges unchanged"
+  },
+  {
+   "case": "2.0|test-cases/kmip-v2.0/mandatory/CS-AC-M-2-20.xml",
+   "message": 2,
+   "path": "BatchItem/RequestPayload/SignatureData",
+   "from": "2925ebf8c6c9d0585c36a44491dd28f8ffd1098d2275a505a0eba7af452e9496472fd5c4a515d1c0db16c7c59ef76863b571cbf498fb8178ffeb75667e6e51b9b9bbf09d55bba54b42acb947aa5a81dc62751727d7cad4616c0c0bf1dd666f8266f24262c5fa9cbbdc424ef5f5e345e633d111e66eb4afc4001bb02e158b2d5d4573c614655f21a688bee0e9dbde6a58324c08f42ae69697e0c51803f9de6b3df242d2915d9b1a8110ad28143ab7855ef92ede48971b484172de3b0b8957f493a74b3372ee2200f2233607735f90d0b180968ab20d74841fd3dba4fb1f225ea5c6c87f99c2a238db72a536e68be202a092cd032337d451477e568f9a48b638cb",
+   "to": "663834d9445d13397aca0ad2b042c572ae3d5599732c3590fed8161d59d83c413fc6d5d2250ec46d87b6d089056ae1a522fbc8a03f5cfd41ac9eea86f545da11c9fc4b3e5c44615f2bb40f1c1b03f3fdd2e3c986feceb0502d87d8fde4ae3df6ef7d4ca938027029c5d6c3fe904095cc9bf5bee29147c56b6176d4463f7b7d76463f16d25b820120d9a4a53fc75d2707a3d74c2e36442b050e91c47c801eb348eb7d659efde63b4a9a6688332dfa6f12162ea7990f7554a789bd61863ad24f277b60892abc90a5045053b8982d27ea8b7e1c23cf1561fad3b30f9f8aa018cc0b58019444c262f04de1862fb3393a4e8858ca1debf0ac280ae4fdd73387456380",
+   "family": "pss-sample-contradicts-default-table",
+   "why": "PSS signature under the stated defaults (MGF1-SHA-1, 64-byte salt) by the sibling CS-AC-M-1 private key; later Invalid exchanges unchanged"
+  },
+  {
+   "case": "2.1|test-cases/kmip-v2.1/mandatory/CS-AC-M-2-21.xml",
+   "message": 2,
+   "path": "BatchItem/RequestPayload/SignatureData",
+   "from": "2925ebf8c6c9d0585c36a44491dd28f8ffd1098d2275a505a0eba7af452e9496472fd5c4a515d1c0db16c7c59ef76863b571cbf498fb8178ffeb75667e6e51b9b9bbf09d55bba54b42acb947aa5a81dc62751727d7cad4616c0c0bf1dd666f8266f24262c5fa9cbbdc424ef5f5e345e633d111e66eb4afc4001bb02e158b2d5d4573c614655f21a688bee0e9dbde6a58324c08f42ae69697e0c51803f9de6b3df242d2915d9b1a8110ad28143ab7855ef92ede48971b484172de3b0b8957f493a74b3372ee2200f2233607735f90d0b180968ab20d74841fd3dba4fb1f225ea5c6c87f99c2a238db72a536e68be202a092cd032337d451477e568f9a48b638cb",
+   "to": "5fb2b1bf0a8612c8b3f9732dc9e6963bf40acb526de9b86e2706a79ae630fda89c6feefe935cc28500d71ec043f21da8e5724356732ecdabf12ac95fd9cf878314fbb215cb12da129caa07945faf38dfcd3916c78044e9f8ba89e97aa3f26a7bdbd400329e3bb296954e10911636ebe850054618d5c883297dd076363ef77ed6cd14b06ea0993409d0dfe121cb83c3d819e181e3bd06b5948bf3fd844ea72f5710d19bbe717b225d77782129648513be612b8aed8823f4315493e4fa6608d70bf0446f11a8c3f55fb9778d2a6eb3bdf77b873cde760baefdce6d1aef73b6d42441babac4ac36cbff013c2e658f6afa9b10fcbac8e4b777a92047c53a348d809b",
+   "family": "pss-sample-contradicts-default-table",
+   "why": "PSS signature under the stated defaults (MGF1-SHA-1, 64-byte salt) by the sibling CS-AC-M-1 private key; later Invalid exchanges unchanged"
+  },
+  {
+   "case": "3.0|test-cases/kmip-v3.0/mandatory/CS-AC-M-2-30.xml",
+   "message": 2,
+   "path": "BatchItem/RequestPayload/SignatureData",
+   "from": "2925ebf8c6c9d0585c36a44491dd28f8ffd1098d2275a505a0eba7af452e9496472fd5c4a515d1c0db16c7c59ef76863b571cbf498fb8178ffeb75667e6e51b9b9bbf09d55bba54b42acb947aa5a81dc62751727d7cad4616c0c0bf1dd666f8266f24262c5fa9cbbdc424ef5f5e345e633d111e66eb4afc4001bb02e158b2d5d4573c614655f21a688bee0e9dbde6a58324c08f42ae69697e0c51803f9de6b3df242d2915d9b1a8110ad28143ab7855ef92ede48971b484172de3b0b8957f493a74b3372ee2200f2233607735f90d0b180968ab20d74841fd3dba4fb1f225ea5c6c87f99c2a238db72a536e68be202a092cd032337d451477e568f9a48b638cb",
+   "to": "9aadc769dbf82afa427fc960e829a1603e878a056d90b04b2161f46837b3092403139ab028406d79d3a4e77e171e268f7ba3925d269b415e6b9c726873f926f0c1fd6ffdcfa283275a53c825b2967fcff6ce8019fcd5f794b668906e338adb1584d9666bf8da3e113fb6e73148f4e1cbbe306026e05c67b67c8815b4ac20898320170a1760ec97e43538b5ea5d6a90e8204a8af4d0ff3525307d3bc5dbf72b76ab26af25e1830d4521b3a3828aecbe0fd488b5a6bd3f267cce671577c7aa9a7299e4faf1a3ed7492d6ef8c4f6770f9e80e578b6e6f066236ca4866a9370f76bd1d42129e6c3f52c7309cb371337542745c3020d854ce6ad620bb738dcfea3eaf",
+   "family": "pss-sample-contradicts-default-table",
+   "why": "PSS signature under the stated defaults (MGF1-SHA-1, 64-byte salt) by the sibling CS-AC-M-1 private key; later Invalid exchanges unchanged"
+  }
+ ]
+}

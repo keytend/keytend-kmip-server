@@ -1,0 +1,17 @@
+{"tag": "RequestMessage", "value": [
+  {"tag": "RequestHeader", "value": [
+    {"tag": "ProtocolVersion", "value": [
+      {"tag": "ProtocolVersionMajor", "type": "Integer", "value": 2},
+      {"tag": "ProtocolVersionMinor", "type": "Integer", "value": 1}]},
+    {"tag": "BatchCount", "type": "Integer", "value": 1}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "Decrypt"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "UniqueIdentifier", "type": "TextString", "value": "$KEY"},
+      {"tag": "CryptographicParameters", "value": [
+        {"tag": "BlockCipherMode", "type": "Enumeration", "value": "GCM"},
+        {"tag": "TagLength", "type": "Integer", "value": 16}]},
+      {"tag": "Data", "type": "ByteString", "value": "$DATA"},
+      {"tag": "IVCounterNonce", "type": "ByteString", "value": "$IV"},
+      {"tag": "AuthenticatedEncryptionAdditionalData", "type": "ByteString", "value": "$AAD"},
+      {"tag": "AuthenticatedEncryptionTag", "type": "ByteString", "value": "$TAG"}]}]}]}

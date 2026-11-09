@@ -1,0 +1,20 @@
+{"tag": "RequestMessage", "value": [
+  {"tag": "RequestHeader", "value": [
+    {"tag": "ProtocolVersion", "value": [
+      {"tag": "ProtocolVersionMajor", "type": "Integer", "value": 2},
+      {"tag": "ProtocolVersionMinor", "type": "Integer", "value": 1}]},
+    {"tag": "BatchCount", "type": "Integer", "value": 2}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "Create"},
+    {"tag": "UniqueBatchItemID", "type": "ByteString", "value": "01"},
+    {"tag": "RequestPayload", "value": [
+      {"tag": "ObjectType", "type": "Enumeration", "value": "SymmetricKey"},
+      {"tag": "Attributes", "value": [
+        {"tag": "CryptographicAlgorithm", "type": "Enumeration", "value": "AES"},
+        {"tag": "CryptographicLength", "type": "Integer", "value": 256},
+        {"tag": "CryptographicUsageMask", "type": "Integer", "value": "DeriveKey"},
+        {"tag": "Extractable", "type": "Boolean", "value": false}]}]}]},
+  {"tag": "BatchItem", "value": [
+    {"tag": "Operation", "type": "Enumeration", "value": "Activate"},
+    {"tag": "UniqueBatchItemID", "type": "ByteString", "value": "02"},
+    {"tag": "RequestPayload", "value": []}]}]}

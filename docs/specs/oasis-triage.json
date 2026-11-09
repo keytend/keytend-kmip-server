@@ -1,0 +1,1709 @@
+{
+ "schema": 1,
+ "scope": "Triage of one strict OASIS trace report. Families explain non-passing cases; they never change a case status or total, never suppress a mismatch and grant no conformance credit. Trace classification does not show that the normative clauses are covered; the full requirement-to-test ledger remains open.",
+ "conformance_credit": "none",
+ "full_spec_implemented": false,
+ "production_approved": false,
+ "classification_rule": "Each case belongs to exactly one family. The family is matched by case key, status, strict failed exchange and the strict detail. Its classification describes the governing blocker: the earliest known mismatch that no cited normative text permits, from the strict report, the official diagnostic mode or research probes. If every known mismatch is a permitted variation, the classification is permitted_reference_choice.",
+ "classifications": {
+  "missing_server_feature": "Behaviour the server does not implement.",
+  "server_defect": "Implemented behaviour that contradicts normative text.",
+  "permitted_reference_choice": "The trace shows one reference-server choice and cited normative text permits the server to differ.",
+  "fixture_corpus_or_harness": "Trace corpus defect or gap, or a harness limitation.",
+  "dependency_determinism_interop": "The case needs cross-case state, deterministic or variable-output handling, or Interop wrapper handling.",
+  "unresolved_spec_ambiguity": "Normative text supports more than one reading; no TC interpretation is cited."
+ },
+ "identity": {
+  "runtime_binary_sha256": "4d4ba87f46bced8aa935ac745249e3c5c0d987277c08b384bc39a0a5b6e1607f",
+  "runtime_source_manifest_sha256": "0f17069e93a85dd065c18bd4e6a19240f0311d127629bc47ad59d37686c06f25",
+  "harness_source_sha256": {
+   "scripts/oasis_conformance.py": "0ef6a8d1ead40f98a8b336a44c664b864fb530fb1b25ebf568cd81f6bd32ac98",
+   "scripts/wire.py": "b3bc81f60923d6e772e641d63563f5f22718af9638eec7f1982eb56d593395c5",
+   "scripts/test_runtime.py": "3a9abef66572de5fb519f2290a3a3f2b860518d3e64b0d43a6be886bb9ec4431",
+   "scripts/fetch_specs.py": "a00cd612c2398ae68e10bb7636709f17ffdee769c460a2156b92169c80e1106d",
+   "docs/specs/registry.json": "5f749c1704567eb57ed74c450a68ce7f5c8b0a780dd7d4f874bf01f8d549a810",
+   "docs/specs/profiles.json": "5184bfc6e46250615531732ae835854957db3522586115ae133ca55a4cca4b23",
+   "docs/specs/additional-traces.json": "621076896ee7302344a8be16af737f2b16c2d82ea177ee9000c51ecca8bef8ff"
+  },
+  "selection": {
+   "versions": [
+    "1.1",
+    "1.2",
+    "1.3",
+    "1.4",
+    "2.0",
+    "2.1",
+    "3.0"
+   ],
+   "filter": ""
+  }
+ },
+ "provenance": {
+  "triage_checkout_head": "d95b3a900452937875c5cae33c1a82a5c0f88c0f",
+  "runtime_source_commit": "a0a50c7a05f74d3e99349aaed520f834a88be194",
+  "triaged_report": "OASIS qualification report (development record, not committed)",
+  "triaged_report_sha256": "f53e55a84a367e7e4b5df72558fff2e486dbcfe92dc2825a05008100f4e21474",
+  "scope": "Re-triage: all 439 case records compared with the previous triage. Only TL-M-2-30 changes to passed; three existing randomized ciphertext details vary. No independent replay or review is claimed.",
+  "runtime_source_note": "64 runtime sources match the integrated candidate and copied tested native binary; the earlier triage fixes, legacy destroyed Get and Alternative Name changes are included.",
+  "native_artifact": "copied tested native executable (not committed)",
+  "previous_identity": "The previous triage (strict 147 passed, 126 failed, 166 unexecuted) is kept in the development records."
+ },
+ "expected_summary": {
+  "passed": 148,
+  "failed": 125,
+  "unexecuted": 166
+ },
+ "sources": {
+  "spec-1.0": {
+   "file": ".cache/specs/1.0.html",
+   "sha256": "c024b3fdff7fc5b55512f2e6c0b18eb7edb61d5b5560b90cf6c60720d703fcb3",
+   "url": "https://docs.oasis-open.org/kmip/spec/v1.0/os/kmip-spec-1.0-os.html"
+  },
+  "spec-1.1": {
+   "file": ".cache/specs/1.1.html",
+   "sha256": "bde1005a9c265f550e670eab670bbf238f4c9d3191b9bc344c76a9aaaca68cec",
+   "url": "https://docs.oasis-open.org/kmip/spec/v1.1/os/kmip-spec-v1.1-os.html"
+  },
+  "spec-1.2": {
+   "file": ".cache/specs/1.2.html",
+   "sha256": "d6fe49fc9fd16601369430373e8507f63c6a9a6a92e946e63f114d93b6aaaaa1",
+   "url": "https://docs.oasis-open.org/kmip/spec/v1.2/os/kmip-spec-v1.2-os.html"
+  },
+  "spec-1.3": {
+   "file": ".cache/specs/1.3.html",
+   "sha256": "f37bd6ba02ae21baaa35bc01fb892dcc938761a702fcd01bb67c3a2f7bdd60b7",
+   "url": "https://docs.oasis-open.org/kmip/spec/v1.3/os/kmip-spec-v1.3-os.html"
+  },
+  "spec-1.4": {
+   "file": ".cache/specs/1.4.html",
+   "sha256": "bdceac414880cbda4cbded5d4670f2697bb37cedd5b47bd804a9abd2d9f066d2",
+   "url": "https://docs.oasis-open.org/kmip/spec/v1.4/os/kmip-spec-v1.4-os.html"
+  },
+  "spec-2.0": {
+   "file": ".cache/specs/2.0.html",
+   "sha256": "0d1b675c8f01165c0ccaa0eb122b9cfc409d3306bacb458bfd214eb4521a0c44",
+   "url": "https://docs.oasis-open.org/kmip/kmip-spec/v2.0/os/kmip-spec-v2.0-os.html"
+  },
+  "spec-2.1": {
+   "file": ".cache/specs/2.1.html",
+   "sha256": "462b07d2b4b234e0f2db6ff9ad217b7f372dcca5873c4cbb4a85ff7b3159e3c8",
+   "url": "https://docs.oasis-open.org/kmip/kmip-spec/v2.1/os/kmip-spec-v2.1-os.html"
+  },
+  "spec-3.0": {
+   "file": ".cache/specs/3.0.html",
+   "sha256": "79570990bb89eebf82f32dddbcdc99539c5c6a2554d50da2675a7347b54e4a68",
+   "url": "https://docs.oasis-open.org/kmip/kmip-spec/v3.0/csd02/kmip-spec-v3.0-csd02.html"
+  },
+  "profiles-1.1": {
+   "file": ".cache/specs/profiles-1.1.zip",
+   "sha256": "d2a5d0a8b27c97c4c4f254856e8c96d19a05a7e326ff2fc43c8e1be0281248a2",
+   "url": "https://docs.oasis-open.org/kmip/profiles/v1.1/os/kmip-profiles-v1.1-os.zip",
+   "member": "kmip-profiles-v1.1-os.html",
+   "member_sha256": "09d12b3c480d993baab662bc3ba723bf3b7c8cf84cc00d9850eb8a6bc2a8d42e"
+  },
+  "profiles-1.2": {
+   "file": ".cache/specs/profiles-1.2.zip",
+   "sha256": "487be3118589a852c69943a68d2323ec3d7746be464edf32172be792bf57bb63",
+   "url": "https://docs.oasis-open.org/kmip/profiles/v1.2/os/kmip-profiles-v1.2-os.zip",
+   "member": "kmip-profiles-v1.2-os.html",
+   "member_sha256": "f446691e24fd0b682efdb7b0d26146ae7da3766446849c620304878078ae4b38"
+  },
+  "profiles-1.3": {
+   "file": ".cache/specs/profiles-1.3.zip",
+   "sha256": "120eb82c717f71e4a70b2680f552006de818f3a4e88129b2083c816ff01361fb",
+   "url": "https://docs.oasis-open.org/kmip/profiles/v1.3/os/kmip-profiles-v1.3-os.zip",
+   "member": "kmip-profiles-v1.3-os.html",
+   "member_sha256": "3ed00fb16328d6cb76df138d8d9b26ce55b929fee331bf37992bdbd94be5eabf"
+  },
+  "profiles-1.4": {
+   "file": ".cache/specs/profiles-1.4.zip",
+   "sha256": "ec85e2ebfffd18b8fc6b56e4c46f8c9cb68d2cda1b3da48810a41fa62329e97d",
+   "url": "https://docs.oasis-open.org/kmip/profiles/v1.4/os/kmip-profiles-v1.4-os.zip",
+   "member": "kmip-profiles-v1.4-os.html",
+   "member_sha256": "ba29894998040129fe582694d25e98efce36875292ae2b82969db69d28a02b79"
+  },
+  "profiles-2.0": {
+   "file": ".cache/specs/profiles-2.0.zip",
+   "sha256": "449cc338e1d66cdee9cf51ee16e4a486a97d911f3e6e393d579e7075a249b8b5",
+   "url": "https://docs.oasis-open.org/kmip/kmip-profiles/v2.0/os/kmip-profiles-v2.0-os.zip",
+   "member": "kmip-profiles-v2.0-os.html",
+   "member_sha256": "7f3f9fb48e8a03b3aae3837c6fdb8a53e26949b495f3f05dafcf0b0c8b900a5a"
+  },
+  "profiles-2.1": {
+   "file": ".cache/specs/profiles-2.1.zip",
+   "sha256": "4f32dea38072c98517e1a406227b567cfd644feaea3bf85a7d0d7b7dbe4cf9b6",
+   "url": "https://docs.oasis-open.org/kmip/kmip-profiles/v2.1/os/kmip-profiles-v2.1-os.zip",
+   "member": "kmip-profiles-v2.1-os.html",
+   "member_sha256": "56eae709cd10fc23af79fb240829ba09e1d6ebc1c2125029864ca36fce477feb"
+  },
+  "profiles-3.0": {
+   "file": ".cache/specs/profiles-3.0.zip",
+   "sha256": "b60453bfb4c8c04703edd33ce9213801f9f204ef1a18a854aa288cad50f0b9fa",
+   "url": "https://docs.oasis-open.org/kmip/kmip-profiles/v3.0/csd02/kmip-profiles-v3.0-csd02.zip",
+   "member": "kmip-profiles-v3.0-csd02.html",
+   "member_sha256": "588b2afa96b048656699d1638d910b22bd4f33a3eee702a0e676230b235f0c35"
+  }
+ },
+ "families": [
+  {
+   "id": "result-message-wording",
+   "status": "failed",
+   "classification": "permitted_reference_choice",
+   "summary": "Only the literal Result Message differs (DENIED vs the server wording). Reason and status match. The official harness diagnostic mode, which ignores only literal Result Message text, passes all 11 cases.",
+   "detail": "/ResponseMessage/BatchItem/ResultMessage value mismatch; expected DENIED, received (Key usage dates forbid this operation|Usage Limits exhausted)",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-AC-M-8-13.xml": 2,
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-14-13.xml": 1,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-AC-M-8-14.xml": 2,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-14-14.xml": 1,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-AC-M-8-20.xml": 2,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-14-20.xml": 1,
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-7-13.xml": 2,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-7-14.xml": 2,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-7-20.xml": 2,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-7-21.xml": 2,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-BC-M-7-30.xml": 2
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1.1",
+     "quote": "ResultMessage - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-1.4",
+     "ref": "Profiles 1.4 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-2.0",
+     "ref": "Profiles 2.0 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-3.0",
+     "ref": "Profiles 3.0 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 9.17",
+     "quote": "This field MAY be returned in a response. It contains a more descriptive error message, which MAY be provided to an end user or used for logging/auditing purposes."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 6.1.55 (Sign); the same sentence appears for Encrypt",
+     "quote": "If the allocation is unable to be obtained the operation SHALL return with a result status of Operation Failed and result reason of Permission Denied."
+    }
+   ],
+   "evidence": [
+    "artifacts/triage/diagnostic-message-text.json: all 11 pass (diagnostic, no credit)"
+   ],
+   "next_action": "None for the server. A comparator mode implementing Profiles section 4.1 variations would still have to keep this exact status/reason check.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "aead-tag-length-one-general-failure",
+   "status": "failed",
+   "classification": "fixture_corpus_or_harness",
+   "subtype": "corpus_defect",
+   "confidence": "probable",
+   "summary": "The first strict mismatch is the permitted literal CRYPTO message. The governing blocker is a later Encrypt with Tag Length 1: the trace expects General Failure with an implementation-internal message (L_KMIPCRYPTO_random:invalid-tag-length / invalid-tag-length); the server returns Invalid Field.",
+   "detail": "/ResponseMessage/BatchItem/ResultMessage value mismatch; expected CRYPTO, received Cryptographic operation failed",
+   "cases": {
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-GCM-1-14.xml": 3,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-GCM-1-20.xml": 3,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-GCM-1-21.xml": 3,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-BC-M-GCM-1-30.xml": 3,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-BC-M-CHACHA20POLY1305-1-30.xml": 3
+   },
+   "authority": [
+    {
+     "source": "profiles-1.4",
+     "ref": "Profiles 1.4 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-3.0",
+     "ref": "Profiles 3.0 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 478 (Result Reason descriptions)",
+     "quote": "Invalid Field The request is syntactically valid but some data in the request (other than an attribute value) has an invalid value"
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 4.16 Cryptographic Parameters",
+     "quote": "Tag Length is the length of the authenticator tag in bytes. This parameter SHALL be provided when the Block Cipher Mode is GCM."
+    }
+   ],
+   "evidence": [
+    "Diagnostic mode: GCM-1 fails at exchange 7 with expected 256, received 7; CHACHA20POLY1305-1-30 at exchange 6.",
+    "General Failure is absent from the Encrypt error lists (1.4 table 353, 2.0 table 201, 2.1 table 216, 3.0 table 322); 2.1 lists it only in enumeration table 479. This absence is the basis for \"probable\"; the lists are not stated to be exhaustive."
+   ],
+   "later_blockers": [
+    "Result Reason General Failure expected for Tag Length 1 (exchanges 7-8 GCM; 6-7 ChaCha20-Poly1305 3.0)"
+   ],
+   "next_action": "Seek a TC interpretation before changing the reason; do not mimic an implementation-internal reason."
+  },
+  {
+   "id": "chacha20poly1305-truncated-tag",
+   "status": "failed",
+   "classification": "unresolved_spec_ambiguity",
+   "summary": "The first strict mismatch is the permitted CRYPTO message. The governing blocker is Decrypt with Tag Length 12 and the first 12 bytes of the RFC 8439 section 2.8.2 tag, expecting Success. KMIP defines Tag Length only for GCM; RFC 8439 defines a 16-byte tag. The server rejects with Invalid Field.",
+   "detail": "/ResponseMessage/BatchItem/ResultMessage value mismatch; expected CRYPTO, received Cryptographic operation failed",
+   "cases": {
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-CHACHA20POLY1305-1-20.xml": 3,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-CHACHA20POLY1305-1-21.xml": 3
+   },
+   "authority": [
+    {
+     "source": "profiles-2.0",
+     "ref": "Profiles 2.0 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 4.16 Cryptographic Parameters",
+     "quote": "Tag Length is the length of the authenticator tag in bytes. This parameter SHALL be provided when the Block Cipher Mode is GCM."
+    }
+   ],
+   "evidence": [
+    "Independent python cryptography ChaCha20Poly1305 reproduces the trace ciphertext; full tag 1ae10b594f09e26a7e902ecbd0600691, trace supplies 1ae10b594f09e26a7e902ecb (RFC 8439 is not a pinned source here).",
+    "Diagnostic/probe: exchange 6 status mismatch, reason 7 Invalid ChaCha20-Poly1305 parameters; exchanges 7-8 then expect General Failure for Tag Length 1 (see aead-tag-length-one-general-failure)."
+   ],
+   "later_blockers": [
+    "Truncated Poly1305 tag acceptance (exchange 6)",
+    "General Failure for Tag Length 1 (exchanges 7-8)"
+   ],
+   "next_action": "Seek a TC interpretation on truncated ChaCha20-Poly1305 tags; accepting truncation is a security decision.",
+   "confidence": "high"
+  },
+  {
+   "id": "date-window-reason-2x",
+   "status": "failed",
+   "classification": "unresolved_spec_ambiguity",
+   "summary": "Sign/Verify or Encrypt/Decrypt outside the Process Start / Protect Stop window on an Active key. The 2.1/3.0 traces expect Wrong Key Lifecycle State; the 2.0 trace for the same scenario expects Permission Denied, which the server returns in every version. Both reasons are listed operation errors; neither date section names a reason.",
+   "detail": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 67, received 12",
+   "cases": {
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-AC-M-8-21.xml": 2,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-14-21.xml": 1,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-AC-M-8-30.xml": 2,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-BC-M-14-30.xml": 1
+   },
+   "authority": [
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 478",
+     "quote": "Wrong Key Lifecycle State The key lifecycle state is invalid for the operation, for example not Active for an Encrypt operation"
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 478",
+     "quote": "Permission Denied Client is not allowed to perform the specified operation"
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 4.41",
+     "quote": "The Protect Stop Date attribute is the date and time after which a valid Managed Object SHALL NOT be used for applying cryptographic protection"
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 4.40",
+     "quote": "The object SHALL NOT be used for these cryptographic purposes before the Process Start Date has been reached."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 336 (Sign Errors) lists both reasons",
+     "quote": "Usage Limit Exceeded, Wrong Key Lifecycle State, Attestation Failed, Attestation Required, Feature Not Supported, Invalid Field, Invalid Message, Operation Not Supported, Permission Denied"
+    }
+   ],
+   "evidence": [
+    "2.0 CS-AC-M-8-20 / CS-BC-M-14-20 expect PermissionDenied for the same requests (see result-message-wording)."
+   ],
+   "later_blockers": [
+    "Literal DENIED Result Message (permitted)"
+   ],
+   "next_action": "Seek a TC interpretation; a version-specific reason change needs that ruling.",
+   "confidence": "high"
+  },
+  {
+   "id": "missing-iv-reason-2x",
+   "status": "failed",
+   "classification": "unresolved_spec_ambiguity",
+   "summary": "Decrypt without a required IV. Traces expect Invalid Message; the server returns Missing Initialization Vector. Both are listed Decrypt errors and the Result Reason description of Missing Initialization Vector matches this condition exactly, but Profiles section 4.1 does not list Result Reason as a permitted variation.",
+   "detail": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 4, received 52",
+   "cases": {
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-11-20.xml": 3,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-12-20.xml": 2,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-11-21.xml": 3,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-12-21.xml": 2,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-BC-M-11-30.xml": 3,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-BC-M-12-30.xml": 2,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-13-21.xml": 2,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-BC-M-13-30.xml": 2
+   },
+   "authority": [
+    {
+     "source": "profiles-2.0",
+     "ref": "Profiles 2.0 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "profiles-3.0",
+     "ref": "Profiles 3.0 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "spec-2.0",
+     "ref": "KMIP 2.0 Table 439",
+     "quote": "Missing Initialization Vector Missing IV when required for crypto operation"
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 478",
+     "quote": "Missing Initialization Vector Missing IV when required for crypto operation"
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 478",
+     "quote": "Invalid Message The request message was not syntactically understood by the server."
+    },
+    {
+     "source": "spec-3.0",
+     "ref": "KMIP 3.0 CSD02 Table 594",
+     "quote": "Missing Initialization Vector Missing IV when required for crypto operation"
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 198 (Decrypt Errors) lists Missing Initialization Vector and Invalid Message",
+     "quote": "Key Value Not Present, Missing Initialization Vector, Object Not Found, Unsupported Cryptographic Parameters, Wrong Key Lifecycle State, Attestation Failed, Attestation Required, Feature Not Supported, Invalid Field, Invalid Message"
+    }
+   ],
+   "evidence": [],
+   "next_action": "Seek a TC interpretation; do not replace the specific reason with Invalid Message without it.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "missing-iv-reason-1x",
+   "status": "failed",
+   "classification": "unresolved_spec_ambiguity",
+   "summary": "Decrypt without a required IV in 1.3/1.4. Traces expect Invalid Message; the server returns Missing Data. The 1.x Decrypt error tables have no missing-IV row; the general table maps payload parse errors to Invalid Message, which may or may not cover an absent optional field.",
+   "detail": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 4, received 6",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-11-13.xml": 3,
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-12-13.xml": 2,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-11-14.xml": 3,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-12-14.xml": 2
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "profiles-1.4",
+     "ref": "Profiles 1.4 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "spec-1.4",
+     "ref": "KMIP 1.4 Table 327 (General Errors)",
+     "quote": "Error parsing batch item or payload within batch item Batch item fails; Result Status is Operation Failed Invalid Message"
+    },
+    {
+     "source": "spec-1.3",
+     "ref": "KMIP 1.3 Table 305 (General Errors)",
+     "quote": "Error parsing batch item or payload within batch item Batch item fails; Result Status is Operation Failed Invalid Message"
+    }
+   ],
+   "evidence": [
+    "1.4 Table 354 and 1.3 Table 332 (Decrypt Errors) contain no missing-IV condition."
+   ],
+   "next_action": "Seek a TC interpretation.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "random-iv-literal-sample",
+   "status": "failed",
+   "classification": "fixture_corpus_or_harness",
+   "subtype": "corpus_defect",
+   "summary": "Encrypt with Random IV true is compared with a literal IV FF0203... and literal ciphertext, while later requests in the same trace reference $DATA_0 and $IV_COUNTER_NONCE that the trace never binds. The 2.1 trace replaces both literals with variables. Three strict runs received three different ciphertexts.",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/Data value mismatch; expected e768203ba72b6e157daaad34b1e791d8e88457dc147942f01bfaff7b28a3cdde2203d4d5a4c7928ba9e9cc78b66a6546, received [0-9a-f]{96}",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-13-13.xml": 1,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-13-14.xml": 1,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-13-20.xml": 1
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1.1",
+     "quote": "the operation inherently contains variable output"
+    },
+    {
+     "source": "profiles-2.0",
+     "ref": "Profiles 2.0 section 4.1.1",
+     "quote": "the operation inherently contains variable output"
+    }
+   ],
+   "evidence": [
+    "The triaged report and two further strict replays: received values differ for all three cases; statuses and exchanges are identical.",
+    "CS-BC-M-13-21 uses $DATA_0 and $IV_COUNTER_NONCE in the Encrypt response."
+   ],
+   "later_blockers": [
+    "Missing-IV reason at exchange 2 (see missing-iv-reason-1x / -2x)"
+   ],
+   "next_action": "A corrected local fixture would have to be labelled as modified; the published trace cannot pass unchanged.",
+   "confidence": "high"
+  },
+  {
+   "id": "pss-sample-contradicts-default-table",
+   "status": "failed",
+   "classification": "fixture_corpus_or_harness",
+   "subtype": "corpus_defect",
+   "summary": "Signature Verify with stored PSS/SHA-256 parameters that omit MGF hash and salt. The sample signature verifies only with MGF1-SHA-256 and a 222-byte salt; the tables default to MGF1-SHA-1 and a salt of the MGF hash block size. The server follows the tables and returns Invalid.",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/ValidityIndicator value mismatch; expected 1, received 2",
+   "cases": {
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-AC-M-2-14.xml": 1,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-AC-M-2-20.xml": 1,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-AC-M-2-21.xml": 1,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-AC-M-2-30.xml": 1
+   },
+   "authority": [
+    {
+     "source": "spec-1.4",
+     "ref": "KMIP 1.4 Cryptographic Parameters table",
+     "quote": "Salt Length Integer No (if omitted, defaults to the block size of the Mask Generator Hashing Algorithm)"
+    },
+    {
+     "source": "spec-2.0",
+     "ref": "KMIP 2.0 Cryptographic Parameters table",
+     "quote": "Salt Length Integer No (if omitted, defaults to the block size of the Mask Generator Hashing Algorithm)"
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 59",
+     "quote": "Salt Length Integer No (if omitted, defaults to the block size of the Mask Generator Hashing Algorithm)"
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 59",
+     "quote": "Mask Generator Hashing Algorithm Enumeration No. (if omitted defaults to SHA-1)."
+    },
+    {
+     "source": "spec-3.0",
+     "ref": "KMIP 3.0 CSD02 Cryptographic Parameters table",
+     "quote": "Salt Length Integer No (if omitted, defaults to the block size of the Mask Generator Hashing Algorithm)"
+    }
+   ],
+   "evidence": [
+    "python cryptography 43.0.0: of MGF1 SHA-1/SHA-256 x salt 0/20/32/64/222/AUTO, only MGF1-SHA-256 with salt 222 (or AUTO) verifies, for every version of the trace. Also recorded in docs/rsa-mechanisms.md."
+   ],
+   "next_action": "None for the server unless the TC issues an erratum.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "pss-parameters-unspecified-1.3",
+   "status": "failed",
+   "classification": "unresolved_spec_ambiguity",
+   "summary": "Same sample in 1.3, which has no Salt Length or Mask Generator fields and states no PSS MGF/salt defaults. The server uses the PKCS#1 defaults; the sample needs MGF1-SHA-256 and a 222-byte salt.",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/ValidityIndicator value mismatch; expected 1, received 2",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-AC-M-2-13.xml": 1
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    }
+   ],
+   "evidence": [
+    "The pinned 1.3 text contains no \"Salt Length\" or \"Mask Generator\" field.",
+    "python cryptography reproduction as for the 1.4+ family."
+   ],
+   "next_action": "Seek a TC interpretation for 1.3 PSS defaults.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "ecdsa-hash-unspecified-1.3",
+   "status": "failed",
+   "classification": "unresolved_spec_ambiguity",
+   "summary": "Sign with an EC private key whose stored Cryptographic Parameters contain only Cryptographic Algorithm ECDSA. KMIP 1.3 defines no default hash; the server returns Missing Data. Later exchanges verify with RSA/PSS parameters against the EC key and expect Valid/Invalid by hash alone. This case is absent from the 1.4+ archives (not a ruling).",
+   "detail": "/ResponseMessage/BatchItem ResultStatus mismatch; reason=6; message='ECDSA hashing algorithm required'",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-AC-M-3-ECC-13.xml": 2
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "spec-1.3",
+     "ref": "KMIP 1.3 Sign operation",
+     "quote": "The cryptographic parameters MAY be omitted from the request as they can be specified as associated attributes of the Managed Cryptographic Object."
+    }
+   ],
+   "evidence": [
+    "Probe: exchanges 3-4 verify with PaddingMethod PSS / CryptographicAlgorithm RSA on the EC public key."
+   ],
+   "later_blockers": [
+    "RSA/PSS verification parameters on an EC key (corpus defect)"
+   ],
+   "next_action": "None without a TC interpretation.",
+   "confidence": "high"
+  },
+  {
+   "id": "aes-ecb-sample-1.3",
+   "status": "failed",
+   "classification": "fixture_corpus_or_harness",
+   "subtype": "corpus_defect",
+   "summary": "AES-128-ECB of 0102...16 under key 0123456789abcdef0123456789abcdef is d9bcce11b0b437b90239552df3a360c9 (server, python cryptography and OpenSSL 3.5.7 agree); the 1.3 trace expects fd912d10.... The 1.4 trace carries the correct value.",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/Data value mismatch; expected fd912d102dbb482f6f6e91bd57119095, received d9bcce11b0b437b90239552df3a360c9",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-6-13.xml": 1
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    }
+   ],
+   "evidence": [
+    "CS-BC-M-6-14 expects d9bcce11b0b437b90239552df3a360c9 and passes."
+   ],
+   "next_action": "None for the server.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "omos-response-version-1.4",
+   "status": "failed",
+   "classification": "fixture_corpus_or_harness",
+   "subtype": "corpus_defect",
+   "confidence": "probable",
+   "summary": "In the 1.4 trace the Register response is 1.4 but the Destroy response to a 1.4 request is labelled 1.3, apparently carried over from the 1.3 trace. The server answers 1.4.",
+   "detail": "/ResponseMessage/ResponseHeader/ProtocolVersion/ProtocolVersionMinor value mismatch; expected 3, received 4",
+   "cases": {
+    "1.4|test-cases/kmip-v1.4/optional/OMOS-O-1-14.xml": 1
+   },
+   "authority": [
+    {
+     "source": "spec-1.4",
+     "ref": "KMIP 1.4 section 6.1",
+     "quote": "Servers and clients SHALL support backward compatibility with versions of the protocol with the same major version."
+    }
+   ],
+   "evidence": [
+    "No pinned sentence states that the response version must echo the request; the classification rests on the internal inconsistency."
+   ],
+   "next_action": "None for the server.",
+   "later_blockers": []
+  },
+  {
+   "id": "query-extra-operations",
+   "status": "failed",
+   "classification": "permitted_reference_choice",
+   "summary": "Query Operations returns every expected operation plus more. Profiles section 4.1.1 permits additional operation types. The probe found no other mismatch in these cases.",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/Operation: expected (8|14) fields, received [0-9]+; .*",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/SASED-M-1-13.xml": 0,
+    "1.3|test-cases/kmip-v1.3/mandatory/TL-M-1-13.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/SASED-M-1-14.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/TL-M-1-14.xml": 0,
+    "2.0|test-cases/kmip-v2.0/mandatory/SASED-M-1-20.xml": 0,
+    "2.0|test-cases/kmip-v2.0/mandatory/TL-M-1-20.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/SASED-M-1-21.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/TL-M-1-21.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/SASED-M-1-30.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/TL-M-1-30.xml": 0
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1.1",
+     "quote": "Operation Types reported in Query other than those noted as required in the profile"
+    },
+    {
+     "source": "profiles-1.4",
+     "ref": "Profiles 1.4 section 4.1.1",
+     "quote": "Operation Types reported in Query other than those noted as required in the profile"
+    },
+    {
+     "source": "profiles-2.0",
+     "ref": "Profiles 2.0 section 4.1.1",
+     "quote": "Operation Types reported in Query other than those noted as required in the profile"
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "Operation Types reported in Query other than those noted as required in the profile"
+    },
+    {
+     "source": "profiles-3.0",
+     "ref": "Profiles 3.0 section 4.1.1",
+     "quote": "Operation Types reported in Query other than those noted as required in the profile"
+    }
+   ],
+   "evidence": [
+    "Set difference of expected names and received codes: missing none in all 10 cases. Counts rose by one (RNG Seed) to 35/37/39/40/41 for 1.3/1.4/2.0/2.1/3.0."
+   ],
+   "residual_uncertainty": "Neither the base specifications nor Profiles section 4.1 define the order of Query operations; extra operations necessarily change positions.",
+   "next_action": "None for the server.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "query-missing-operations",
+   "status": "failed",
+   "classification": "missing_server_feature",
+   "summary": "Suite B Query lists name Cancel, Certify, Notify, Poll, Put and Re-certify, which the server does not support or report. RNG Seed is now advertised. Extra operations reported by the server are permitted.",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/Operation: expected 39 fields, received (35|37); .*",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/SUITEB_128-M-1-13.xml": 0,
+    "1.3|test-cases/kmip-v1.3/mandatory/SUITEB_192-M-1-13.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/SUITEB_128-M-1-14.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/SUITEB_192-M-1-14.xml": 0
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1.1",
+     "quote": "Operation Types reported in Query other than those noted as required in the profile"
+    },
+    {
+     "source": "profiles-1.4",
+     "ref": "Profiles 1.4 section 4.1.1",
+     "quote": "Operation Types reported in Query other than those noted as required in the profile"
+    },
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "profiles-1.4",
+     "ref": "Profiles 1.4 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    }
+   ],
+   "evidence": [
+    "Set difference of expected names and received codes: missing Poll, Cancel, Certify, ReCertify, Notify, Put (all four cases); operation 38 (RNG Seed) is now received. 1.3 returns 35 and 1.4 returns 37 operations."
+   ],
+   "next_action": "Implement or explicitly scope out these operations; Query must not advertise unsupported operations.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "msgenc-too-large-then-query-operations",
+   "status": "failed",
+   "classification": "missing_server_feature",
+   "summary": "Exchange 0: Query with Maximum Response Size 256. The server returns Response Too Large per item and either omits the optional Result Message or uses its own wording; both are permitted variations. Exchange 1 Query lists then name operations the server lacks.",
+   "detail": "/ResponseMessage/BatchItem/ResultMessage(: expected 1 fields, received 0; expected \\[\\'TOO_LARGE\\'\\], received \\[\\]| value mismatch; expected TOO_LARGE, received Response exceeds Maximum Response Size)",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/MSGENC-HTTPS-M-1-13.xml": 0,
+    "1.3|test-cases/kmip-v1.3/mandatory/MSGENC-JSON-M-1-13.xml": 0,
+    "1.3|test-cases/kmip-v1.3/mandatory/MSGENC-XML-M-1-13.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/MSGENC-HTTPS-M-1-14.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/MSGENC-JSON-M-1-14.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/MSGENC-XML-M-1-14.xml": 0,
+    "2.0|test-cases/kmip-v2.0/mandatory/MSGENC-HTTPS-M-1-20.xml": 0,
+    "2.0|test-cases/kmip-v2.0/mandatory/MSGENC-JSON-M-1-20.xml": 0,
+    "2.0|test-cases/kmip-v2.0/mandatory/MSGENC-XML-M-1-20.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/MSGENC-HTTPS-M-1-21.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/MSGENC-JSON-M-1-21.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/MSGENC-XML-M-1-21.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/MSGENC-HTTPS-M-1-30.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/MSGENC-JSON-M-1-30.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/MSGENC-XML-M-1-30.xml": 0
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1.1",
+     "quote": "ResultMessage - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-1.4",
+     "ref": "Profiles 1.4 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-2.0",
+     "ref": "Profiles 2.0 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-3.0",
+     "ref": "Profiles 3.0 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "Operation Types reported in Query other than those noted as required in the profile"
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 5.4",
+     "quote": "items such as MaximumResponseSize are interpreted to refer to a maximum length computed as if it were a TTLV-encoded response"
+    }
+   ],
+   "evidence": [
+    "Diagnostic mode (no credit): 1.3/1.4 and 3.0 XML advance to exchange 1 and fail on the Query list; the other 2.x/3.0 traces still stop at exchange 0 because the optional Result Message is omitted.",
+    "Set difference from trace bytes against this runtime's Query lists: 1.x and 2.x JSON/XML lack Cancel, Certify, Notify, Poll, Put, Recertify; 2.x HTTPS also Log; 3.0 lists 19 absent operations including Interop. RNG Seed is no longer absent.",
+    "The 3.0 JSON and XML traces differ only in correlation text; one byte of length decides whether the optional Result Message still fits in 256 bytes.",
+    "These profiles name HTTPS/JSON/XML encodings, but this harness replays them as binary TTLV."
+   ],
+   "later_blockers": [
+    "Query operation list lacks operations (exchange 1)",
+    "2.0 JSON/XML: equal counts (39) but different membership and order"
+   ],
+   "next_action": "Implement missing operations; exercise HTTPS/JSON/XML encodings separately.",
+   "confidence": "high"
+  },
+  {
+   "id": "quantum-safe-query",
+   "status": "failed",
+   "classification": "missing_server_feature",
+   "summary": "Quantum Safe profile minimum Query list. The server lacks Log and Set Endpoint Role and does not offer Interop. Extra operations are permitted.",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/Operation: expected 21 fields, received (39|40|41); .*",
+   "cases": {
+    "2.0|test-cases/kmip-v2.0/mandatory/QS-M-1-20.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/QS-M-1-21.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/QS-M-1-30.xml": 0
+   },
+   "authority": [
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 5.17.1",
+     "quote": "The specific list of operations noted in the test case are the minimum list of operations - additional operations MAY be supported."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 6.1.26 (Interop)",
+     "quote": "It SHALL NOT be available in a production server."
+    }
+   ],
+   "evidence": [
+    "Missing: Interop, Log, SetEndpointRole (2.0, 2.1, 3.0). Received 39/40/41 operations including RNG Seed (38)."
+   ],
+   "residual_uncertainty": "The minimum list includes Interop, which a production server must not offer; this case cannot pass on a production listener without a TC interpretation.",
+   "next_action": "Implement Log and Set Endpoint Role if the Quantum Safe profile is claimed; never add Interop to production.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "quantum-safe-attributes",
+   "status": "failed",
+   "classification": "missing_server_feature",
+   "summary": "Create with Protection Level, Protection Period and Quantum Safe. The server rejects the attributes as unsupported (Feature Not Supported); the reference server applied them and refused AES-128 with General Failure NOT_SAFE.",
+   "detail": "/ResponseMessage/BatchItem/ResultReason value mismatch; expected 256, received 8",
+   "cases": {
+    "2.0|test-cases/kmip-v2.0/mandatory/QS-M-2-20.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/QS-M-2-21.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/QS-M-2-30.xml": 0
+   },
+   "authority": [
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 4.45",
+     "quote": "The Quantum Safe attribute is a flag to be set to indicate an object is required to be Quantum Safe for the given Protection Period and Protection Level."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 4.43",
+     "quote": "The Protection Period attribute is the period of time for which the output of an operation or a Managed Cryptographic Object SHALL remain safe."
+    }
+   ],
+   "evidence": [
+    "Probe message: Attribute is not supported."
+   ],
+   "residual_uncertainty": "General Failure is listed only in the 2.1 Result Reason enumeration; whether it is the required reason once the attributes are supported is unestablished.",
+   "next_action": "Implement Quantum Safe attributes if that profile is claimed.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "undo-batch-wrapped-get",
+   "status": "failed",
+   "classification": "missing_server_feature",
+   "summary": "A four-item Undo batch with key-wrapped Gets in which every item succeeds. The server processes Create 01, refuses wrapped Get 02 with Feature Not Supported (\"Undo cannot include cryptographic protection operations\"), undoes Create 01 and does not return items 03/04. Cryptographic protection under Undo remains unimplemented (docs/batch-limits.md).",
+   "detail": "/ResponseMessage/(ResponseHeader/BatchCount value mismatch; expected 4, received 2|BatchItem: expected 4 fields, received 2)",
+   "cases": {
+    "1.4|test-cases/kmip-v1.4/mandatory/AX-M-2-14.xml": 1,
+    "2.0|test-cases/kmip-v2.0/mandatory/AX-M-2-20.xml": 1,
+    "2.1|test-cases/kmip-v2.1/mandatory/AX-M-2-21.xml": 1,
+    "3.0|test-cases/kmip-v3.0/mandatory/AX-M-2-30.xml": 1
+   },
+   "authority": [
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 434",
+     "quote": "Undo If any operation in the request fails, then the server SHALL undo all the previous operations."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 8.6 Table 399",
+     "quote": "Operation Yes, if specified in Request Batch Item"
+    },
+    {
+     "source": "spec-1.4",
+     "ref": "KMIP 1.4 Table 366",
+     "quote": "Processing of batch item fails with Batch Error Continuation Option set to Undo Batch item fails and Result Status is set to Operation Failed. Batch items that had been processed have been undone and their responses are returned with Undone result status."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 9.19 Table 424 (Operation Undone)",
+     "quote": "Operation Undone - The requested operation was performed, but had to be undone (i.e., due to a failure in a batch for which the Error Continuation Option was set to Undo)."
+    },
+    {
+     "source": "spec-3.0",
+     "ref": "KMIP 3.0 CSD02 Batch Error Continuation Option enumeration",
+     "quote": "If a server does not support the Undo capability and a client sends this option in a request, the request should be rejected as not supported."
+    }
+   ],
+   "evidence": [
+    "Research probe on native 462a1d89 (no credit), exchange 1 of all four traces: item 1 Operation Create, Result Status Operation Undone with Object Type and Unique Identifier; item 2 Operation Get, Operation Failed, Result Reason 8 (Feature Not Supported). 1.4/2.0/2.1 return Batch Count 2 and Unique Batch Item IDs 01/02; the 3.0 request carries no IDs and its response has none.",
+    "Previously (runtime 441650f) one Operation-less Batch Item with Batch Count 1 was returned; that secondary defect is corrected in this runtime."
+   ],
+   "next_action": "Decide Undo semantics for wrapping/protection outputs (implement rollback-safe wrapped Get or scope it out explicitly).",
+   "later_blockers": [],
+   "confidence": "high",
+   "residual_uncertainty": "Partial, operation-specific Undo support is not settled by the 1.x whole-request rejection rule or the 3.0 draft guidance; whether to advertise a narrower capability or reject the whole combination remains open (docs/batch-limits.md). No TC interpretation is cited."
+  },
+  {
+   "id": "triple-des",
+   "status": "failed",
+   "classification": "missing_server_feature",
+   "summary": "3DES (DES3, 168-bit) Create or Register is unsupported.",
+   "detail": "/ResponseMessage/BatchItem ResultStatus mismatch; reason=7; message='(Unsupported symmetric algorithm or key length|Key length does not match material)'",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-4-12-3DES-13.xml": 0,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKFF-M-4-13.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKFF-M-4-14.xml": 0,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKFF-M-4-20.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKFF-M-4-21.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/SKFF-M-12-30.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/SKFF-M-4-30.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/SKFF-M-8-30.xml": 0
+   },
+   "authority": [
+    {
+     "source": "spec-1.3",
+     "ref": "KMIP 1.3 section 2.1.3 Key Block",
+     "quote": "3DES keys are typically from 112 to 192 bits (depending upon key length and the presence of parity bits)."
+    }
+   ],
+   "evidence": [
+    "CS-BC-M-4-12-3DES-13 registers 24 bytes as Cryptographic Length 168; if 3DES is added, parity-bit lengths must be accepted."
+   ],
+   "next_action": "Security/product decision on 3DES; it remains unsupported.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "group-link",
+   "status": "failed",
+   "classification": "missing_server_feature",
+   "summary": "Draft 3.0 Group Link is unsupported in Register and as a Locate filter (ablation: removing Group Link makes Register succeed). SASED-M-3-30 also depends on objects registered by SASED-M-2-30.",
+   "detail": "/ResponseMessage/BatchItem ResultStatus mismatch; reason=8; message='(Attribute is not supported|Unsupported Locate filter)'",
+   "cases": {
+    "3.0|test-cases/kmip-v3.0/mandatory/SASED-M-2-30.xml": 1,
+    "3.0|test-cases/kmip-v3.0/mandatory/SASED-M-3-30.xml": 0
+   },
+   "authority": [
+    {
+     "source": "spec-3.0",
+     "ref": "KMIP 3.0 CSD02 section 4.35.7",
+     "quote": "The Group Link attribute identifies the group that a managed object is a member of."
+    }
+   ],
+   "evidence": [
+    "Ablation probe."
+   ],
+   "later_blockers": [
+    "SASED-M-3-30 cross-case state"
+   ],
+   "next_action": "Implement Group Link for the draft.",
+   "confidence": "high"
+  },
+  {
+   "id": "template-object-1.3",
+   "status": "failed",
+   "classification": "missing_server_feature",
+   "summary": "Register of a 1.3 Template object (and later Template-name use) is unsupported.",
+   "detail": "/ResponseMessage/BatchItem ResultStatus mismatch; reason=8; message='Unsupported object type'",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/SASED-M-2-13.xml": 1
+   },
+   "authority": [
+    {
+     "source": "spec-1.3",
+     "ref": "KMIP 1.3 section 2.2.6",
+     "quote": "The Template Managed Object is deprecated as of version 1.3 of this specification and MAY be removed from subsequent versions of the specification."
+    }
+   ],
+   "evidence": [
+    "Probe exchange 2: Template names are not supported."
+   ],
+   "next_action": "Decide whether deprecated 1.3 Templates are in scope.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "cross-case-state",
+   "status": "failed",
+   "classification": "dependency_determinism_interop",
+   "subtype": "cross_case_state",
+   "summary": "Locate finds objects created by an earlier case (SASED-M-2 or TL-M-2). The harness gives each case an empty store and principal, so nothing is found.",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/UniqueIdentifier: expected 1 fields, received 0; expected \\['\\$UNIQUE_IDENTIFIER_0'\\], received \\[\\]",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/SASED-M-3-13.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/SASED-M-3-14.xml": 0,
+    "2.0|test-cases/kmip-v2.0/mandatory/SASED-M-3-20.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/SASED-M-3-21.xml": 0,
+    "1.3|test-cases/kmip-v1.3/mandatory/TL-M-3-13.xml": 0,
+    "1.4|test-cases/kmip-v1.4/mandatory/TL-M-3-14.xml": 0,
+    "2.0|test-cases/kmip-v2.0/mandatory/TL-M-3-20.xml": 0,
+    "2.1|test-cases/kmip-v2.1/mandatory/TL-M-3-21.xml": 0,
+    "3.0|test-cases/kmip-v3.0/mandatory/TL-M-3-30.xml": 0
+   },
+   "authority": [
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 5.11.3.3",
+     "quote": "Locate and retrieve the previously registered authentication key and finally destroy the authentication key."
+    }
+   ],
+   "evidence": [
+    "Locate filters use SASED-M-2-<v>-group or TL-M-2-<v> values.",
+    "Prerequisites are themselves non-passing: SASED-M-2-13 (Template), TL-M-2 unexecuted for 1.3-2.1 and failing for 3.0."
+   ],
+   "next_action": "Add an explicit sequenced-case mode that records the dependency chain; prerequisites must pass first.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "rng-seed-data-length-policy",
+   "status": "failed",
+   "classification": "permitted_reference_choice",
+   "summary": "RNG Seed is implemented with one fixed policy: validate the request, ignore the seed and return Data Length 0. CS-RNG-O-1 and O-2 send the same 32-byte seed and expect a server that used 32 or 16 bytes. Base text lets the server ignore the seed and report zero, and these are optional test cases that MAY be supported. The cases remain failed; no comparator relaxation or pass is claimed.",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/DataLength value mismatch; expected (32|16), received 0",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-RNG-O-1-13.xml": 0,
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-RNG-O-2-13.xml": 0,
+    "1.3|test-cases/kmip-v1.3/optional/CS-RNG-O-1-13.xml": 0,
+    "1.3|test-cases/kmip-v1.3/optional/CS-RNG-O-2-13.xml": 0,
+    "1.4|test-cases/kmip-v1.4/optional/CS-RNG-O-1-14.xml": 0,
+    "1.4|test-cases/kmip-v1.4/optional/CS-RNG-O-2-14.xml": 0,
+    "2.0|test-cases/kmip-v2.0/optional/CS-RNG-O-1-20.xml": 0,
+    "2.0|test-cases/kmip-v2.0/optional/CS-RNG-O-2-20.xml": 0,
+    "2.1|test-cases/kmip-v2.1/optional/CS-RNG-O-1-21.xml": 0,
+    "2.1|test-cases/kmip-v2.1/optional/CS-RNG-O-2-21.xml": 0,
+    "3.0|test-cases/kmip-v3.0/optional/CS-RNG-O-1-30.xml": 0,
+    "3.0|test-cases/kmip-v3.0/optional/CS-RNG-O-2-30.xml": 0
+   },
+   "authority": [
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 6.1.50 (identical in 1.2-1.4 section 4.36, 2.0 section 6.1.46, 3.0 section 6.1.57)",
+     "quote": "The server MAY elect to ignore the information provided by the client (i.e. not accept the seeding material) and MAY indicate this to the client by returning zero as the value in the Data Length response. A client SHALL NOT consider a response from a server which does not use the provided data as an error."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 320",
+     "quote": "Data Length Yes The amount of seed data used (in bytes)."
+    },
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 2.1",
+     "quote": "MAY specify the optional test cases that MAY be supported by conforming implementations"
+    },
+    {
+     "source": "profiles-1.4",
+     "ref": "Profiles 1.4 section 2.1",
+     "quote": "MAY specify the optional test cases that MAY be supported by conforming implementations"
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 2.1 (same text in 2.0 and 3.0)",
+     "quote": "Specify the optional test cases that MAY be supported by conforming implementations"
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    }
+   ],
+   "evidence": [
+    "Strict report and independent replay: Success with Data Length 0 at exchange 0 in all 12 traces; the comparator stops at the literal Data Length.",
+    "Research probe on native 462a1d89 (no credit): CS-RNG-O-1-13 (optional/) and CS-RNG-O-2-21 return one Batch Item, Operation 38, Result Status Success, payload Data Length 0 only.",
+    "CS-RNG-O-3 (Data Length 0) now passes in all six traces; O-1, O-2 and O-3 send the same request, so one configuration can match at most one of them per edition.",
+    "docs/rng-seed.md records why no client material is mixed into OpenSSL."
+   ],
+   "residual_uncertainty": "Profiles section 4.1.1 lists no Data Length variation, so these traces cannot pass strictly under the selected policy. Treating an unsupported optional seeding policy as a permitted choice relies on the base MAY text and the optional-test-case clauses; no TC interpretation is cited.",
+   "next_action": "None required for the selected ignore-and-zero policy. Matching O-1/O-2 would need an optional proven seed-ingestion path (docs/rng-seed.md).",
+   "later_blockers": [],
+   "confidence": "medium"
+  },
+  {
+   "id": "rng-seed-permission-denied-acl",
+   "status": "failed",
+   "classification": "fixture_corpus_or_harness",
+   "subtype": "harness_gap",
+   "summary": "CS-RNG-O-4 expects Permission Denied for the same seed request. The harness runs every case with one client policy that permits operations 1-66, so the server applies its ignore-and-zero policy and returns Success. A policy without operation 38 produces Permission Denied; the harness has no per-case policy, so this is not a pass.",
+   "detail": "/ResponseMessage/BatchItem ResultStatus mismatch; reason=None; message=None",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-RNG-O-4-13.xml": 0,
+    "1.3|test-cases/kmip-v1.3/optional/CS-RNG-O-4-13.xml": 0,
+    "1.4|test-cases/kmip-v1.4/optional/CS-RNG-O-4-14.xml": 0,
+    "2.0|test-cases/kmip-v2.0/optional/CS-RNG-O-4-20.xml": 0,
+    "2.1|test-cases/kmip-v2.1/optional/CS-RNG-O-4-21.xml": 0,
+    "3.0|test-cases/kmip-v3.0/optional/CS-RNG-O-4-30.xml": 0
+   },
+   "authority": [
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Table 321",
+     "quote": "Operation Failed Cryptographic Failure, Attestation Failed, Attestation Required, Feature Not Supported, Invalid Field, Invalid Message, Operation Not Supported, Permission Denied, Response Too Large Table 321: RNG Seed Errors"
+    },
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 2.1",
+     "quote": "MAY specify the optional test cases that MAY be supported by conforming implementations"
+    },
+    {
+     "source": "profiles-1.4",
+     "ref": "Profiles 1.4 section 2.1",
+     "quote": "MAY specify the optional test cases that MAY be supported by conforming implementations"
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 2.1 (same text in 2.0 and 3.0)",
+     "quote": "Specify the optional test cases that MAY be supported by conforming implementations"
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "Result Message - May or may not be included in responses and the value (if included) may vary from the text contained within the test case."
+    }
+   ],
+   "evidence": [
+    "scripts/dev-pki.sh grants the client principal operations 1-66; scripts/oasis_conformance.py only renames principals per case.",
+    "Research probe on native 462a1d89 with operation 38 removed from the client principal (no credit): all five editions (1.3 optional/, 1.4, 2.0, 2.1, 3.0) return Operation 38, Operation Failed, Permission Denied (12) with message \"Operation denied by certificate policy\"; strict comparison then stops on the permitted Result Message wording (\"DENIED\").",
+    "Under the harness policy the response is Success with Data Length 0 (probe of CS-RNG-O-4-21)."
+   ],
+   "next_action": "Add a labelled per-case policy fixture to the harness for denial traces, then compare under a Profiles 4.1 variation mode; never alter the production policy for a trace.",
+   "later_blockers": [
+    "Result Message wording (permitted variation) under a denying policy"
+   ],
+   "confidence": "high"
+  },
+  {
+   "id": "rng-algorithm-metadata",
+   "status": "failed",
+   "classification": "permitted_reference_choice",
+   "summary": "The reference server reports RNG Algorithm ANSI X9.31; the server reports Unspecified. This is the only mismatch in all 15 exchanges (probe).",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/Attributes/RandomNumberGenerator/RNGAlgorithm value mismatch; expected 5, received 1",
+   "cases": {
+    "3.0|test-cases/kmip-v3.0/mandatory/SKFF-M-10-30.xml": 1,
+    "3.0|test-cases/kmip-v3.0/mandatory/SKFF-M-11-30.xml": 1
+   },
+   "authority": [
+    {
+     "source": "profiles-3.0",
+     "ref": "Profiles 3.0 CSD02 section 4.1.1",
+     "quote": "Random Number Generator - The value returned may vary from the value returned including any of the defined values for the RNG Algorithm field within the Random Number Generator attribute including Unspecified."
+    }
+   ],
+   "evidence": [
+    "Continue-on-mismatch probe."
+   ],
+   "next_action": "None for the server.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "additional-digest",
+   "status": "failed",
+   "classification": "permitted_reference_choice",
+   "summary": "Get Attributes returns the mandatory SHA-256 PKCS#1 Digest plus an additional PKCS#8 Digest; the trace shows one. This is the only mismatch kind in the case (probe).",
+   "detail": "/ResponseMessage/BatchItem/ResponsePayload/Attributes/Digest: expected 1 fields, received 2",
+   "cases": {
+    "3.0|test-cases/kmip-v3.0/optional/AKLC-O-1-30.xml": 1
+   },
+   "authority": [
+    {
+     "source": "spec-3.0",
+     "ref": "KMIP 3.0 CSD02 section 4.24",
+     "quote": "Multiple digests MAY be calculated using different algorithms and/or key format types."
+    },
+    {
+     "source": "spec-3.0",
+     "ref": "KMIP 3.0 CSD02 section 4.24",
+     "quote": "If this attribute exists, then it SHALL have a mandatory attribute instance computed with the SHA-256 hashing algorithm and the default Key Value Format for this object type and algorithm."
+    },
+    {
+     "source": "profiles-3.0",
+     "ref": "Profiles 3.0 CSD02 section 4.1.1",
+     "quote": "Additional attributes beyond those noted in the response"
+    }
+   ],
+   "evidence": [
+    "Probe: Digest PKCS_8 and PKCS_1 with SHA-256; 3.0 Table 117 makes PKCS#1 the RSA private key default."
+   ],
+   "next_action": "None for the server.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "generated-material-literal",
+   "status": "unexecuted",
+   "classification": "dependency_determinism_interop",
+   "subtype": "variable_output_literal_sample",
+   "summary": "Fixed key material or digests after server-side key generation. The traces contain no Register. Profiles section 4.1.1 lists generated key material and Digest Value of dynamically generated objects as variable, so these need either a deterministic test-only fixture or a comparator that implements those variations with independent validation.",
+   "detail": "trace contains fixed key material/digests after key generation; deterministic test-only fixture required",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/AKLC-M-1-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/AKLC-M-2-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/AKLC-M-3-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/AKLC-O-1-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKFF-M-10-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKFF-M-11-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKFF-M-12-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKFF-M-5-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKFF-M-6-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKFF-M-7-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKFF-M-8-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKFF-M-9-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKLC-M-1-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKLC-M-2-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKLC-M-3-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/SKLC-O-1-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/TL-M-2-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/optional/AKLC-O-1-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/optional/SKLC-O-1-13.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/AKLC-M-1-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/AKLC-M-2-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/AKLC-M-3-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKFF-M-10-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKFF-M-11-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKFF-M-12-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKFF-M-5-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKFF-M-6-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKFF-M-7-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKFF-M-8-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKFF-M-9-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKLC-M-1-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKLC-M-2-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/SKLC-M-3-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/TL-M-2-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/optional/AKLC-O-1-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/optional/SKLC-O-1-14.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/AKLC-M-1-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/AKLC-M-2-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/AKLC-M-3-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKFF-M-10-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKFF-M-11-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKFF-M-12-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKFF-M-5-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKFF-M-6-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKFF-M-7-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKFF-M-8-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKFF-M-9-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKLC-M-1-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKLC-M-2-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/SKLC-M-3-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/TL-M-2-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/optional/AKLC-O-1-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/optional/SKLC-O-1-20.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/AKLC-M-1-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/AKLC-M-2-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/AKLC-M-3-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKFF-M-10-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKFF-M-11-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKFF-M-12-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKFF-M-5-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKFF-M-6-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKFF-M-7-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKFF-M-8-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKFF-M-9-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKLC-M-1-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKLC-M-2-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/SKLC-M-3-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/TL-M-2-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/optional/AKLC-O-1-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/optional/SKLC-O-1-21.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/AKLC-M-1-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/AKLC-M-2-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/AKLC-M-3-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/SKLC-M-1-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/SKLC-M-2-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/SKLC-M-3-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/optional/SKLC-O-1-30.xml": null
+   },
+   "authority": [
+    {
+     "source": "profiles-1.3",
+     "ref": "Profiles 1.3 section 4.1.1",
+     "quote": "KeyValue / KeyMaterial including: key material content returned for managed cryptographic objects which are generated by the server"
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    }
+   ],
+   "evidence": [
+    "The preflight rule is coarse: any Create plus any literal KeyMaterial/DigestValue anywhere in the trace."
+   ],
+   "next_action": "Separate test-only fixture or a section 4.1-aware comparator; never weaken production RNG.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "randomized-rsa-literal",
+   "status": "unexecuted",
+   "classification": "dependency_determinism_interop",
+   "subtype": "variable_output_literal_sample",
+   "summary": "OAEP / PKCS#1 v1.5 / PSS output with a registered key compared with literal sample bytes; the output is inherently randomized.",
+   "detail": "trace compares randomized RSA padding output with fixed sample bytes even with a registered key; deterministic test-only fixture required",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-AC-M-1-13.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-AC-M-OAEP-1-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-AC-M-OAEP-3-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-AC-M-OAEP-5-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-AC-M-OAEP-7-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-AC-M-OAEP-9-14.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-AC-M-OAEP-1-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-AC-M-OAEP-3-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-AC-M-OAEP-5-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-AC-M-OAEP-7-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-AC-M-OAEP-9-20.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-AC-M-OAEP-1-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-AC-M-OAEP-3-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-AC-M-OAEP-5-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-AC-M-OAEP-7-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-AC-M-OAEP-9-21.xml": null
+   },
+   "authority": [
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "the operation inherently contains variable output"
+    }
+   ],
+   "evidence": [],
+   "next_action": "Validate by decryption/verification round trips rather than literal bytes.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "generated-key-crypto-literal",
+   "status": "unexecuted",
+   "classification": "dependency_determinism_interop",
+   "subtype": "variable_output_literal_sample",
+   "summary": "Cryptographic output of a server-generated key compared with literal bytes.",
+   "detail": "trace compares a generated key's cryptographic output with fixed sample bytes; deterministic test-only fixture required",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-1-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-2-13.xml": null,
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-BC-M-3-13.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-1-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-2-14.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-BC-M-3-14.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-1-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-2-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-BC-M-3-20.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-1-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-2-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-BC-M-3-21.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/CS-BC-M-3-30.xml": null
+   },
+   "authority": [
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "the operation inherently contains variable output"
+    }
+   ],
+   "evidence": [],
+   "next_action": "Separate test-only fixture or round-trip validation.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "csprng-literal",
+   "status": "unexecuted",
+   "classification": "dependency_determinism_interop",
+   "subtype": "variable_output_literal_sample",
+   "summary": "RNG Retrieve output compared with literal sample bytes.",
+   "detail": "trace compares CSPRNG output with fixed sample bytes; deterministic test-only fixture required",
+   "cases": {
+    "1.3|test-cases/kmip-v1.3/mandatory/CS-RNG-M-1-13.xml": null,
+    "1.4|test-cases/kmip-v1.4/mandatory/CS-RNG-M-1-14.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/CS-RNG-M-1-20.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/CS-RNG-M-1-21.xml": null
+   },
+   "authority": [
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.1",
+     "quote": "the operation inherently contains variable output"
+    }
+   ],
+   "evidence": [],
+   "next_action": "Check length/type only in a labelled variation mode; never a production deterministic RNG.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "interop-begin-end-wrapper",
+   "status": "unexecuted",
+   "classification": "dependency_determinism_interop",
+   "subtype": "interop_wrapper",
+   "summary": "All 47 traces use Interop only as a single-item Begin first request and End last request. Profiles 2.0+ section 4.1.2 lets a test omit these. The production listener correctly lacks Interop; an explicitly labelled omission mode in the harness is the unimplemented need.",
+   "detail": "trace requires the test-only Interop operation, prohibited on production servers; separate test fixture required",
+   "cases": {
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-1-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-10-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-11-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-12-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-13-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-2-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-3-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-4-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-5-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-6-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-7-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-8-20.xml": null,
+    "2.0|test-cases/kmip-v2.0/mandatory/BL-M-9-20.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-1-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-10-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-11-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-12-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-13-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-2-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-3-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-4-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-5-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-6-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-7-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-8-21.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/BL-M-9-21.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-1-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-10-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-11-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-12-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-13-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-14-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-15-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-16-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-17-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-18-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-19-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-2-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-20-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-21-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-3-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-4-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-5-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-6-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-7-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-8-30.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/BL-M-9-30.xml": null
+   },
+   "authority": [
+    {
+     "source": "spec-2.0",
+     "ref": "KMIP 2.0 section 6.1.25",
+     "quote": "It SHALL NOT be available in a production server."
+    },
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 6.1.26",
+     "quote": "It SHALL NOT be available in a production server."
+    },
+    {
+     "source": "spec-3.0",
+     "ref": "KMIP 3.0 CSD02 section 6.1.32",
+     "quote": "It SHALL NOT be available in a production server."
+    },
+    {
+     "source": "profiles-2.0",
+     "ref": "Profiles 2.0 section 4.1.2",
+     "quote": "A test MAY be preceded by a request containing the Operation Interop with the Interop Function set to Begin"
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.2",
+     "quote": "A test MAY be followed by a request containing the Operation Interop with the Interop Function set to End"
+    },
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1.2",
+     "quote": "Use of the Operation Interop is optional"
+    },
+    {
+     "source": "profiles-3.0",
+     "ref": "Profiles 3.0 CSD02 section 4.1.2",
+     "quote": "A test MAY be preceded by a request containing the Operation Interop with the Interop Function set to Begin"
+    }
+   ],
+   "evidence": [
+    "Trace scan: 47/47 have exactly (first, Begin, 1 item) and (last, End, 1 item), with no Reset."
+   ],
+   "next_action": "Add a harness mode that drops only those two exchanges and records the modification; results stay separate from unmodified replays.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "pkcs11-function-enumeration",
+   "status": "unexecuted",
+   "classification": "fixture_corpus_or_harness",
+   "subtype": "harness_gap",
+   "summary": "The harness registry has no PKCS#11 Function enumeration values (C_Initialize). The server also does not report the PKCS#11 operation (51) in Query, so a later server gap is expected.",
+   "detail": "enumeration PKCS_11Function=C_Initialize",
+   "cases": {
+    "2.0|test-cases/kmip-v2.0/mandatory/PKCS11-M-1-20.xml": null,
+    "2.1|test-cases/kmip-v2.1/mandatory/PKCS11-M-1-21.xml": null,
+    "3.0|test-cases/kmip-v3.0/mandatory/PKCS11-M-1-30.xml": null
+   },
+   "authority": [
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 6.1.37",
+     "quote": "This operation enables the server to perform a PKCS#11 operation."
+    }
+   ],
+   "evidence": [
+    "Server Query lists in this report omit operation code 51."
+   ],
+   "later_blockers": [
+    "PKCS#11 operation unimplemented"
+   ],
+   "next_action": "Registry enumeration first; the operation remains unimplemented.",
+   "confidence": "high"
+  },
+  {
+   "id": "non-trace-archive-files",
+   "status": "unexecuted",
+   "classification": "fixture_corpus_or_harness",
+   "subtype": "non_trace_file",
+   "summary": "Word export support files in the 3.0 CSD02 profiles archive (.fld/*.xml) are not message traces but are counted as cases.",
+   "detail": "no message trace",
+   "cases": {
+    "3.0|kmip-profiles-v3.0-csd02.fld/colorschememapping.xml": null,
+    "3.0|kmip-profiles-v3.0-csd02.fld/filelist.xml": null,
+    "3.0|kmip-profiles-v3.0-csd02.fld/item0001.xml": null,
+    "3.0|kmip-profiles-v3.0-csd02.fld/props002.xml": null
+   },
+   "authority": [
+    {
+     "source": "profiles-3.0",
+     "ref": "Profiles 3.0 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    }
+   ],
+   "evidence": [
+    "Paths under kmip-profiles-v3.0-csd02.fld/."
+   ],
+   "next_action": "Exclude non-trace files with a recorded rule.",
+   "later_blockers": [],
+   "confidence": "high"
+  },
+  {
+   "id": "legacy-archives-without-traces",
+   "status": "unexecuted",
+   "classification": "fixture_corpus_or_harness",
+   "subtype": "no_trace_corpus",
+   "summary": "The pinned 1.1 and 1.2 profile archives contain only the profile document. They reference separate KMIP Test Cases documents (published as OASIS Committee Notes), which are not pinned or converted here.",
+   "detail": "profile archive contains no XML traces; legacy test-case document coverage pending",
+   "cases": {
+    "1.1|(archive)": null,
+    "1.2|(archive)": null
+   },
+   "authority": [
+    {
+     "source": "profiles-1.1",
+     "ref": "Profiles 1.1 references",
+     "quote": "Key Management Interoperability Protocol Test Cases Version 1.1"
+    },
+    {
+     "source": "profiles-1.2",
+     "ref": "Profiles 1.2 references",
+     "quote": "Key Management Interoperability Protocol Test Cases Version 1.2"
+    }
+   ],
+   "evidence": [
+    "Archive listings contain .doc/.html/.pdf and images only."
+   ],
+   "next_action": "Pin and convert the 1.1/1.2 test-case documents.",
+   "later_blockers": [],
+   "confidence": "high"
+  }
+ ],
+ "findings": [
+  {
+   "id": "refusal-batch-item-form",
+   "type": "server_defect_corrected",
+   "summary": "Runtime 441650f returned the AX-M-2 refusal as Batch Count 1 with one Batch Item lacking Operation and Unique Batch Item ID. Runtime 462a1d89 returns Create 01 Undone and Get 02 failed, each with its Operation and ID (research probe). The governing undo-batch-wrapped-get blocker remains; this finding is not a pass.",
+   "cases": [
+    "AX-M-2 (1.4, 2.0, 2.1, 3.0)"
+   ],
+   "authority": [
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 section 8.6 Table 399",
+     "quote": "Operation Yes, if specified in Request Batch Item"
+    },
+    {
+     "source": "spec-1.4",
+     "ref": "KMIP 1.4 Table 327",
+     "quote": "Message cannot be parsed Response message containing a header and a Batch Item without Operation, but with the Result Status field set to Operation Failed Invalid Message"
+    },
+    {
+     "source": "spec-1.4",
+     "ref": "KMIP 1.4 Table 366",
+     "quote": "Processing of batch item fails with Batch Error Continuation Option set to Undo Batch item fails and Result Status is set to Operation Failed. Batch items that had been processed have been undone and their responses are returned with Undone result status."
+    }
+   ]
+  },
+  {
+   "id": "harness-camelcase-rekey",
+   "type": "harness_gap",
+   "summary": "Traces spell ReKey and ReKeyKeyPair (19 occurrences, Query lists only). The harness normalizer produces Rekey, so enum_value raises Unsupported once a Query count matches; count mismatches currently hide this. With RNG Seed advertised, the 2.0 MSGENC-JSON/XML exchange-1 lists now have equal counts (39); they are not reached because exchange 0 fails, and element-wise comparison would stop at the first entry (Query vs Create) before ReKey at index 18.",
+   "cases": [
+    "SUITEB, MSGENC and other 39+ entry Query lists"
+   ],
+   "authority": [
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 5.4.1.1",
+     "quote": "KMIP text values of Tags, Types and Enumerations SHALL be normalized to create a 'CamelCase' format"
+    }
+   ]
+  },
+  {
+   "id": "comparator-variation-scope",
+   "type": "harness_gap",
+   "summary": "The strict comparator implements none of the Profiles section 4.1 permitted variations (Result Message, extra Query operations, additional attributes, RNG metadata, generated material). It also ignores response fields absent from the expected trace. It is therefore stricter than the Profiles in some places and laxer in others; neither direction earns or removes credit here.",
+   "cases": [],
+   "authority": [
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 4.1",
+     "quote": "Other variations not explicitly noted in this section SHALL be deemed non-conformant."
+    }
+   ]
+  },
+  {
+   "id": "duplicate-traces",
+   "type": "corpus_note",
+   "summary": "Several cases are byte-identical apart from comments or correlation text, so strict totals count them more than once: 1.3 mandatory/optional copies of AKLC-O-1, CS-RNG-O-1..4, OMOS-O-1 and SKLC-O-1; MSGENC HTTPS/JSON/XML in 1.3/1.4 and JSON/XML in 2.0/2.1/3.0; SUITEB_128/192 in 1.3/1.4.",
+   "cases": [],
+   "authority": []
+  },
+  {
+   "id": "encodings-not-exercised",
+   "type": "harness_gap",
+   "summary": "MSGENC-HTTPS/JSON/XML traces are replayed as binary TTLV over mTLS; HTTPS, JSON and XML message encodings are not exercised by this harness.",
+   "cases": [],
+   "authority": [
+    {
+     "source": "profiles-2.1",
+     "ref": "Profiles 2.1 section 5.4",
+     "quote": "items such as MaximumResponseSize are interpreted to refer to a maximum length computed as if it were a TTLV-encoded response"
+    }
+   ]
+  },
+  {
+   "id": "errata-reviewed",
+   "type": "source_note",
+   "summary": "Pinned 1.4 errata01 changes sections 2.2, 2.2.8 and Table 104 only; 1.1 errata01 has no traces here. Neither affects a cited clause.",
+   "cases": [],
+   "authority": []
+  },
+  {
+   "id": "capacity-reason-not-exercised",
+   "type": "coverage_note",
+   "summary": "This runtime maps local capacity refusals to General Failure in 1.x and Server Limit Exceeded (0x3a) from 2.0, including Validate certificate caps. No strict trace detail contains reason 58 or a capacity refusal; the Tag Length 1 General Failure cases are unchanged. The OASIS corpus therefore neither confirms nor refutes the mapping, and operation-specific error tables (for example Validate Table 342) still omit the reason.",
+   "cases": [],
+   "authority": [
+    {
+     "source": "spec-2.1",
+     "ref": "KMIP 2.1 Result Reason table",
+     "quote": "Server Limit Exceeded Some limit on the server such as database size has been exceeded"
+    }
+   ]
+  },
+  {
+   "id": "alternative-name-implemented",
+   "type": "server_feature_added",
+   "summary": "TL-M-2-30 passes with Alternative Name. Removed its sole failure family. Bounded native/image probes also exercise partial Locate; this is not full conformance.",
+   "cases": [
+    "3.0|test-cases/kmip-v3.0/mandatory/TL-M-2-30.xml"
+   ]
+  }
+ ],
+ "remaining_gaps": [
+  "A complete requirement-to-test ledger covering every normative clause of every claimed version, including approved errata, does not exist.",
+  "No TC interpretations are cited; the unresolved_spec_ambiguity families need them.",
+  "Sequenced cross-case replay, an Interop-omission mode, a section 4.1 variation mode and a deterministic test-only fixture are unimplemented.",
+  "HTTPS/JSON/XML encodings, TLS profile requirements and the separately pinned 1.1/1.2 legacy notes are not covered by this 439-entry harness.",
+  "Per-case authorization policy fixtures (for denial traces such as CS-RNG-O-4) are absent from the harness."
+ ]
+}

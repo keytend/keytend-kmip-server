@@ -1,0 +1,16 @@
+[
+  {
+    "version": "1.1",
+    "filename": "1.1-errata01.html",
+    "url": "https://docs.oasis-open.org/kmip/spec/v1.1/errata01/os/kmip-spec-v1.1-errata01-os.html",
+    "sha256": "56db980587430cff4572a364328ea7bdc0a154e57e28a3f040f811f056e6577e",
+    "status": "approved_errata"
+  },
+  {
+    "version": "1.4",
+    "filename": "1.4-errata01.html",
+    "url": "https://docs.oasis-open.org/kmip/spec/v1.4/errata01/os/kmip-spec-v1.4-errata01-os.html",
+    "sha256": "57d9902b7173f07a109330a29fd2f31df7e98e578657df32f83b8b12a8a8995a",
+    "status": "approved_errata"
+  }
+]

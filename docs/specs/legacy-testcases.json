@@ -1,0 +1,35 @@
+[
+  {
+    "document": "KMIP Test Cases 1.1 CN01",
+    "version": "1.1",
+    "status": "OASIS Committee Note 01, 27 July 2012 (non-normative; latest approved stage, no errata published under testcases/v1.1/)",
+    "format": "hex-ttlv",
+    "url": "https://docs.oasis-open.org/kmip/testcases/v1.1/cn01/kmip-testcases-v1.1-cn01.zip",
+    "filename": "kmip-testcases-v1.1-cn01.zip",
+    "sha256": "73cae15d0f9d3324564c50e54193fc316a6ca7150321e9467e5a1c5a6e77c16e",
+    "member": "kmip-testcases-v1.1-cn01.html",
+    "member_sha256": "a9ad3ccca8bb07cb4ecfe76741f5c0b7b31a337b2b5233393dcbc7861abb408c",
+    "encoding": "windows-1252",
+    "authoritative": "kmip-testcases-v1.1-cn01.doc (the HTML rendering in the same release ZIP is parsed)"
+  },
+  {
+    "document": "KMIP Test Cases 1.2 CN01",
+    "version": "1.2",
+    "status": "OASIS Committee Note 01, 11 November 2014 (non-normative; latest approved stage, no errata published under testcases/v1.2/)",
+    "format": "xml",
+    "url": "https://docs.oasis-open.org/kmip/testcases/v1.2/cn01/kmip-testcases-v1.2-cn01.zip",
+    "filename": "kmip-testcases-v1.2-cn01.zip",
+    "sha256": "ae2aeffce77b42af0eea4e01aa2abb609487cd497be6dfdeb1b43f36e7fe4546",
+    "member": "kmip-testcases-v1.2-cn01.html",
+    "member_sha256": "21f73cfa2f1cd7124037f964dbf568441811cf180decf7c052e21221eeecd714",
+    "encoding": "windows-1252",
+    "authoritative": "kmip-testcases-v1.2-cn01.doc (the HTML rendering in the same release ZIP is parsed)",
+    "oasis_manifest": {
+      "url": "https://docs.oasis-open.org/kmip/testcases/v1.2/cn01/kmip-testcases-v1.2-cn01-manifest.txt",
+      "filename": "kmip-testcases-v1.2-cn01-manifest.txt",
+      "sha256": "467fe9e3fa0aa43ed3934b7b1c2add13ed43322e5df62cb9b613aae2d778a231",
+      "zip_md5": "91e585e2eade664445f0e7b208845481",
+      "zip_sha1": "b468e0b8e1da87fb585dfb5461687129c7b32e27"
+    }
+  }
+]
