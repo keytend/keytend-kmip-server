@@ -3,17 +3,17 @@
   "repository": "keytend/keytend-kmip-java",
   "tag": "v0.10.0-rc.1",
   "version": "0.10.0-rc.1",
-  "commit": "12dd7d3d68e56f9cdaee405c20f52575e5363801",
+  "commit": "0c5c725ae9b700f6e754643c3c21fde811680039",
   "java_release": 17,
   "asset": "keytend-kmip-0.10.0-rc.1.zip",
-  "asset_bytes": 8100804,
-  "asset_sha256": "8bf75d88d97949c4fe635465fd05c3e335746d2b4519777f9a8390594bcb84f6",
-  "checksum_sha256": "6a111675138e84c307781d04580e71df05e0aea94e2a4a80abfdcaf548904cfa",
-  "sums_sha256": "a7d17da17704cd7e7d59d5bdb731430e868969b63d6ce83eee95091e50131b86",
+  "asset_bytes": 7767183,
+  "asset_sha256": "b53a38405e4028a453d49e3363a616e6a488834bab8f4f4722defab8bb474c16",
+  "checksum_sha256": "2b146a610280e8ffb32d340f46bfd119b5942a75fd107ddd6180743bda825866",
+  "sums_sha256": "e7f519a9afd57a1e2a15018ad1958a375e9738a3fd33f52c87bf7a61520518c9",
   "url": "https://github.com/keytend/keytend-kmip-java/releases/download/v0.10.0-rc.1/keytend-kmip-0.10.0-rc.1.zip",
   "source_asset": "keytend-kmip-0.10.0-rc.1-src.zip",
-  "source_asset_bytes": 4386243,
-  "source_asset_sha256": "571ae195d6e9523e647817e1a4c71f96a101e7e95b668ac55855571b619f0fba",
+  "source_asset_bytes": 4269601,
+  "source_asset_sha256": "8c86e17a01493040e4629102f80a5fa0a7c1d7729cdaff15021e2a253a37e097",
   "openpgp": {
     "primary": "3A84912AFBE7D2B04EBA2A8A51E65DD49C6F987F",
     "signed": [
@@ -32,78 +32,78 @@
   "artifacts": [
     {
       "path": "lib/keytend-kmip-0.10.0-rc.1.jar",
-      "sha256": "d4a9bbbfcb7bc51e7a653eac99c9abd43f3bc2ad0532352e23b554f3d226fb86",
-      "bytes": 2441349
+      "sha256": "b86d2ba54716d83c0b3c9d57dbba1a2adc2f433a224544eed1e11c763f14ef95",
+      "bytes": 2441470
     },
     {
       "path": "lib/keytend-kmip-0.10.0-rc.1-sources.jar",
-      "sha256": "5fad2c45ebc7419f778e38330b22ab338976ebf9c3b47d959a4dfd77a8a4ca20",
-      "bytes": 1775192
+      "sha256": "37c85b98756bdc082d7031b406844b4c80e9ddb5fa248c6211e3448f5c8d44d4",
+      "bytes": 1775105
     },
     {
       "path": "lib/keytend-kmip-0.10.0-rc.1-javadoc.jar",
-      "sha256": "b4a5f5b387b4be8385b8eb5b54e277954eb0d620dd0e4de1634a14d2a012f72d",
-      "bytes": 1465400
+      "sha256": "e060a8cc6499e4930b2b63976dd209c63b8a11167e780f221b962ce6a81e5c4a",
+      "bytes": 1465061
     },
     {
       "path": "lib/keytend-kmip-micrometer-0.10.0-rc.1.jar",
-      "sha256": "23f420bb6f2d33e892c0a14a2ed6ce0d6a94baedd62afa610c94b537ce824635",
-      "bytes": 31304
+      "sha256": "dd5438754b5fb811d2bb0a9fb9173b8632221eac47d77f1ece5366f44f48809b",
+      "bytes": 31006
     },
     {
       "path": "lib/keytend-kmip-micrometer-0.10.0-rc.1-sources.jar",
-      "sha256": "96e0ff4bfdff76bdc55c67e76b51b4052e505453f40f2fe1e41c6e6c2652a3c1",
-      "bytes": 25498
+      "sha256": "6b9e23cb6886a93cd8bf2e00140f252398fa95cf345d17ae531baebf80329d8a",
+      "bytes": 25200
     },
     {
       "path": "lib/keytend-kmip-micrometer-0.10.0-rc.1-javadoc.jar",
-      "sha256": "80b88caf6d2b62c2b209811d486e8cc4300874b5879a6900f41cae0f9475247c",
-      "bytes": 100942
+      "sha256": "ccdb8d4bebb32661ece78428679907b109747c07dd0f7893fce1798b8ae215fc",
+      "bytes": 100644
     },
     {
       "path": "lib/keytend-kmip-opentelemetry-0.10.0-rc.1.jar",
-      "sha256": "96b0d7e5852b60fc95c2b3cbf89eaf2db4cc88440a30c17260eac2a8df4b1641",
-      "bytes": 41449
+      "sha256": "8792f058facae9f9413bed08921623d40c8f45c778f25f88ee3fcb936789bc90",
+      "bytes": 41151
     },
     {
       "path": "lib/keytend-kmip-opentelemetry-0.10.0-rc.1-sources.jar",
-      "sha256": "893060d31948fb4cb00297542881be9fa804f7241cbc3bf98637586904e3b405",
-      "bytes": 32938
+      "sha256": "dd0b6b053026434cbe13c9f09fe61a1725621a5efb851c7fc2fb634cf673167b",
+      "bytes": 32640
     },
     {
       "path": "lib/keytend-kmip-opentelemetry-0.10.0-rc.1-javadoc.jar",
-      "sha256": "91078365f072ea34adaed01e39eee7b90cd28bbaa0f703d0e0341e4af6c62e09",
-      "bytes": 106294
+      "sha256": "02d5abee4202fda2f405aa8caf789442da1b33d29a460b44ca55516f3a2c76b6",
+      "bytes": 105996
     },
     {
       "path": "lib/keytend-kmip-cli-0.10.0-rc.1.jar",
-      "sha256": "83e4186f93d396085791bff3f3f040e2ba32e00f75dd8f5cdd1d6873a81c9528",
-      "bytes": 168495
+      "sha256": "62002cece045568c5935f8a32576c6edaa3d308ec8c4064ce58b375f4e02198c",
+      "bytes": 168189
     },
     {
       "path": "lib/keytend-kmip-cli-0.10.0-rc.1-sources.jar",
-      "sha256": "ba51a66624bc19b8eed41fee54aa269cb14f67dc081ec6ea717ad9712bd3552b",
-      "bytes": 89431
+      "sha256": "47204aecb5620f0ac352004130f4777d508652ed621a6dc9482ffd6654721200",
+      "bytes": 89125
     },
     {
       "path": "lib/keytend-kmip-cli-0.10.0-rc.1-javadoc.jar",
-      "sha256": "4da951dd53a20ab6ef472cd26f9974a6482ecf6e4a5271b989d299ca0d3d463f",
-      "bytes": 87535
+      "sha256": "0d8ffd038771cdd0cdf86672f0f658dc4b090a17c168a149a44ab09bae4e5b75",
+      "bytes": 87237
     },
     {
       "path": "lib/keytend-kmip-integration-0.10.0-rc.1.jar",
-      "sha256": "b91a53ffb5f32356129062f55d02506231bc73d8644a9428fe5fe32380561bdf",
-      "bytes": 255190
+      "sha256": "302a01916ffc569563b30c588cca4d3f90fb3ab96b3eade8dbf691285843cbe4",
+      "bytes": 238306
     },
     {
       "path": "lib/keytend-kmip-integration-0.10.0-rc.1-sources.jar",
-      "sha256": "b9aaefb145267b9f0de55762a2838f95da96f07d0a1ff27223ad6e1fb104b97e",
-      "bytes": 125317
+      "sha256": "2ddbd1419017a5cd002696b3f745c6ec948494a4c554edba1ef41ecbd300b20a",
+      "bytes": 112742
     },
     {
       "path": "lib/keytend-kmip-integration-0.10.0-rc.1-javadoc.jar",
-      "sha256": "83709aee2200192f7d11c6e6b4818caedf0b0992c7dd437e2695ee5f4a11bab4",
-      "bytes": 173335
+      "sha256": "79b01374f133c4e17e12e7ba8322cae710dc89369b7edc600d9afbbecf882c03",
+      "bytes": 172890
     },
     {
       "path": "lib/jackson-core-3.2.4.jar",
@@ -132,22 +132,22 @@
     },
     {
       "path": "lib/keytend-kmip-micrometer-0.10.0-rc.1-cyclonedx.json",
-      "sha256": "953bfd6c8ceffa61a443e79a350a96c87f29157bed0a9e845199bbbc7acda92b",
+      "sha256": "7583a44891157253dbeb5e8ab1c6c43aed56c1738580337a5e9f56c249ba1fe2",
       "bytes": 19965
     },
     {
       "path": "lib/keytend-kmip-opentelemetry-0.10.0-rc.1-cyclonedx.json",
-      "sha256": "40d3d483234ed77132a1e68de2f1dff22984e5d1b5c6f5022640f892eda0b1ed",
+      "sha256": "2ab086a6666a6f62b807916ad29c7e103cc1ace7bd7d87e8fb7ad1a33adfad0d",
       "bytes": 14843
     },
     {
       "path": "lib/keytend-kmip-cli-0.10.0-rc.1-cyclonedx.json",
-      "sha256": "a0ca12df9fa3dd23e73ad4cbd10106d56a0cddcf378848e635971667f6734a24",
+      "sha256": "263a3fa0c8bdb127b755b86e3e8bfe429cba1659950ef9db4fd0f4e3a4d86671",
       "bytes": 15625
     },
     {
       "path": "lib/keytend-kmip-integration-0.10.0-rc.1-cyclonedx.json",
-      "sha256": "8e7b888bd47975055db04e92cf0618bd4aec26208c0785b2247792e68a3a4e5a",
+      "sha256": "95d15295b8768457ca90f19e7b438e2813c28d73790672cb4ce24e57392a8352",
       "bytes": 13335
     }
   ],

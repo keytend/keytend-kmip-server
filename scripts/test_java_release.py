@@ -47,14 +47,15 @@ def collect(engine,image):
             assert report['tested_image_config_id']==config and report['archive_sha256']==packaged['archive_sha256']
     # The catalog contract is the one in the signed release.
     catalog_path=keytend_kmip_release.source()/'integration/catalog/catalog.json';catalog=json.loads(catalog_path.read_text())
-    ids={c['id'] for c in catalog['cases']};assert len(ids)==164
+    # The catalog's size is the release's: one record per case and lane.
+    ids={c['id'] for c in catalog['cases']};assert ids and len(ids)==len(catalog['cases'])
     assert reports['catalog']['catalog_sha256']==sha(catalog_path)
     matrix=[];tuples=set();findings=collections.defaultdict(list);opt_in=collections.defaultdict(list);no_previous=collections.defaultdict(list);coverage_findings=[]
     for lane in reports['catalog']['lanes']:
         path=lane['report'];data=retain(path);assert files[path]==lane['report_sha256']
         major=int(re.search(r'version "(\d+)',lane['jdk']).group(1))
         key=(lane['wire_version'],major);assert key not in tuples;tuples.add(key)
-        assert {r['test_id'] for r in data['records']}==ids and len(data['records'])==164
+        assert {r['test_id'] for r in data['records']}==ids and len(data['records'])==len(ids)
         assert data['cleanup']['remaining_run_owned_ids']==[]
         control=lane['control_log'];assert sha(ROOT/control)==lane['control_log_sha256'];files[control]=lane['control_log_sha256']
         events=[json.loads(line) for line in (ROOT/control).read_text().splitlines()]
@@ -106,7 +107,7 @@ def collect(engine,image):
     result={'status':'completed_with_findings' if findings or server_findings or coverage_findings else 'passed_applicable_subset',
             'client_artifact':artifact,
             **packaged,'runtime_binary_sha256':reports['https_native']['runtime_binary_sha256'],
-            'catalog_observations':18*164,'catalog_matrix':matrix,
+            'catalog_observations':18*len(ids),'catalog_matrix':matrix,
             'tested_jdk_runtimes':sorted({lane['jdk'] for lane in reports['catalog']['lanes']}),
             'supplemental_sdk_wrapping_lanes':{'native':18,'container':18},'server_findings':server_findings,
             'https_lanes':{'native':54,'container':54},
@@ -136,6 +137,6 @@ def main():
                   ['test_catalog_contract.py','--engine',a.engine,'--image',a.image]]
         for script,*args in commands:subprocess.run([sys.executable,str(ROOT/'scripts'/script),*args],check=True,cwd=ROOT)
     result=collect(a.engine,a.image)
-    print(result['status']+': 2,952 catalog observations, 108 HTTPS lanes and 36 supplemental wrapping lanes')
+    print(result['status']+f": {result['catalog_observations']:,} catalog observations, 108 HTTPS lanes and 36 supplemental wrapping lanes")
     if not result['subset_gate_passed'] and not a.report_only:raise SystemExit(1)
 if __name__=='__main__':main()

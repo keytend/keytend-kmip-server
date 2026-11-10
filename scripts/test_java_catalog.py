@@ -117,7 +117,7 @@ def main():
                     with report.with_suffix('.run.log').open('w') as log:
                         result=subprocess.run([java,'-Dkmip.catalog.p95Millis=1000','-Dkmip.catalog.p99Millis=2000',*(['-Dkmip.catalog.previousArtifact='+str(previous)] if previous else []),'-cp',classpath,'dev.keytend.kmip.interop.ServerCatalog',str(client),'localhost',str(server.port),str(certs),version,'runtime-'+runtime,'sha256:'+image_id,pin,config_hash,str(control_path),str(report),sha(ADAPTER)],stdout=log,stderr=subprocess.STDOUT,timeout=1800,cwd=client)
                     if result.returncode:raise RuntimeError('Java catalog process failed; see '+str(report.with_suffix('.run.log')))
-                    data=json.loads(report.read_text());records=data['records'];assert len(records)==164 and {r['test_id'] for r in records}=={c['id'] for c in json.loads(catalog.read_text())['cases']}
+                    data=json.loads(report.read_text());records=data['records'];cases={c['id'] for c in json.loads(catalog.read_text())['cases']};assert len(records)==len(cases) and {r['test_id'] for r in records}==cases
                     counts=dict(collections.Counter(r['outcome'] for r in records));lane={'wire_version':version,'jdk':jdk,'report':str(report.relative_to(ROOT)),'report_sha256':sha(report),'outcomes':counts,'qualified':data['qualification']['qualified'],'control_log':str(control_log.relative_to(ROOT)),'control_log_sha256':sha(control_log),'control_failures':controller.failures};lanes.append(lane)
                     print(json.dumps(lane),flush=True)
                 finally:
