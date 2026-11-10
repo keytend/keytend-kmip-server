@@ -15,6 +15,6 @@
 # Downloads and build output of the examples (Rust's target/ is ignored at the root).
 /c/libkmip/
 /c/create_get
-/java/keytend-kmip-0.9.1/
-/java/keytend-kmip-0.9.1.zip
-/java/keytend-kmip-0.9.1.zip.asc
+/java/keytend-kmip-0.10.0-rc.1/
+/java/keytend-kmip-0.10.0-rc.1.zip
+/java/keytend-kmip-0.10.0-rc.1.zip.asc

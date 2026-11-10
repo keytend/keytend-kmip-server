@@ -18,7 +18,7 @@ limitations under the License.
 
 Part of [connecting a client](../clients.md).
 
-[keytend-kmip](https://github.com/keytend/keytend-kmip-java) 0.9.1 is this
+[keytend-kmip](https://github.com/keytend/keytend-kmip-java) 0.10.0-rc.1 is this
 project's Java client, for JDK 17, 21 and 25. It negotiates KMIP 1.4–2.1 by
 default (2.1 against this server) and can be pinned to 1.1–1.3, over binary
 KMIP or HTTPS. The complete programs are in
@@ -37,12 +37,12 @@ client jar.
 ## Install
 
 You need a JDK (17, 21 or 25) and bash or zsh. `run.sh` expects two jars in
-`examples/clients/java/keytend-kmip-0.9.1/lib`, which Git ignores: the SDK,
-`keytend-kmip-0.9.1.jar`, and `slf4j-api-*.jar`, the logging API the SDK needs
+`examples/clients/java/keytend-kmip-0.10.0-rc.1/lib`, which Git ignores: the SDK,
+`keytend-kmip-0.10.0-rc.1.jar`, and `slf4j-api-*.jar`, the logging API the SDK needs
 at run time. keytend-kmip is not on Maven Central yet (planned from 1.0).
 
 You also need `curl`, `unzip` and GnuPG 2.2 or later (`gpg`). Download the
-[v0.9.1 release](https://github.com/keytend/keytend-kmip-java/releases/tag/v0.9.1)
+[v0.10.0-rc.1 release](https://github.com/keytend/keytend-kmip-java/releases/tag/v0.10.0-rc.1)
 zip and its signature, verify the signature against the Keytend release key
 committed in this repository, and unzip it only if that succeeds. Run from the
 checkout:
@@ -50,14 +50,14 @@ checkout:
 ```sh
 export KMIP_PKI=$PWD/.cache/dev-pki
 cd examples/clients/java
-BASE=https://github.com/keytend/keytend-kmip-java/releases/download/v0.9.1
-curl -fsSLO "$BASE/keytend-kmip-0.9.1.zip" && curl -fsSLO "$BASE/keytend-kmip-0.9.1.zip.asc"
+BASE=https://github.com/keytend/keytend-kmip-java/releases/download/v0.10.0-rc.1
+curl -fsSLO "$BASE/keytend-kmip-0.10.0-rc.1.zip" && curl -fsSLO "$BASE/keytend-kmip-0.10.0-rc.1.zip.asc"
 . ../../../signing/pgp_verify.sh
-pgp_verify keytend-kmip-0.9.1.zip.asc keytend-kmip-0.9.1.zip && unzip -q keytend-kmip-0.9.1.zip
+pgp_verify keytend-kmip-0.10.0-rc.1.zip.asc keytend-kmip-0.10.0-rc.1.zip && unzip -q keytend-kmip-0.10.0-rc.1.zip
 ```
 
 ```text
-pgp_verify: good signature by the Keytend release key: keytend-kmip-0.9.1.zip
+pgp_verify: good signature by the Keytend release key: keytend-kmip-0.10.0-rc.1.zip
 ```
 
 [`signing/pgp_verify.sh`](../../signing/pgp_verify.sh) accepts only a good
@@ -67,8 +67,9 @@ one by an expired or revoked key, which plain `gpg --verify` accepts. That
 page also shows how to check the fingerprint against an independent copy.
 
 The zip's `lib/` holds both jars `run.sh` uses. To use the SDK from Maven,
-run `./mvnw install` in the unzipped `keytend-kmip-0.9.1` directory and depend
-on `dev.keytend:keytend-kmip:0.9.1`; Maven brings slf4j-api with it.
+build the release's source zip (`keytend-kmip-0.10.0-rc.1-src.zip`, signed
+the same way) with `./mvnw install` and depend on
+`dev.keytend:keytend-kmip:0.10.0-rc.1`; Maven brings slf4j-api with it.
 
 `run.sh` puts only the SDK and slf4j-api on the class path, with no logging
 binding, so the examples other than `HttpsQuickstart` first print three
@@ -243,8 +244,7 @@ thread-safe) and close it at shutdown.
 - Mutations are never re-sent: a lost answer raises `OUTCOME_UNKNOWN`
   ([retrying](../client-errors.md#retrying-after-a-lost-response)).
 
-The client's own documentation (in `keytend-kmip-0.9.1/docs/` in the zip,
-starting with `operating-keys.md` and `choosing-an-api.md`) covers failure categories, rotation,
+The client's own documentation (in `docs/` in the source zip, starting with `operating-keys.md` and `choosing-an-api.md`) covers failure categories, rotation,
 envelopes, connection pooling, credentials and the lower-level API.
 
 Next: [beyond the test setup](../clients.md#beyond-the-test-setup).

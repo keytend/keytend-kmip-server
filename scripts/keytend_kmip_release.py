@@ -29,7 +29,8 @@ only when:
   in the signed SHA256SUMS.
 
 The previous release's SDK JAR (pin `previous`), for the catalog's upgrade and rollback case,
-is read from that release's ZIP and checked against its pinned digests. The test-only H2 JAR the catalog's consumer-database cases need is fetched from Maven
+is read from that release's ZIP and checked against its pinned digests. Without a `previous`
+pin (no earlier release is published), that case is not applicable. The test-only H2 JAR the catalog's consumer-database cases need is fetched from Maven
 Central and checked against its pinned SHA-256 and SHA-1. The SDK's runtime dependencies
 (slf4j-api; jackson-core for the integration classes) are the JARs the release ZIP ships,
 listed under runtime_jars in the pin. Adapters in interop/java/
@@ -68,11 +69,41 @@ def sha(path):
 def download():
     CACHE.mkdir(parents=True, exist_ok=True)
     archive = CACHE/PIN['asset']
-    wanted = [archive, archive.with_name(archive.name+'.sha256'), archive.with_name(archive.name+'.asc'), CACHE/'SHA256SUMS', CACHE/'SHA256SUMS.asc']
+    source = CACHE/PIN['source_asset']
+    wanted = [archive, archive.with_name(archive.name+'.sha256'), archive.with_name(archive.name+'.asc'), CACHE/'SHA256SUMS', CACHE/'SHA256SUMS.asc',
+              source, source.with_name(source.name+'.asc')]
     if not all(p.exists() for p in wanted):
         subprocess.run(['gh', 'release', 'download', PIN['tag'], '--repo', PIN['repository'], '--dir', str(CACHE), '--skip-existing',
-                        '--pattern', PIN['asset']+'*', '--pattern', 'SHA256SUMS*'], check=True)
+                        '--pattern', PIN['asset']+'*', '--pattern', PIN['source_asset']+'*', '--pattern', 'SHA256SUMS*'], check=True)
     return archive
+
+
+def extract(archive, top):
+    """Check every entry of ARCHIVE stays under TOP, extract it once with its modes, and check
+    the extracted bytes still equal the archive's. Returns CACHE/TOP."""
+    directory = CACHE/top
+    with zipfile.ZipFile(archive) as z:
+        names, total = set(), 0
+        for entry in z.infolist():
+            path = pathlib.PurePosixPath(entry.filename)
+            assert not path.is_absolute() and '..' not in path.parts and path.parts[0] == top, 'unexpected ZIP entry '+entry.filename
+            assert not stat.S_ISLNK(entry.external_attr >> 16) and entry.filename not in names
+            names.add(entry.filename)
+            total += entry.file_size
+            assert total <= 64*1024*1024, 'unexpected unpacked size'
+        if not directory.exists():
+            partial = CACHE/(top+'.partial')
+            shutil.rmtree(partial, ignore_errors=True)
+            z.extractall(partial)
+            for entry in z.infolist():
+                if not entry.is_dir():
+                    (partial/entry.filename).chmod((entry.external_attr >> 16) & 0o755 or 0o644)
+            (partial/top).rename(directory)
+            partial.rmdir()
+        for entry in z.infolist():
+            if not entry.is_dir():
+                assert (CACHE/entry.filename).read_bytes() == z.read(entry), 'modified release entry: '+entry.filename
+    return directory
 
 
 def verify_signatures(archive):
@@ -95,28 +126,7 @@ def release():
     assert sha(checksum) == PIN['checksum_sha256'] and checksum.read_text().split() == [PIN['asset_sha256'], PIN['asset']], 'release .sha256 differs from pin'
     assert sha(CACHE/'SHA256SUMS') == PIN['sums_sha256'], 'published SHA256SUMS differs from pin'
     signatures = verify_signatures(archive)
-    directory = CACHE/TOP
-    with zipfile.ZipFile(archive) as z:
-        names, total = set(), 0
-        for entry in z.infolist():
-            path = pathlib.PurePosixPath(entry.filename)
-            assert not path.is_absolute() and '..' not in path.parts and path.parts[0] == TOP, 'unexpected ZIP entry '+entry.filename
-            assert not stat.S_ISLNK(entry.external_attr >> 16) and entry.filename not in names
-            names.add(entry.filename)
-            total += entry.file_size
-            assert total <= 64*1024*1024, 'unexpected unpacked size'
-        if not directory.exists():
-            partial = CACHE/(TOP+'.partial')
-            shutil.rmtree(partial, ignore_errors=True)
-            z.extractall(partial)
-            for entry in z.infolist():
-                if not entry.is_dir():
-                    (partial/entry.filename).chmod((entry.external_attr >> 16) & 0o755 or 0o644)
-            (partial/TOP).rename(directory)
-            partial.rmdir()
-        for entry in z.infolist():
-            if not entry.is_dir():
-                assert (CACHE/entry.filename).read_bytes() == z.read(entry), 'modified release entry: '+entry.filename
+    directory = extract(archive, TOP)
     data = json.loads((directory/'release.json').read_text())
     for key in ['version', 'tag', 'commit', 'java_release', 'artifacts']:
         assert data[key] == PIN[key], 'release.json differs from pin: '+key
@@ -142,13 +152,28 @@ def release():
     return directory, jars, evidence
 
 
+@functools.cache
+def source():
+    """The verified, extracted source ZIP of the same release: the binary ZIP has no source
+    tree, and the catalog takes its PKI script (integration/catalog/generate-pki.sh) from here.
+    Its size and SHA-256 match the pin, its signature verifies, and the signed SHA256SUMS lists it."""
+    release()
+    archive = CACHE/PIN['source_asset']
+    assert archive.stat().st_size == PIN['source_asset_bytes'] and sha(archive) == PIN['source_asset_sha256'], 'source ZIP differs from pin'
+    signed = {name: digest for digest, name in (line.split() for line in (CACHE/'SHA256SUMS').read_text().splitlines())}
+    assert signed.get(PIN['source_asset']) == PIN['source_asset_sha256'], 'signed SHA256SUMS does not list the pinned source ZIP'
+    return extract(archive, TOP+'-src')
+
+
 def previous_jar():
     """The previous release's SDK JAR (pin `previous`), for the catalog's upgrade and rollback case.
 
     Its ZIP comes from the GitHub release into .cache/keytend-kmip-<previous version>/ and must
     match the pinned size and SHA-256; the one JAR is read from it and checked against its own
     pinned digest. The pin, committed here, is the trust root; the ZIP was verified with its
-    signatures when it was the current release."""
+    signatures when it was the current release. None without a `previous` pin."""
+    if 'previous' not in PIN:
+        return None
     prev = PIN['previous']
     cache = ROOT/f'.cache/keytend-kmip-{prev["version"]}'
     archive = cache/prev['asset']

@@ -17,7 +17,7 @@ import pathlib,shutil,tempfile
 import keytend_kmip_release as fixture
 
 def fresh():
-    fixture.release.cache_clear()  # release() caches its result per process
+    fixture.release.cache_clear();fixture.source.cache_clear()  # both cache their result per process
     return fixture.release()
 
 def rejected(action):
@@ -31,10 +31,11 @@ def main():
         with tempfile.TemporaryDirectory(prefix='keytend-release-extract-') as directory:
             fixture.CACHE=pathlib.Path(directory)
             archive=fixture.CACHE/fixture.PIN['asset']
-            for name in [archive.name,archive.name+'.sha256',archive.name+'.asc','SHA256SUMS','SHA256SUMS.asc']:shutil.copyfile(original/name,fixture.CACHE/name)
+            for name in [archive.name,archive.name+'.sha256',archive.name+'.asc',fixture.PIN['source_asset'],fixture.PIN['source_asset']+'.asc','SHA256SUMS','SHA256SUMS.asc']:shutil.copyfile(original/name,fixture.CACHE/name)
             root,jars,evidence=fresh()
-            for name in ['mvnw','integration/generate-certs.sh','integration/catalog/generate-pki.sh']:
-                assert (root/name).stat().st_mode&0o111,'ZIP executable modes were lost'
+            assert (root/'bin/keytend-kmip-cli').stat().st_mode&0o111,'ZIP executable modes were lost'
+            for name in ['mvnw','integration/catalog/generate-pki.sh']:
+                assert (fixture.source()/name).stat().st_mode&0o111,'source ZIP executable modes were lost'
             jar=jars[0];jar.write_bytes(jar.read_bytes()+b'changed')
             rejected(fresh)
             jar.unlink()
@@ -42,6 +43,6 @@ def main():
             assert fresh()[2]==evidence
             data=bytearray(archive.read_bytes());data[-1]^=1;archive.write_bytes(data)
             rejected(fresh)
-    finally:fixture.CACHE=original;fixture.release.cache_clear()
+    finally:fixture.CACHE=original;fixture.release.cache_clear();fixture.source.cache_clear()
     print('PASS fresh extraction preserves executable modes; changed JAR and ZIP are rejected')
 if __name__=='__main__':main()

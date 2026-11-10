@@ -33,7 +33,7 @@ runs exercised is in [project status](../docs/status.md#what-has-been-tested).
 | [`../integration/ibm/client.c`](../integration/ibm/client.c) | IBM libkmipclient v2.44.1, in a client container | `scripts/test_ibm_client.py` |
 | [`phsym/`](phsym) | phsym kmip-rs v0.6.0 (trial, not counted) | `scripts/test_phsym_client.py` |
 | [`cosmian/`](cosmian) | Cosmian KMS client 5.28.0 (trial, not counted; BUSL-1.1, test use only) | `scripts/test_cosmian_client.py` |
-| [`java/`](java) | the signed keytend-kmip 0.9.1 release (commit `036e1c5`) that [`java/keytend-kmip-release.json`](java/keytend-kmip-release.json) pins | `scripts/test_java_*.py` and other feature tests |
+| [`java/`](java) | the signed keytend-kmip 0.10.0-rc.1 release (commit `12dd7d3`) that [`java/keytend-kmip-release.json`](java/keytend-kmip-release.json) pins | `scripts/test_java_*.py` and other feature tests |
 | [`pbm/`](pbm) | Percona Backup for MongoDB 2.17.0 test image | `scripts/test_database_pbm*.py` |
 
 phsym kmip-rs and the Cosmian client run in separate trial suites and are not

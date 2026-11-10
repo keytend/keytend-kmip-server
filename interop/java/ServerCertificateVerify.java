@@ -94,7 +94,7 @@ public final class ServerCertificateVerify {
         if(code>=13&&code<20){
             // The server omits Validity Indicator from a non-final multi-part response in every
             // edition (docs/crypto-operations.md#multipart-operations), as 2.x Table 338 allows ("No for multi-part"). The 1.3/1.4
-            // tables mark it REQUIRED without that exception, and keytend-kmip 0.9 enforces them, so
+            // tables mark it REQUIRED without that exception, and keytend-kmip enforces them, so
             // the client refuses the non-final response (CLIENT-MULTIPART-001); the continuation
             // is exercised from 2.0.
             try{c.call(Requests.signatureVerify().uniqueIdentifier(id).add(cp,bool(INIT_INDICATOR,true),bytes(DATA,Arrays.copyOfRange(DATA_VALUE,0,7))).build());

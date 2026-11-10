@@ -32,7 +32,7 @@ export KMIP_PKI=$PWD/.cache/dev-pki
 | --- | --- | --- | --- |
 | [`python`](python) | PyKMIP (`requirements.txt`); standard library | `../../../.cache/pykmip/bin/python connect.py` | [Python](../../docs/clients/python.md) |
 | [`go`](go) | OVH kmip-go (`go.mod`, `go.sum`) | `go run .` | [Go](../../docs/clients/go.md) |
-| [`java`](java) | keytend-kmip 0.9.1, from the signed release zip | `./run.sh Quickstart` | [Java](../../docs/clients/java.md) |
+| [`java`](java) | keytend-kmip 0.10.0-rc.1, from the signed release zip | `./run.sh Quickstart` | [Java](../../docs/clients/java.md) |
 | [`c`](c) | OpenKMIP libkmip (`Makefile`) | `make && ./create_get` | [C](../../docs/clients/c.md) |
 | [`rust`](rust) | NLnet Labs kmip-protocol (`Cargo.toml`, `Cargo.lock`) | `cargo run --locked` | [Rust](../../docs/clients/rust.md) |
 

@@ -34,9 +34,10 @@ def main():
     def save(data):
         temporary=manifest.with_suffix('.tmp');temporary.write_text(json.dumps(data,indent=2)+'\n');temporary.replace(manifest)
     # The signed release: the soak runs the SDK's own CatalogSoak class from its integration JAR.
-    client,jars,artifact=keytend_kmip_release.release();PIN=artifact['commit']
+    binary,jars,artifact=keytend_kmip_release.release();PIN=artifact['commit']
+    client=keytend_kmip_release.source()  # the catalog reads the source tree; the JARs are the binary ZIP's
     config=local_image_id(a.engine,a.image);image=packaged_evidence(config);runtime=image.get('source_commit') or source_commit()[0]
-    sdk_hashes={str(j.relative_to(client)):sha(j) for j in jars}
+    sdk_hashes={str(j.relative_to(binary)):sha(j) for j in jars}
     record={'status':'STARTING','pid':os.getpid(),'client_commit':PIN,'wire_version':a.version,'jdk':subprocess.check_output([a.java,'-version'],stderr=subprocess.STDOUT,text=True).splitlines()[0],'requested_duration':a.duration,'sdk_class_sha256':sdk_hashes,**image,'limits':['Client retained heap, threads and descriptor limits are checked by CatalogSoak','This workload is not full capacity, HA, server resource or production qualification','Runtime source changes after startup do not change this pinned image; this is evidence for that image only']};save(record)
     def interrupted(*_):raise InterruptedError('Soak interrupted')
     signal.signal(signal.SIGTERM,interrupted)

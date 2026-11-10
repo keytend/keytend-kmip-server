@@ -20,7 +20,7 @@ members = ["crates/ossl-provider-info", "crates/ossl-pqc"]
 
 [package]
 name = "keytend-kmip-server"
-version = "0.10.0-rc.1"
+version = "0.10.0-rc.2-dev"
 edition = "2024"
 license = "Apache-2.0"
 authors = ["Jeremiah Jordan"]

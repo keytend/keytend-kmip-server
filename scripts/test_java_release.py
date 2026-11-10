@@ -20,10 +20,12 @@ Default execution fails for any applicable failed, unsupported or blocked case.
 """
 import argparse,collections,json,pathlib,re,subprocess,sys
 from image_evidence import local_image_id,packaged_evidence
+import keytend_kmip_release
 from keytend_kmip_release import ROOT,release,sha
 
 VERSIONS={'1.1','1.2','1.3','1.4','2.0','2.1'}
 OPT_IN_SOAK='JAVA-06'
+UPGRADE='JAVA-07'
 
 def collect(engine,image):
     client,jars,artifact=release()
@@ -44,10 +46,10 @@ def collect(engine,image):
         if name in {'catalog','https_image','wrapping_image','contract'}:
             assert report['tested_image_config_id']==config and report['archive_sha256']==packaged['archive_sha256']
     # The catalog contract is the one in the signed release.
-    catalog_path=client/'integration/catalog/catalog.json';catalog=json.loads(catalog_path.read_text())
+    catalog_path=keytend_kmip_release.source()/'integration/catalog/catalog.json';catalog=json.loads(catalog_path.read_text())
     ids={c['id'] for c in catalog['cases']};assert len(ids)==164
     assert reports['catalog']['catalog_sha256']==sha(catalog_path)
-    matrix=[];tuples=set();findings=collections.defaultdict(list);opt_in=collections.defaultdict(list);coverage_findings=[]
+    matrix=[];tuples=set();findings=collections.defaultdict(list);opt_in=collections.defaultdict(list);no_previous=collections.defaultdict(list);coverage_findings=[]
     for lane in reports['catalog']['lanes']:
         path=lane['report'];data=retain(path);assert files[path]==lane['report_sha256']
         major=int(re.search(r'version "(\d+)',lane['jdk']).group(1))
@@ -68,6 +70,10 @@ def collect(engine,image):
             # not running it is recorded apart, not as a finding.
             if record['test_id']==OPT_IN_SOAK and record['outcome']=='BLOCKED_ENV' and 'opt-in' in record['reason']:
                 opt_in[(record['test_id'],record['reason'])].append({'wire_version':key[0],'jdk':major})
+            # Upgrade and rollback need an earlier published SDK release; none is pinned
+            # (keytend_kmip_release.PIN has no `previous`), so the case does not apply yet.
+            elif record['test_id']==UPGRADE and record['outcome']=='BLOCKED_ENV' and 'previous' not in keytend_kmip_release.PIN:
+                no_previous[(record['test_id'],record['reason'])].append({'wire_version':key[0],'jdk':major})
             elif record['outcome'] not in {'PASS','NOT_APPLICABLE'}:
                 findings[(record['test_id'],record['outcome'],record['reason'])].append({'wire_version':key[0],'jdk':major})
         matrix.append({'wire_version':key[0],'jdk':major,'outcomes':counts,'sdk_candidate_profile_qualified':lane['qualified']})
@@ -104,6 +110,7 @@ def collect(engine,image):
             'tested_jdk_runtimes':sorted({lane['jdk'] for lane in reports['catalog']['lanes']}),
             'supplemental_sdk_wrapping_lanes':{'native':18,'container':18},'server_findings':server_findings,
             'https_lanes':{'native':54,'container':54},
+            'not_applicable_no_previous_release':[{'test_id':key[0],'reason':key[1],'observations':value} for key,value in sorted(no_previous.items())],
             'opt_in_not_run':[{'test_id':key[0],'reason':key[1],'observations':value} for key,value in sorted(opt_in.items())],
             'raw_catalog_findings':[{'test_id':key[0],'upstream_outcome':key[1],'reason':key[2],'observations':value} for key,value in sorted(findings.items())],
             'reports_sha256':files,'all_applicable_catalog_cases_passed':not bool(findings),

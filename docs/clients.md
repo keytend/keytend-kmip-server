@@ -148,6 +148,6 @@ tests cover; the results are in each release's
 | [NLnet Labs kmip-protocol](https://github.com/NLnetLabs/kmip-protocol) | 0.4.3 | 1.0–1.2 (per operation), binary |
 | [Thales kmip-go](https://github.com/ThalesGroup/kmip-go) | commit `5b93a22` | 1.4, binary |
 | [IBM libkmipclient](https://github.com/ibm-s390-linux/s390-tools/tree/v2.44.1/libkmipclient) | v2.44.1 | 1.0–2.1, binary and HTTPS TTLV/JSON/XML |
-| [keytend-kmip](https://github.com/keytend/keytend-kmip-java) | [0.9.1](https://github.com/keytend/keytend-kmip-java/releases/tag/v0.9.1), the signed release ([install](clients/java.md#install)) | 1.1–2.1 (1.4–2.1 by default), binary and HTTPS |
+| [keytend-kmip](https://github.com/keytend/keytend-kmip-java) | [0.10.0-rc.1](https://github.com/keytend/keytend-kmip-java/releases/tag/v0.10.0-rc.1), the signed release ([install](clients/java.md#install)) | 1.1–2.1 (1.4–2.1 by default), binary and HTTPS |
 | Percona Server for MongoDB | 8.0.34-15 | built-in KMIP client ([integration](percona.md)) |
 | Percona Server for MySQL | 8.4.11-11 | `component_keyring_kmip`, 1.4 ([integration](percona.md)) |

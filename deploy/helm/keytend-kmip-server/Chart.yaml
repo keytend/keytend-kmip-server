@@ -19,7 +19,7 @@ description: >-
   one replica with an SQLite store, scheduled backups, restore and master-key
   rotation driven by values. Not for production use.
 type: application
-version: 0.10.0-rc.1
-appVersion: 0.10.0-rc.1
+version: 0.10.0-rc.2
+appVersion: 0.10.0-rc.2
 kubeVersion: ">=1.27.0-0"
 keywords: [kmip, key-management, testing]

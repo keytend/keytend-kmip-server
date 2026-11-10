@@ -19,12 +19,12 @@
 #
 # Needs a JDK (17, 21 or 25), KMIP_PKI set to the test certificates, and the
 # SDK jar and slf4j-api (the one library it needs at run time) in
-# keytend-kmip-0.9.1/lib here, unpacked from the verified release zip
+# keytend-kmip-0.10.0-rc.1/lib here, unpacked from the verified release zip
 # (docs/clients/java.md#install).
 set -eu
 cd "$(dirname "$0")"
-LIB=keytend-kmip-0.9.1/lib
-JAR=$LIB/keytend-kmip-0.9.1.jar
+LIB=keytend-kmip-0.10.0-rc.1/lib
+JAR=$LIB/keytend-kmip-0.10.0-rc.1.jar
 [ -f "$JAR" ] ||
   { echo "run.sh: no $JAR here; see docs/clients/java.md#install" >&2; exit 2; }
 SLF4J=$(ls "$LIB"/slf4j-api-*.jar 2>/dev/null | head -n 1)

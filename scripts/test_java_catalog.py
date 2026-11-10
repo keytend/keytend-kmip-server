@@ -82,7 +82,10 @@ class Control(socketserver.UnixStreamServer):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--engine',choices=['podman','docker'],default='podman');p.add_argument('--image',default='localhost/keytend-kmip-server:dev');p.add_argument('--java',action='append',help='JDK java executable; repeat for several lanes (default: java on PATH)');p.add_argument('--versions',nargs='+',default=['1.1','1.2','1.3','1.4','2.0','2.1']);p.add_argument('--report-only',action='store_true');a=p.parse_args()
-    client,jars,artifact=keytend_kmip_release.release();pin=artifact['commit'];art=ART
+    _,jars,artifact=keytend_kmip_release.release();pin=artifact['commit'];art=ART
+    # The catalog and its fixture read the client's source tree (catalog.json, the PKI script,
+    # sdk/src): the release's verified source ZIP. The JARs come from the binary ZIP.
+    client=keytend_kmip_release.source()
     art.mkdir(parents=True,exist_ok=True);summary_path=art/'summary.json';summary_path.write_text(json.dumps({'status':'running'})+'\n')
     image_id=local_image_id(a.engine,a.image);image=packaged_evidence(image_id);runtime=image.get('source_commit') or source_commit()[0]
     # The catalog contract is the one in the signed release.
@@ -112,7 +115,7 @@ def main():
                 try:
                     server.start()
                     with report.with_suffix('.run.log').open('w') as log:
-                        result=subprocess.run([java,'-Dkmip.catalog.p95Millis=1000','-Dkmip.catalog.p99Millis=2000','-Dkmip.catalog.previousArtifact='+str(previous),'-cp',classpath,'dev.keytend.kmip.interop.ServerCatalog',str(client),'localhost',str(server.port),str(certs),version,'runtime-'+runtime,'sha256:'+image_id,pin,config_hash,str(control_path),str(report),sha(ADAPTER)],stdout=log,stderr=subprocess.STDOUT,timeout=1800,cwd=client)
+                        result=subprocess.run([java,'-Dkmip.catalog.p95Millis=1000','-Dkmip.catalog.p99Millis=2000',*(['-Dkmip.catalog.previousArtifact='+str(previous)] if previous else []),'-cp',classpath,'dev.keytend.kmip.interop.ServerCatalog',str(client),'localhost',str(server.port),str(certs),version,'runtime-'+runtime,'sha256:'+image_id,pin,config_hash,str(control_path),str(report),sha(ADAPTER)],stdout=log,stderr=subprocess.STDOUT,timeout=1800,cwd=client)
                     if result.returncode:raise RuntimeError('Java catalog process failed; see '+str(report.with_suffix('.run.log')))
                     data=json.loads(report.read_text());records=data['records'];assert len(records)==164 and {r['test_id'] for r in records}=={c['id'] for c in json.loads(catalog.read_text())['cases']}
                     counts=dict(collections.Counter(r['outcome'] for r in records));lane={'wire_version':version,'jdk':jdk,'report':str(report.relative_to(ROOT)),'report_sha256':sha(report),'outcomes':counts,'qualified':data['qualification']['qualified'],'control_log':str(control_log.relative_to(ROOT)),'control_log_sha256':sha(control_log),'control_failures':controller.failures};lanes.append(lane)
@@ -120,7 +123,7 @@ def main():
                 finally:
                     controller.shutdown();controller.server_close();thread.join(timeout=5);server.stop()
                     if control_path.exists():control_path.unlink()
-    result={'client_artifact':artifact,'client_source':artifact['url'],'status':'passed' if lanes and all(l['qualified'] for l in lanes) else 'incomplete','client_commit':pin,'catalog_sha256':sha(catalog),'h2_jar_sha256':sha(h2),'previous_client':{'version':keytend_kmip_release.PIN['previous']['version'],'sdk_jar_sha256':sha(previous)},**image,'lanes':lanes,'limits':['Object-granular read permissions use real controlled policy restarts; remaining server/client findings stay explicit','Controlled-peer/codec cases retain their own layers','External vendor cases retain their prerequisites','This is not full-spec or production qualification']}
+    result={'client_artifact':artifact,'client_source':artifact['url'],'status':'passed' if lanes and all(l['qualified'] for l in lanes) else 'incomplete','client_commit':pin,'catalog_sha256':sha(catalog),'h2_jar_sha256':sha(h2),'previous_client':{'version':keytend_kmip_release.PIN['previous']['version'],'sdk_jar_sha256':sha(previous)} if previous else None,**image,'lanes':lanes,'limits':['Object-granular read permissions use real controlled policy restarts; remaining server/client findings stay explicit','Controlled-peer/codec cases retain their own layers','External vendor cases retain their prerequisites','This is not full-spec or production qualification']}
     summary_path.write_text(json.dumps(result,indent=2)+'\n')
     if result['status']!='passed' and not a.report_only:raise SystemExit(1)
 if __name__=='__main__':main()

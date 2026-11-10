@@ -59,7 +59,7 @@ public final class ServerLocateDates {
     public static void main(String[]args)throws Exception{
         Path pki=Path.of(args[0]),manifest=Path.of(args[4]);boolean create=args[3].equals("create");
         var tls=Tls.context(pki.resolve("client.p12"),"changeit".toCharArray(),pki.resolve("ca.pem"));
-        // keytend-kmip 0.9 encodes a DateTime outside the xsd:dateTime range it writes as hex in XML,
+        // keytend-kmip encodes a DateTime outside the xsd:dateTime range it writes as hex in XML,
         // which Profiles 5.4.1.6.11 does not allow (hex is a JSON form only); the server refuses
         // such a request. Exclude the XML extremes while that holds, and fail if it changes.
         String xmlMax=new String(new XmlCodec().encode(date(ACTIVATION_DATE,Long.MAX_VALUE)),java.nio.charset.StandardCharsets.UTF_8);

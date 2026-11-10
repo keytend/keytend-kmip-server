@@ -78,7 +78,7 @@ public final class ServerProtection {
                     var exported=c.call(Requests.export().uniqueIdentifier(joined).build()).requirePayload();
                     c.destroy(joined);
                     // Protection Storage Masks is not a field of the KMIP 2.x Import request (2.0 Table 220,
-                    // 2.1 Table 238); the server accepts it as an extension. keytend-kmip 0.9 normalises the
+                    // 2.1 Table 238); the server accepts it as an extension. keytend-kmip normalises the
                     // payload to the table and moves the unknown field into Attributes, where the server
                     // refuses it (CLIENT-PROTECTION-001). The server's Import storage checks are covered by
                     // tests/protection_storage.rs; this lane then restores without the extension field.
