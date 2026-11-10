@@ -1,0 +1,187 @@
+# Copyright 2026 Jeremiah Jordan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Build a release from a v<version> tag on main (docs/release-builds.md).
+#
+# A tag push tests the commit, builds the amd64 and arm64 images natively,
+# scans them, assembles the release set, signs SHA256SUMS (cosign keyless with
+# this workflow's identity, and OpenPGP with the CI signing subkey) and creates
+# a draft release. Publishing the draft starts publish-image.yml, which pushes
+# the images to ghcr.io. A manual run builds and tests main without signing or
+# releasing anything.
+#
+# Repository settings (scripts/ci_signing_subkey.sh sets both): secret
+# KEYTEND_SIGNING_KEY, the armored CI subkey secret without a passphrase (the
+# primary is a stub), and variable KEYTEND_SIGNING_SUBKEY, its fingerprint.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  RUST_TOOLCHAIN: 1.99.1
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: version
+        name: Tag, version and branch
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["package"]["version"])')
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            [ "$GITHUB_REF_NAME" = "v$version" ] || { echo "::error::tag $GITHUB_REF_NAME does not match Cargo.toml version $version"; exit 1; }
+            case $version in *-dev*) echo "::error::$version is a development version"; exit 1 ;; esac
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::$GITHUB_REF_NAME is not on main"; exit 1; }
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          case $version in *-*) echo prerelease=true ;; *) echo prerelease=false ;; esac >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component clippy
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Tests
+        run: cargo test --locked
+      - name: License headers
+        run: python3 scripts/check_license.py
+
+  image:
+    needs: check
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    env:
+      ARCH: ${{ matrix.arch }}
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tools
+        run: |
+          command -v podman >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q podman; }
+          command -v rustup >/dev/null || { curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; }
+      - name: Rust toolchain
+        run: |
+          export PATH=$HOME/.cargo/bin:$PATH
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Build the image
+        run: python3 scripts/package.py --engine podman --arch "$ARCH"
+      - name: Scan the image
+        run: |
+          if [ "$ARCH" = amd64 ]; then tag=localhost/keytend-kmip-server:$VERSION; else tag=localhost/keytend-kmip-server:$VERSION-$ARCH; fi
+          python3 scripts/scan_image.py --engine podman --image "$tag" --arch "$ARCH"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-${{ matrix.arch }}
+          path: artifacts/
+          retention-days: 7
+          if-no-files-found: error
+
+  release:
+    needs: [check, test, image]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write   # the draft release
+      id-token: write   # cosign keyless signing
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+      PRERELEASE: ${{ needs.check.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: image-*
+          path: artifacts/
+          merge-multiple: true
+      - name: Load the images
+        run: |
+          podman load --input "artifacts/keytend-kmip-server-$VERSION.docker.tar"
+          podman load --input "artifacts/linux-arm64/keytend-kmip-server-$VERSION-linux-arm64.docker.tar"
+      - name: Assemble the release set
+        run: python3 scripts/release_artifacts.py assemble --dir "$RUNNER_TEMP/bundle/release" --platforms amd64 arm64
+      - name: OpenPGP signing keyring
+        env:
+          SIGNING_KEY: ${{ secrets.KEYTEND_SIGNING_KEY }}
+        run: |
+          umask 077
+          mkdir -p "$RUNNER_TEMP/gnupg"
+          # The subkey has no passphrase; the secret store protects it. gpg_tool still reads a file.
+          : > "$RUNNER_TEMP/signing-passphrase"
+          printf '%s\n' "$SIGNING_KEY" | gpg --homedir "$RUNNER_TEMP/gnupg" --batch --quiet --import
+      - name: Sign and verify
+        env:
+          KEYTEND_SIGNING_HOME: ${{ runner.temp }}/gnupg
+          KEYTEND_SIGNING_PASSPHRASE_FILE: ${{ runner.temp }}/signing-passphrase
+          KEYTEND_SIGNING_SUBKEY: ${{ vars.KEYTEND_SIGNING_SUBKEY }}
+        run: |
+          python3 scripts/release_artifacts.py sign --keyless --dir "$RUNNER_TEMP/bundle/release"
+          python3 scripts/release_artifacts.py verify --dir "$RUNNER_TEMP/bundle/release" --require-platforms amd64 arm64
+      - name: Remove the signing keyring
+        if: always()
+        run: |
+          gpgconf --homedir "$RUNNER_TEMP/gnupg" --kill all || true
+          rm -rf "$RUNNER_TEMP/gnupg" "$RUNNER_TEMP/signing-passphrase"
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          out=$RUNNER_TEMP/assets; mkdir -p "$out"
+          tar -cf "$out/keytend-kmip-server-$VERSION-signed-release.tar" -C "$RUNNER_TEMP/bundle" release
+          (cd "$out" && sha256sum "keytend-kmip-server-$VERSION-signed-release.tar" > "keytend-kmip-server-$VERSION-signed-release.tar.sha256")
+          cp "$RUNNER_TEMP/bundle/release/SHA256SUMS" "$RUNNER_TEMP/bundle/release/SHA256SUMS.asc" "$RUNNER_TEMP/bundle/release/SHA256SUMS.sigstore.json" "$out/"
+          flags=(--draft --verify-tag --title "keytend-kmip-server $VERSION")
+          [ "$PRERELEASE" = true ] && flags+=(--prerelease)
+          printf '%s\n' "keytend-kmip-server $VERSION, built by the release workflow from $GITHUB_SHA." "" \
+            "Verify and load the image: \`scripts/verify_release.sh $VERSION\` (docs/release-signing.md)." \
+            "Publishing this release pushes the images to ghcr.io/keytend/keytend-kmip-server." > "$out/notes.md"
+          gh release create "v$VERSION" "${flags[@]}" --notes-file "$out/notes.md" \
+            "$out/keytend-kmip-server-$VERSION-signed-release.tar" "$out/keytend-kmip-server-$VERSION-signed-release.tar.sha256" \
+            "$out/SHA256SUMS" "$out/SHA256SUMS.asc" "$out/SHA256SUMS.sigstore.json"

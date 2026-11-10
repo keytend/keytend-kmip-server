@@ -23,7 +23,8 @@
 # signing/cosign.pub and cosign pin. In a new directory outside the checkout
 # it downloads SHA256SUMS, SHA256SUMS.sigstore.json, the signed-release
 # archive and SHA256SUMS.asc. It unpacks only regular files and directories
-# under release/, checks the cosign signature of SHA256SUMS and its OpenPGP
+# under release/, checks the cosign signature of SHA256SUMS (keyless for a
+# release built by the release workflow) and its OpenPGP
 # signature by the Keytend release key (signing/pgp_verify.sh), then the digest of every file
 # SHA256SUMS lists, and only then loads the image for the architecture
 # (default: this host's) and tags it localhost/keytend-kmip-server:VERSION.
@@ -88,9 +89,19 @@ PY
 cp "$WORK"/SHA256SUMS* "$WORK/release/"
 
 # 3. The signatures of SHA256SUMS, then every digest, then load.
-"$COSIGN" verify-blob --key "$CHECKOUT/signing/cosign.pub" --insecure-ignore-tlog=true \
-  --bundle "$WORK/release/SHA256SUMS.sigstore.json" "$WORK/release/SHA256SUMS" ||
-  die "the signature of SHA256SUMS does not verify; nothing loaded"
+# A release built by the release workflow is signed keyless: the bundle must hold a
+# certificate for that workflow at tag vVERSION and a transparency-log entry. A
+# release built on a workstation is signed with signing/cosign.pub.
+if grep -q '"certificate"\|"x509CertificateChain"' "$WORK/release/SHA256SUMS.sigstore.json"; then
+  IDENTITY=$(python3 -I -c 'import re, sys; print("^"+re.escape(sys.argv[1])+"$")' \
+    "https://github.com/keytend/keytend-kmip-server/.github/workflows/release.yml@refs/tags/v$VERSION")
+  "$COSIGN" verify-blob --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+    --certificate-identity-regexp "$IDENTITY" \
+    --bundle "$WORK/release/SHA256SUMS.sigstore.json" "$WORK/release/SHA256SUMS"
+else
+  "$COSIGN" verify-blob --key "$CHECKOUT/signing/cosign.pub" --insecure-ignore-tlog=true \
+    --bundle "$WORK/release/SHA256SUMS.sigstore.json" "$WORK/release/SHA256SUMS"
+fi || die "the signature of SHA256SUMS does not verify; nothing loaded"
 # shellcheck source=signing/pgp_verify.sh
 (set +o pipefail; . "$CHECKOUT/signing/pgp_verify.sh" &&
   pgp_verify "$WORK/release/SHA256SUMS.asc" "$WORK/release/SHA256SUMS") ||

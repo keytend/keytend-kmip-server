@@ -19,13 +19,17 @@ limitations under the License.
 Part of [security](README.md#security).
 
 Each release set is described by one manifest, `SHA256SUMS`, which lists the
-SHA-256 of the files in the set. It is signed twice: with the project's cosign
-key (`SHA256SUMS.sigstore.json`) and with an OpenPGP signing subkey of the
-Keytend release key (`SHA256SUMS.asc`). A valid signature shows that the
-holder of a key signed those bytes.
+SHA-256 of the files in the set. It is signed twice: with cosign
+(`SHA256SUMS.sigstore.json`) and with an OpenPGP signing subkey of the Keytend
+release key (`SHA256SUMS.asc`). A release built by the
+[release workflow](release-builds.md#how-releases-are-built) is signed with
+cosign keyless, as that workflow; an earlier release, built on a workstation,
+with the project's cosign key. A valid signature shows that the holder of a
+key, or that workflow, signed those bytes.
 
 - [Verifying a release](#verifying-a-release): [by hand](#by-hand) and
   [other ways to verify](#other-ways-to-verify)
+- [Images on ghcr.io](#images-on-ghcrio)
 - [Getting the image into a registry](#getting-the-image-into-a-registry)
 - [OpenPGP signature](#openpgp-signature): the release key fingerprint
 - [What the signatures prove](#what-the-signatures-prove)
@@ -57,9 +61,11 @@ keys or tools that check it. It stops at the first failure, removing what it
 downloaded, and loads nothing unless every check passes:
 
 1. It unpacks only regular files and directories under `release/`.
-2. It checks the cosign signature of `SHA256SUMS` with
-   [`signing/cosign.pub`](../signing/cosign.pub) and its OpenPGP signature,
-   `SHA256SUMS.asc`, with [`pgp_verify`](#openpgp-signature).
+2. It checks the cosign signature of `SHA256SUMS` and its OpenPGP signature,
+   `SHA256SUMS.asc`, with [`pgp_verify`](#openpgp-signature). A keyless
+   cosign signature must be by the release workflow for the tag
+   `v<version>` and have a transparency-log entry; a key signature must be by
+   [`signing/cosign.pub`](../signing/cosign.pub).
 3. It checks the digest of every file that `SHA256SUMS` lists.
 4. It loads the image for this host's architecture (or the one named). The
    amd64 image loads as `localhost/keytend-kmip-server:<version>`; the arm64
@@ -69,9 +75,9 @@ downloaded, and loads nothing unless every check passes:
 It keeps the release files for [the registry copy](#getting-the-image-into-a-registry)
 and prints their path. It needs bash, curl, Python 3.12 or later, Docker or
 Podman, and gpg (GnuPG 2.2 or later). On Linux it fetches the
-pinned cosign (SHA-256 checked); on macOS, install cosign 3 yourself. cosign
-also warns about the transparency log: `--insecure-ignore-tlog=true` is
-required because nothing is uploaded to one
+pinned cosign (SHA-256 checked); on macOS, install cosign 3 yourself. For a
+release signed with the key, cosign warns about the transparency log:
+`--insecure-ignore-tlog=true` is required because nothing was uploaded to one
 ([what the signatures prove](#what-the-signatures-prove)).
 
 To run it with the quick start, see
@@ -121,10 +127,20 @@ macOS, use `shasum -a 256 -c` instead of `sha256sum -c`.
    ```
 
 3. Check the signatures, then the digests, and load the image only if every
-   check succeeds:
+   check succeeds. A release built by the release workflow (its bundle holds
+   a `certificate`) is checked keyless:
 
    ```sh
-   "$COSIGN" verify-blob --key "$CHECKOUT/signing/cosign.pub" --insecure-ignore-tlog=true \
+   COSIGN_CHECK=(--certificate-oidc-issuer https://token.actions.githubusercontent.com
+     --certificate-identity "https://github.com/keytend/keytend-kmip-server/.github/workflows/release.yml@refs/tags/v$VERSION")
+   ```
+
+   A release signed with the key is checked with
+   `COSIGN_CHECK=(--key "$CHECKOUT/signing/cosign.pub" --insecure-ignore-tlog=true)`
+   instead. Then:
+
+   ```sh
+   "$COSIGN" verify-blob "${COSIGN_CHECK[@]}" \
      --bundle "$WORK/release/SHA256SUMS.sigstore.json" "$WORK/release/SHA256SUMS" &&
      (. "$CHECKOUT/signing/pgp_verify.sh" &&
       pgp_verify "$WORK/release/SHA256SUMS.asc" "$WORK/release/SHA256SUMS") &&
@@ -160,6 +176,25 @@ under the same rule as `pgp_verify`; that `SHA256SUMS` lists exactly the files
 present and every digest matches; that every required platform is present and
 the image index covers exactly the release's platforms; and that cosign
 fetched no trusted root, so verification works offline.
+
+## Images on ghcr.io
+
+Releases are also published as
+`ghcr.io/keytend/keytend-kmip-server:<version>`, a multi-architecture index
+for amd64 and arm64 (`<version>-amd64` and `<version>-arm64` name each
+platform). They are the images of the signed release, not a rebuild: the
+image IDs match `linux-<arch>/image.json` in the release set. From
+v0.10.0-rc.2 on, the index is signed with cosign keyless by
+[`publish-image.yml`](../.github/workflows/publish-image.yml):
+
+```sh
+cosign verify ghcr.io/keytend/keytend-kmip-server:0.10.0-rc.2 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp '^https://github\.com/keytend/keytend-kmip-server/\.github/workflows/publish-image\.yml@'
+```
+
+Deploy by digest: `docker buildx imagetools inspect` or
+`skopeo inspect --raw` shows the index digest.
 
 ## Getting the image into a registry
 
@@ -259,7 +294,14 @@ keys.openpgp.org) to get the current key and verify again.
 
 ## What the signatures prove
 
-Signing is offline: there is no Rekor transparency-log entry, no trusted
+A release built by the release workflow is signed keyless: the cosign
+certificate names the workflow and the tag it ran for, and the signature is
+recorded in the public Rekor transparency log, so anyone can see when it was
+made. Its OpenPGP signature is made in the same job by a CI signing subkey
+held as a repository secret. It shows that the release workflow of this
+repository signed those bytes for that tag.
+
+For a release built on a workstation, signing is offline: there is no Rekor transparency-log entry, no trusted
 timestamp and no keyless identity. Nobody can check from a public log when a
 signature was made or what else a key signed, and a signature made after a key
 compromise cannot be told apart from an earlier one. The cosign key is a

@@ -20,10 +20,12 @@ assemble  copies each platform's packaged outputs (scripts/package.py --arch) in
           `podman manifest`, copies each --extra file (the test reports archive)
           into <dir>/reports/ and writes SHA256SUMS over every file;
 sign      signs SHA256SUMS twice: a cosign blob signature, SHA256SUMS.sigstore.json
-          (offline key, no transparency log), and a detached OpenPGP signature,
+          (offline key, no transparency log; with --keyless, the release
+          workflow's GitHub OIDC identity, logged in Rekor), and a detached OpenPGP signature,
           SHA256SUMS.asc, by this project's signing subkey of the Keytend release
           key (scripts/gpg_tool.py);
-verify    checks both signatures against signing/cosign.pub and
+verify    checks both signatures (cosign against signing/cosign.pub, or a keyless
+          bundle against the release workflow identity for v<version>) and
           signing/keytend-release-key.asc, every listed digest, that each
           required platform is present and that the image index covers exactly
           the release's platforms. Writes <dir>/verification.json.
@@ -174,9 +176,14 @@ def assemble(args):
 
 def sign(args):
     directory = args.dir
-    cosign_tool.check_private_key()
+    keyless = getattr(args, "keyless", False)
+    if not keyless:
+        cosign_tool.check_private_key()
     gpg_tool.check_signing_keyring()
-    cosign_tool.sign_blob(directory/SUMS, directory/COSIGN)
+    if keyless:
+        cosign_tool.sign_blob_keyless(directory/SUMS, directory/COSIGN)
+    else:
+        cosign_tool.sign_blob(directory/SUMS, directory/COSIGN)
     gpg_tool.sign_detached(directory/SUMS, directory/OPENPGP)
     checked = gpg_tool.verify(directory/SUMS, directory/OPENPGP, gpg_tool.PUBLIC_KEY, gpg_tool.RELEASE_FINGERPRINT)
     if not checked['verified']:
@@ -194,8 +201,14 @@ def check(directory, public_key, openpgp_key, require_platforms=(), primary=gpg_
             failures.append(message)
         return condition
     tuf = pathlib.Path(cosign_tool.environment()['TUF_ROOT'])
-    cosign_ok = (directory/COSIGN).exists() and cosign_tool.verify_blob(directory/SUMS, directory/COSIGN, public_key).returncode == 0
-    expect(cosign_ok, f'{COSIGN} does not verify against {pathlib.Path(public_key).name}')
+    # A workstation release is signed with the key pair, a release workflow run keyless.
+    keyless = (directory/COSIGN).exists() and cosign_tool.is_keyless(directory/COSIGN)
+    if keyless:
+        cosign_ok = cosign_tool.verify_blob_keyless(directory/SUMS, directory/COSIGN, VERSION).returncode == 0
+        expect(cosign_ok, f'{COSIGN} is not a keyless signature by {cosign_tool.RELEASE_WORKFLOW} for v{VERSION}')
+    else:
+        cosign_ok = (directory/COSIGN).exists() and cosign_tool.verify_blob(directory/SUMS, directory/COSIGN, public_key).returncode == 0
+        expect(cosign_ok, f'{COSIGN} does not verify against {pathlib.Path(public_key).name}')
     # OpenPGP: the release key's public part only; any subkey of it may have signed.
     openpgp = gpg_tool.verify(directory/SUMS, directory/OPENPGP, openpgp_key, primary) if (directory/OPENPGP).exists() else dict(
         signature=OPENPGP, verified=False, reason='missing')
@@ -212,9 +225,11 @@ def check(directory, public_key, openpgp_key, require_platforms=(), primary=gpg_
     expect(not tuf.exists(), f'cosign created {tuf}: verification contacted a TUF repository')
     report = dict(status='verified' if not failures else 'failed', verified_at=now(), directory=directory.name,
         cosign=cosign_tool.VERSION, cosign_sha256=cosign_tool.SHA256[cosign_tool.host_arch()],
-        cosign_signature=dict(signature=COSIGN, public_key=pathlib.Path(public_key).name, public_key_sha256=sha(public_key), verified=cosign_ok),
+        cosign_signature=dict(signature=COSIGN, identity=cosign_tool.release_identity(VERSION), issuer=cosign_tool.OIDC_ISSUER, verified=cosign_ok) if keyless
+            else dict(signature=COSIGN, public_key=pathlib.Path(public_key).name, public_key_sha256=sha(public_key), verified=cosign_ok),
         openpgp={**openpgp, 'public_key_sha256': sha(openpgp_key)},
-        transparency_log='not used: signed with an offline signing config (no Rekor/TSA/Fulcio); verified with --insecure-ignore-tlog=true',
+        transparency_log='keyless: a Rekor entry is required and verified' if keyless else
+            'not used: signed with an offline signing config (no Rekor/TSA/Fulcio); verified with --insecure-ignore-tlog=true',
         sums_sha256=sha(directory/SUMS), files_checked=len(sums), platforms=platforms,
         index=dict(index_digest=summary['index_digest'], archive=summary['archive'], archive_sha256=summary['archive_sha256']),
         failures=failures)
@@ -239,6 +254,8 @@ def main():
             command.add_argument('--engine', default='podman', choices=['podman'])
             command.add_argument('--platforms', nargs='+', default=['amd64'], choices=sorted(PLATFORMS))
             command.add_argument('--extra', action='append', default=[], type=pathlib.Path, help='another file to sign, placed under reports/')
+        if name == 'sign':
+            command.add_argument('--keyless', action='store_true', help='sign with the GitHub Actions OIDC identity (release workflow)')
         if name == 'verify':
             command.add_argument('--public-key', type=pathlib.Path, default=cosign_tool.PUBLIC_KEY)
             command.add_argument('--require-platforms', nargs='+', choices=sorted(PLATFORMS))

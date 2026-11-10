@@ -1,0 +1,91 @@
+# Copyright 2026 Jeremiah Jordan
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Push a published release's images to ghcr.io/keytend/keytend-kmip-server
+# (docs/release-builds.md).
+#
+# It downloads the release, verifies it with scripts/verify_release.sh, pushes
+# the amd64 and arm64 images and a multi-architecture index tagged <version>
+# (and latest for a final release), then signs the index with cosign keyless.
+# The pushed images are the signed release's images, not a rebuild.
+name: publish-image
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published release version, without the leading v
+        required: true
+
+permissions:
+  contents: read
+  packages: write   # push to ghcr.io
+  id-token: write   # cosign keyless signing
+
+concurrency:
+  group: publish-image
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    env:
+      REPOSITORY: ghcr.io/keytend/keytend-kmip-server
+    steps:
+      - name: Version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          INPUT: ${{ inputs.version }}
+        run: |
+          version=${TAG#v}; version=${version:-$INPUT}
+          case $version in ''|*[!0-9A-Za-z.+-]*) echo "::error::bad version: $version"; exit 1 ;; esac
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: v${{ env.VERSION }}
+          persist-credentials: false
+      - name: Verify the release and load its images
+        run: |
+          for arch in amd64 arm64; do
+            DOCKER=podman scripts/verify_release.sh "$VERSION" "$arch" | tee "$RUNNER_TEMP/verify-$arch.log"
+          done
+      - name: Push the images and the index
+        env:
+          TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ github.event.release.prerelease || contains(inputs.version, '-') }}
+        run: |
+          release=$(sed -n 's/^release files: //p' "$RUNNER_TEMP/verify-amd64.log")
+          printf '%s\n' "$TOKEN" | podman login -u "$GITHUB_ACTOR" --password-stdin ghcr.io
+          podman manifest create "local-$VERSION"
+          for arch in amd64 arm64; do
+            id=$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1]))["image_id"])' "$release/linux-$arch/image.json")
+            podman tag "$id" "$REPOSITORY:$VERSION-$arch"
+            podman push --digestfile "$RUNNER_TEMP/$arch.digest" "$REPOSITORY:$VERSION-$arch"
+            podman manifest add "local-$VERSION" "docker://$REPOSITORY@$(cat "$RUNNER_TEMP/$arch.digest")"
+          done
+          podman manifest push --digestfile "$RUNNER_TEMP/index.digest" "local-$VERSION" "docker://$REPOSITORY:$VERSION"
+          if [ "$PRERELEASE" != true ]; then
+            podman manifest push "local-$VERSION" "docker://$REPOSITORY:latest"
+          fi
+          echo "INDEX=$(cat "$RUNNER_TEMP/index.digest")" >> "$GITHUB_ENV"
+      - name: Sign the index
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          cosign=$(python3 scripts/cosign_tool.py fetch | cut -d' ' -f1)
+          printf '%s\n' "$TOKEN" | "$cosign" login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          TUF_ROOT=$RUNNER_TEMP/tuf "$cosign" sign --yes "$REPOSITORY@$INDEX"
+          echo "pushed and signed $REPOSITORY:$VERSION ($INDEX)" | tee -a "$GITHUB_STEP_SUMMARY"

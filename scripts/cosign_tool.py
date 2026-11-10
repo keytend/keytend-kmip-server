@@ -17,11 +17,15 @@
 
 The binary is downloaded once into .cache/bin and checked against the SHA-256
 published in the release's cosign_checksums.txt (pinned below). No system
-install. Signing is offline: no transparency-log upload and no keyless identity
-(see docs/release-signing.md).
+install. A release built on a workstation is signed offline with the key pair
+(no transparency-log upload); a release built by the product repository's
+release workflow is signed keyless, with the workflow's GitHub OIDC identity,
+and recorded in the public Sigstore transparency log (docs/release-signing.md).
 """
 import argparse
 import hashlib
+import json
+import re
 import os
 import pathlib
 import platform
@@ -45,6 +49,11 @@ PUBLIC_KEY = ROOT/'signing/cosign.pub'
 # Sigstore signing config with no Rekor, TSA or Fulcio service (`cosign signing-config create` with no
 # services): signatures are made with the key alone and nothing is uploaded to a transparency log.
 OFFLINE_SIGNING_CONFIG = ROOT/'signing/offline-signing-config.json'
+# Keyless signatures: the GitHub Actions OIDC issuer and the release workflow of the product repository.
+OIDC_ISSUER = 'https://token.actions.githubusercontent.com'
+RELEASE_WORKFLOW = 'https://github.com/keytend/keytend-kmip-server/.github/workflows/release.yml'
+# Keyless verification fetches the Sigstore trusted root through TUF into this cache.
+KEYLESS_TUF_ROOT = ROOT/'.cache/cosign-tuf'
 
 
 def sha256(path):
@@ -82,18 +91,21 @@ def check_private_key():
         assert mode == 0o600, f'{path} has mode {oct(mode)}; expected 0600'
 
 
-def environment():
+def environment(keyless=False):
     """Environment for cosign: password from the custody file, never on the command line."""
     env = {k: v for k, v in os.environ.items() if not k.startswith(('COSIGN_', 'SIGSTORE_'))}
+    if keyless:
+        env['TUF_ROOT'] = str(KEYLESS_TUF_ROOT)
+        return env
     env['COSIGN_PASSWORD'] = PASSWORD_FILE.read_text().strip() if PASSWORD_FILE.exists() else ''
     # Offline: never contact a TUF mirror for a trusted root.
     env['TUF_ROOT'] = str(ROOT/'.cache/cosign-tuf-unused')
     return env
 
 
-def run(args, check=True):
+def run(args, check=True, keyless=False):
     result = subprocess.run([str(binary()), *map(str, args)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        text=True, env=environment(), timeout=600)
+        text=True, env=environment(keyless), timeout=600)
     if check and result.returncode != 0:
         raise RuntimeError(f'cosign {args[0]} failed ({result.returncode}): {result.stdout[-2000:]}')
     return result
@@ -107,6 +119,28 @@ def sign_blob(path, bundle):
 
 def verify_blob(path, bundle, public_key=PUBLIC_KEY):
     return run(['verify-blob', '--key', public_key, '--insecure-ignore-tlog=true', '--bundle', bundle, path], check=False)
+
+
+def is_keyless(bundle):
+    """True for a bundle signed with a Fulcio certificate, False for one signed with a key."""
+    material = json.loads(pathlib.Path(bundle).read_text()).get('verificationMaterial', {})
+    return 'certificate' in material or 'x509CertificateChain' in material
+
+
+def release_identity(version):
+    """Certificate identity of the release workflow run for tag v<version>, as an anchored regular expression."""
+    return '^'+re.escape(f'{RELEASE_WORKFLOW}@refs/tags/v{version}')+'$'
+
+
+def sign_blob_keyless(path, bundle):
+    """Keyless blob signature with the ambient GitHub Actions OIDC token, logged in Rekor."""
+    run(['sign-blob', '--yes', '--bundle', bundle, path], keyless=True)
+
+
+def verify_blob_keyless(path, bundle, version):
+    """Verify a keyless bundle: made by the release workflow for tag v<version>, with a transparency-log entry."""
+    return run(['verify-blob', '--bundle', bundle, '--certificate-oidc-issuer', OIDC_ISSUER,
+                '--certificate-identity-regexp', release_identity(version), path], check=False, keyless=True)
 
 
 def generate_key_pair():

@@ -35,9 +35,9 @@ collects it):
 | `index/keytend-kmip-server-<version>.oci.tar` | OCI image layout archive: the multi-architecture image index and every platform's image |
 | `index/oci-image-index.json` | the raw OCI image index blob; its SHA-256 is the index digest |
 | `index/image-index.json` | index digest, each platform's manifest digest and the bindings to the Docker archives |
-| `reports/keytend-kmip-server-<version>-test-reports.tar.gz` | the reports of the run that produced the release ([test reports](testing.md#test-reports)) |
+| `reports/keytend-kmip-server-<version>-test-reports.tar.gz` | the reports of the qualification run that produced the release ([test reports](testing.md#test-reports)); a release built by the release workflow has none |
 | `SHA256SUMS` | SHA-256 of every file above |
-| `SHA256SUMS.sigstore.json` | cosign signature of `SHA256SUMS` (a Sigstore bundle) |
+| `SHA256SUMS.sigstore.json` | cosign signature of `SHA256SUMS` (a Sigstore bundle: keyless for a release built by the release workflow) |
 | `SHA256SUMS.asc` | detached ASCII-armored OpenPGP signature of `SHA256SUMS` (see [OpenPGP signature](release-signing.md#openpgp-signature)) |
 
 `sign` writes the two signatures; nothing else in the set is signed
@@ -52,6 +52,27 @@ directories). Other assets, such as a `.sha256` of the tar or a copy of
 `cosign.pub`, are not needed for verification.
 
 ## How releases are built
+
+Pushing a tag `v<version>` on `main` starts the release workflow
+([`.github/workflows/release.yml`](../.github/workflows/release.yml)). The tag
+must match the version in `Cargo.toml`. The workflow:
+
+1. runs Clippy, `cargo test` and the license check;
+2. builds the amd64 and arm64 images natively, on GitHub's amd64 and arm64
+   runners, with `scripts/package.py`, and scans each with
+   `scripts/scan_image.py`;
+3. assembles the release set and signs `SHA256SUMS` with cosign keyless (the
+   workflow's GitHub identity, recorded in the Sigstore transparency log) and
+   with the OpenPGP CI signing subkey;
+4. creates a draft GitHub release with the assets below.
+
+Publishing the draft starts
+[`.github/workflows/publish-image.yml`](../.github/workflows/publish-image.yml).
+It verifies the published release with `scripts/verify_release.sh`, pushes
+the same images to `ghcr.io/keytend/keytend-kmip-server` as `<version>` (a
+multi-architecture index), `<version>-amd64` and `<version>-arm64` (and
+`latest` for a final release), and signs the index with cosign keyless
+([images on ghcr.io](release-signing.md#images-on-ghcrio)).
 
 - Each platform is built with one `podman build`, with both UBI base images
   pinned by digest, from a build context tar with sorted names, zero
@@ -68,9 +89,9 @@ directories). Other assets, such as a `.sha256` of the tar or a copy of
   commit, the build command, the base images, `Cargo.lock`, every shipped
   RPM, the toolchain, the builder host, and digests of `image.json`, the SBOM
   and the build log.
-- The SLSA level is at most Build L1. Provenance is written and signed on
-  developer-operated hosts, not by a hosted build platform (L2), and builds
-  are not isolated from the signing keys (L3).
+- The SLSA level is at most Build L1. The provenance is written by
+  `scripts/package.py` inside the build job, not by the build platform itself
+  (L2), and the signing job holds the OpenPGP subkey in the same workflow (L3).
 
 ## Build type `podman-dockerfile-v1`
 
