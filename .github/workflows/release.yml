@@ -71,14 +71,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Rust toolchain
+      # The server needs OpenSSL 3.5, which the runner's Ubuntu does not have: run Clippy
+      # and the tests in the pinned UBI builder image with the image build's OpenSSL.
+      - name: Clippy and tests
         run: |
-          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component clippy
-          rustup default "$RUST_TOOLCHAIN"
-      - name: Clippy
-        run: cargo clippy --locked --all-targets -- -D warnings
-      - name: Tests
-        run: cargo test --locked
+          chmod -R a+rX .
+          read -r builder openssl < <(python3 -c 'import sys; sys.path.insert(0, "scripts")
+          from image_evidence import base_images, dockerfile_arg
+          print(base_images("amd64")["UBI_BUILDER"], *[p for p in dockerfile_arg("BUILD_PACKAGES").split() if p.startswith("openssl-devel")])')
+          podman run --rm -v "$PWD:/src:Z" -w /src -e RUST_TOOLCHAIN -e OPENSSL_CONF=/src/image/openssl.cnf \
+            "$builder" bash /src/scripts/ci_test.sh "$openssl"
       - name: License headers
         run: python3 scripts/check_license.py
 

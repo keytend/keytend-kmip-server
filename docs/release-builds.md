@@ -57,7 +57,9 @@ Pushing a tag `v<version>` on `main` starts the release workflow
 ([`.github/workflows/release.yml`](../.github/workflows/release.yml)). The tag
 must match the version in `Cargo.toml`. The workflow:
 
-1. runs Clippy, `cargo test` and the license check;
+1. runs Clippy and `cargo test` in the pinned UBI builder image, which has
+   the OpenSSL 3.5 the server needs (`scripts/ci_test.sh`), and the license
+   check;
 2. builds the amd64 and arm64 images natively, on GitHub's amd64 and arm64
    runners, with `scripts/package.py`, and scans each with
    `scripts/scan_image.py`;
