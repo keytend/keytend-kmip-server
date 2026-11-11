@@ -23,11 +23,15 @@ use, and it stays a test server at 1.0 and beyond. It has not had an independent
 
 ## Reporting a vulnerability
 
-Email **security@keytend.dev**. Do not open a public issue. Include the
-affected version or commit, a synthetic reproducer and the impact; never
-include real keys, master keys or database key material. Reports cannot be
-encrypted yet: the Keytend OpenPGP key has signing subkeys only. There is no
-security-response time commitment yet.
+Report it privately on GitHub:
+[Report a vulnerability](https://github.com/keytend/keytend-kmip-server/security/advisories/new),
+also on the repository's Security tab. The report becomes a draft security
+advisory that only you and the maintainer can see. It is discussed and fixed
+there, and the advisory is published from it.
+
+Do not open a public issue. Include the affected version or commit, a
+synthetic reproducer and the impact; never include real keys, master keys or
+database key material. There is no security-response time commitment yet.
 
 ### Supported versions
 

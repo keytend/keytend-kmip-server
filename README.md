@@ -138,7 +138,9 @@ shows each step by hand, changing a setting, and running from source.
 ## Development
 
 Build and test commands are in [testing](docs/testing.md). Report security
-issues to security@keytend.dev ([security policy](SECURITY.md)); other
+issues privately through
+[GitHub](https://github.com/keytend/keytend-kmip-server/security/advisories/new)
+([security policy](SECURITY.md)); other
 questions and bugs go to the
 [issue tracker](https://github.com/keytend/keytend-kmip-server/issues). The
 project has a single maintainer; open an issue before starting a pull request.
