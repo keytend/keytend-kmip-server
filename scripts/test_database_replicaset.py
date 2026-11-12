@@ -29,7 +29,7 @@ import time
 import uuid
 
 from image_evidence import ROOT, local_image_id, packaged_evidence
-from test_database import ContainerServer, PERCONA
+from test_database import ContainerServer, PERCONA, mongod_env
 from test_runtime import free_port
 from wire import key_value, get, payload, exchange, request, uid, enumeration, structure
 
@@ -78,7 +78,7 @@ class ReplicaSet:
 
     def base(self, member):
         identity = ['--userns', 'keep-id'] if self.engine == 'podman' else []
-        return [self.engine, 'run', '--network', 'host', *identity, '--user', f'{os.getuid()}:{os.getgid()}', '--entrypoint', 'mongod', '-e', 'HOME=/tmp', '-e', 'PERCONA_TELEMETRY_DISABLE=1', '-v', f'{self.tls}:/tls:ro', '-v', f'{self.directories[member]}:/data/db']
+        return [self.engine, 'run', '--network', 'host', *identity, '--user', f'{os.getuid()}:{os.getgid()}', '--entrypoint', 'mongod', '-e', 'HOME=/tmp', '-e', 'PERCONA_TELEMETRY_DISABLE=1', *mongod_env(), '-v', f'{self.tls}:/tls:ro', '-v', f'{self.directories[member]}:/data/db']
 
     def flags(self, member):
         return ['--bind_ip', '127.0.0.1', '--port', str(self.ports[member]), '--dbpath', '/data/db', '--replSet', 'qualification', '--keyFile', '/tls/replication.key', '--tlsMode', 'requireTLS', '--tlsCertificateKeyFile', '/tls/mongod.pem', '--tlsCAFile', '/tls/ca.pem', '--enableEncryption', '--kmipServerName', '127.0.0.1', '--kmipPort', str(self.server.port), '--kmipServerCAFile', '/tls/ca.pem', '--kmipClientCertificateFile', '/tls/client.pem', '--kmipKeyStatePollingSeconds', '2', '--kmipConnectRetries', '0', '--kmipConnectTimeoutMS', '1000']

@@ -35,6 +35,9 @@ def main():
     names = ['interop/pbm/Dockerfile', 'interop/pbm/node.sh', 'interop/pbm/command.sh',
         'scripts/build_pbm_fixture.py', 'LICENSE', 'NOTICE']
     hashes = {name: sha(ROOT/name) for name in names}
+    # A fresh checkout (a CI runner) may lack both.
+    output.mkdir(exist_ok=True)
+    (ROOT/'.cache').mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='pbm-image-', dir=ROOT/'.cache') as directory:
         context = pathlib.Path(directory)
         for name in ['Dockerfile', 'node.sh', 'command.sh']:

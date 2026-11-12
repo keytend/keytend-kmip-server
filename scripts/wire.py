@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """Small independent TTLV test transport (not a production client library)."""
-import socket,ssl,struct
+import json,socket,ssl,struct,time
 from pathlib import Path
 
 def node(tag,kind,value):return (tag,kind,value)
@@ -64,6 +64,24 @@ def connect(pki,port,identity='client',cert=True):
     pki=Path(pki);ctx=ssl.create_default_context(cafile=str(pki/'ca.pem'));ctx.minimum_version=ssl.TLSVersion.TLSv1_2
     if cert:ctx.load_cert_chain(pki/f'{identity}.pem',pki/f'{identity}.key')
     return ctx.wrap_socket(socket.create_connection(('127.0.0.1',port),timeout=5),server_hostname='localhost')
+def connection_metrics(health,timeout=2):
+    """Server lifecycle counters from the plaintext health listener (no TLS connection)."""
+    with socket.create_connection(('127.0.0.1',health),timeout=timeout) as c:
+        c.sendall(b'GET /connection-metrics HTTP/1.1\r\nHost: localhost\r\n\r\n');data=b''
+        while chunk:=c.recv(65536):data+=chunk
+    head,_,body=data.partition(b'\r\n\r\n')
+    if not head.startswith(b'HTTP/1.1 200'):raise OSError('connection-metrics unavailable')
+    return json.loads(body)
+def probe_counted(health,timeout=10):
+    """Wait until the server has accepted and closed a readiness probe's TCP connect to its KMIP
+    port. Through a container engine's port forward it can accept the probe after the connect
+    returns, so a counter baseline taken sooner would count the probe as a later connection."""
+    until=time.monotonic()+timeout
+    while True:
+        m=connection_metrics(health)
+        if m['ttlv_accepted_total']>=1 and m['active']==0:return m
+        if time.monotonic()>=until:raise TimeoutError(f'readiness probe not counted: {m}')
+        time.sleep(.05)
 def attr(n):
     names={0x420028:'Cryptographic Algorithm',0x42002a:'Cryptographic Length',0x42002c:'Cryptographic Usage Mask',0x420053:'Name',0x42008d:'State',0x420122:'Extractable'}
     return structure(0x420008,text(0x42000a,names[n[0]]),(0x42000b,n[1],n[2]))

@@ -38,6 +38,7 @@ GROUP='keytend-mysql-lane'
 MARKER='keytend-kmip-server durable encrypted mysql marker'
 UDF_KEY=b'q1-known-key-material-0123456789'  # keyring_udf passes a C string: no NUL bytes
 STALE='Connection closed or error while reading'
+LOADED="Component component_keyring_kmip reported: 'Keyring component initialized successfully.'"
 NOT_UNIQUE="Name is not unique among the owner's objects"
 STATE={1:'Pre-Active',2:'Active',3:'Deactivated',4:'Compromised',5:'Destroyed',6:'Destroyed Compromised'}
 
@@ -179,6 +180,9 @@ class Lane:
         r=subprocess.run(self.base(cnf)+['--name',name,MYSQL,'--initialize-insecure','--datadir=/var/lib/mysql','--log-error-verbosity=3'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=300)
         (self.out/'mysql-initialize.log').write_text(r.stdout);subprocess.run([self.engine,'rm','-f',name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         assert r.returncode==0,r.stdout[-2000:]
+        # mysqld initializes even if the component did not load, as under a host AppArmor profile for
+        # /usr/sbin/mysqld, which denies it the manifest, the plugin and its error messages.
+        assert LOADED in r.stdout,r.stdout[-2000:]
     def start(self,label,cnf_over=None,add_hosts=(),expect_ready=True,timeout=90):
         cnf,config=self.cnf(label,**(cnf_over or {}))
         self.name=f'keytend-mysql-{self.run_id}-{label}';self.containers.append(self.name)

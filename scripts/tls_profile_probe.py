@@ -320,17 +320,7 @@ DELTA_KEYS = ['tcp_accepted_total', 'tls_started_total', 'tls_succeeded_total', 
               'ttlv_responses_total', 'https_accepted_total', 'closed_total', 'error_total']
 
 
-def server_metrics(health, timeout=2):
-    """Server lifecycle counters from the plaintext health listener (no TLS connection)."""
-    with socket.create_connection(('127.0.0.1', health), timeout=timeout) as c:
-        c.sendall(b'GET /connection-metrics HTTP/1.1\r\nHost: localhost\r\n\r\n')
-        data = b''
-        while chunk := c.recv(65536):
-            data += chunk
-    head, _, body = data.partition(b'\r\n\r\n')
-    if not head.startswith(b'HTTP/1.1 200'):
-        raise OSError('connection-metrics unavailable')
-    return json.loads(body)
+server_metrics = wire.connection_metrics
 
 
 def settled_delta(health, before, timeout=5):
@@ -707,9 +697,13 @@ def wait_ready(health, port, alive, timeout=15):
                 if not c.recv(64).startswith(b'HTTP/1.1 200'):
                     raise OSError('not ready')
             with socket.create_connection(('127.0.0.1', port), timeout=.3):
-                return
+                pass
         except OSError:
             time.sleep(.1)
+            continue
+        # Each probe's counter delta must not include this connect (wire.probe_counted).
+        wire.probe_counted(health)
+        return
     raise TimeoutError('server did not become ready')
 
 

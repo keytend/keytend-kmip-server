@@ -173,9 +173,16 @@ def static_checks(rootfs, expected, report, arch='amd64'):
 def rpm_verify(engine, image, report, arch='amd64'):
     """rpm -Va from the pinned UBI builder against a disposable writable mount of the image."""
     builder = base_images(arch)['UBI_BUILDER']
+    # A host that did not build the image (a CI job that loaded the archive) lacks the builder.
+    if subprocess.run([engine, 'image', 'inspect', builder], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
+        subprocess.run([engine, 'pull', '--quiet', '--platform', PLATFORMS[arch]['platform'], builder],
+            check=True, stdout=subprocess.DEVNULL, timeout=900)
     result = subprocess.run([engine, 'run', '--rm', '--network', 'none', '--pull=never',
         '--mount', f'type=image,source={image},destination=/target,rw=true', builder, 'rpm', '--root', '/target', '-Va'],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=300)
+    # rpm -V exits with a small count of failures, which the parser below judges; the engine's own
+    # failures exit 125 to 127.
+    assert result.returncode < 125, f'{engine} run of {builder} exited {result.returncode}: {result.stdout[-2000:]}'
     unsatisfied, files, owner = set(), set(), None
     for line in result.stdout.splitlines():
         heading = re.match(r'Unsatisfied dependencies for (.+):$', line)

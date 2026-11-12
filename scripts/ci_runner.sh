@@ -19,7 +19,8 @@
 #   scripts/ci_runner.sh python             virtual environment from scripts/ci-requirements.txt, first on PATH
 #   scripts/ci_runner.sh podman             podman, checked to run a container with CPU, memory and PID limits
 #                                           (the tests set them); if it cannot, the runner's user session gets
-#                                           delegated cgroup controllers, and the check runs again
+#                                           delegated cgroup controllers, and the check runs again; the
+#                                           runner's AppArmor profile for /usr/sbin/mysqld is unloaded
 #   scripts/ci_runner.sh rust               Rust on the runner itself (interop clients, cargo-audit), first on PATH
 #   scripts/ci_runner.sh inotify            raise the inotify limits (kind, the PBM agents)
 #   scripts/ci_runner.sh space              remove SDKs the jobs do not use, for container images
@@ -76,6 +77,12 @@ from image_evidence import base_images; print(base_images(sys.argv[1])["UBI_MICR
       }
     fi
     echo "rootless podman runs containers with resource limits"
+    # The runner's MySQL has an AppArmor profile that attaches by path to every /usr/sbin/mysqld, also
+    # the Percona one in a rootless container, and denies it its plugin, manifest and messages.
+    if sudo -n grep -q '^/usr/sbin/mysqld ' /sys/kernel/security/apparmor/profiles 2>/dev/null; then
+      sudo -n apparmor_parser -R /etc/apparmor.d/usr.sbin.mysqld
+      echo "unloaded the runner's AppArmor profile for /usr/sbin/mysqld"
+    fi
     ;;
   rust)
     if ! command -v cargo >/dev/null; then

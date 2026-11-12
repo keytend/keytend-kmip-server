@@ -22,7 +22,7 @@ Disposable named containers and directories only; PKI generated at test time.
 """
 import argparse,datetime,hashlib,json,os,pathlib,shutil,subprocess,tempfile,time,uuid
 from image_evidence import local_image_id,packaged_evidence,native_sha256
-from test_database import ContainerServer,PERCONA
+from test_database import ContainerServer,PERCONA,mongod_env
 from test_database_mysql import Kmip,sha
 from test_runtime import ROOT,free_port
 from wire import *
@@ -69,7 +69,7 @@ class Lane:
         """Start mongod and report whether it served requests or exited."""
         name=f'keytend-psmdb-neg-{self.run_id}-{label}';self.containers.append(name);self.name=name
         args=[self.engine,'run','-d','--name',name,'--network','host']+(['--userns','keep-id'] if self.engine=='podman' else [])
-        args+=['--user',f'{os.getuid()}:{os.getgid()}','--entrypoint','mongod','-e','HOME=/tmp','-e','PERCONA_TELEMETRY_DISABLE=1','-v',f'{self.tls}:/tls:ro','-v',f'{data}:/data/db']
+        args+=['--user',f'{os.getuid()}:{os.getgid()}','--entrypoint','mongod','-e','HOME=/tmp','-e','PERCONA_TELEMETRY_DISABLE=1',*mongod_env(),'-v',f'{self.tls}:/tls:ro','-v',f'{data}:/data/db']
         for h in add_hosts:args+=['--add-host',f'{h}:127.0.0.1']
         flags=['--bind_ip','127.0.0.1','--port',str(self.port),'--dbpath','/data/db','--enableEncryption','--kmipServerName',server_name,'--kmipPort',str(self.server.port),
                '--kmipServerCAFile',ca,'--kmipClientCertificateFile',cert,'--kmipKeyStatePollingSeconds','2','--kmipConnectRetries','1','--kmipConnectTimeoutMS','3000']

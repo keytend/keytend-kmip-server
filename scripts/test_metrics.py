@@ -27,7 +27,7 @@ removed (docs/metrics.md).
 import argparse, datetime, hashlib, http.client, json, pathlib, re, socket, ssl, subprocess, tempfile, time
 from image_evidence import ROOT, local_image_id, packaged_evidence, source_commit, native_sha256
 from https_client import HttpsContainer, HttpsServer, post
-from wire import enumeration, exchange, get, integer, payload, reason, request, status, structure, text, uid
+from wire import enumeration, exchange, get, integer, payload, probe_counted, reason, request, status, structure, text, uid
 
 CENSUS_INTERVAL = 10
 NAME = 'metrics-lane-secret-name'
@@ -130,6 +130,8 @@ def image_binary_sha256(engine, image):
 
 def exercise(server, image, engine):
     results = {}
+    if image:
+        probe_counted(server.health)  # ContainerServer.start's readiness probe of the KMIP port
     before_text, before = scrape(server)
     assert value(before, 'kmip_build_info') == 1
     build = [dict(ls) for (n, ls), _ in before.items() if n == 'kmip_build_info'][0]
@@ -181,7 +183,7 @@ def exercise(server, image, engine):
     }
     for name, got in checks.items():
         assert got == 1, (name, got, after_text)
-    assert delta('kmip_connections_accepted_total', listener='ttlv') == 4
+    assert delta('kmip_connections_accepted_total', listener='ttlv') == 4, (before_text, after_text)
     assert delta('kmip_request_batch_items_count') == 7
     assert value(after, 'kmip_connections_active') == 0
     results['deltas'] = checks

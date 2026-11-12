@@ -16,13 +16,25 @@
 """Real encrypted Percona workload against the deliverable container image.
 Runs only disposable named containers and directories; no external database is used.
 """
-import argparse,json,os,pathlib,re,shutil,socket,subprocess,tempfile,time,uuid
+import argparse,functools,json,os,pathlib,platform,re,shutil,socket,subprocess,sys,tempfile,time,uuid
 from test_runtime import ROOT,Server,free_port,stable_port
 from wire import *
 from image_evidence import local_image_id,packaged_evidence
 import image_server
 PERCONA='docker.io/percona/percona-server-mongodb@sha256:e1004538c31619ec471aa39423ef9ffa39a598750661c2d6c66d785de852d538'
 ART=ROOT/'artifacts';ART.mkdir(exist_ok=True)
+@functools.cache
+def mongod_env(release=None):
+    """Container options for a PERCONA mongod on this host. Its mongod refuses to start on kernel
+    releases 6.19.0 to 7.0.13 (SERVER-121912), also Ubuntu's 7.0.0 kernels that carry the upstream
+    7.0.14 fix (SERVER-136848, open). MongoDB 8.0.37 reads Ubuntu's upstream version (SERVER-131779);
+    no PSMDB release does yet. There glibc keeps rseq, so TCMalloc uses per-thread caches, not the
+    per-CPU caches at issue."""
+    release=release or platform.release()
+    version=re.match(r'(\d+)\.(\d+)\.(\d+)',release)
+    if not version or not (6,19,0)<=tuple(map(int,version.groups()))<=(7,0,13):return ()
+    print(f'NOTE kernel {release}: mongod runs with GLIBC_TUNABLES=glibc.pthread.rseq=1 (SERVER-121912)',file=sys.stderr,flush=True)
+    return ('-e','GLIBC_TUNABLES=glibc.pthread.rseq=1')
 def command(args,**kwargs):return subprocess.check_output(args,text=True,stderr=subprocess.STDOUT,**kwargs)
 class ContainerServer(Server):
     def __init__(self,directory,engine,image,*,pki=None,data=None,binary=None,draft=False,log_path=None):
@@ -108,7 +120,7 @@ def run(engine,image):
         shutil.copy(s.pki/'ca.pem',dbtls/'ca.pem');(dbtls/'client.pem').write_bytes((s.pki/'client.pem').read_bytes()+(s.pki/'client.key').read_bytes())
         # These files are private to the disposable 0700 test directory.
         (dbtls/'client.pem').chmod(0o600)
-        base=[engine,'run','--network','host']+(['--userns','keep-id'] if engine=='podman' else [])+['--user',f'{os.getuid()}:{os.getgid()}','--entrypoint','mongod','-e','HOME=/tmp','-e','PERCONA_TELEMETRY_DISABLE=1','-v',f'{dbtls}:/tls:ro','-v',f'{dbdata}:/data/db']
+        base=[engine,'run','--network','host']+(['--userns','keep-id'] if engine=='podman' else [])+['--user',f'{os.getuid()}:{os.getgid()}','--entrypoint','mongod','-e','HOME=/tmp','-e','PERCONA_TELEMETRY_DISABLE=1',*mongod_env(),'-v',f'{dbtls}:/tls:ro','-v',f'{dbdata}:/data/db']
         flags=['--bind_ip','127.0.0.1','--port',str(port),'--dbpath','/data/db','--enableEncryption','--kmipServerName','127.0.0.1','--kmipPort',str(s.port),'--kmipServerCAFile','/tls/ca.pem','--kmipClientCertificateFile','/tls/client.pem','--kmipKeyStatePollingSeconds','2']
         def shell(js):return command([engine,'exec','-e','HOME=/tmp',name,'mongosh','--port',str(port),'--quiet','--eval',js])
         def start_db():

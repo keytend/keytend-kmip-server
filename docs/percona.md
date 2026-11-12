@@ -61,6 +61,13 @@ security:
   revoking the key takes that database offline.
 - During a KMIP outage a running `mongod` keeps its cached key, so a
   revocation takes effect only when it can poll again.
+- 8.0.34-15 refuses to start where the kernel release reads 6.19.0 to 7.0.13,
+  which includes Ubuntu's 7.0.0 kernels
+  ([SERVER-121912](https://jira.mongodb.org/browse/SERVER-121912)). On such a
+  host this project's tests run `mongod` with
+  `GLIBC_TUNABLES=glibc.pthread.rseq=1`, which turns off the TCMalloc per-CPU
+  caches that the check guards. It costs performance (`mongod` logs warning
+  8718500), so it is not a production setting.
 
 ## Percona Server for MySQL
 
