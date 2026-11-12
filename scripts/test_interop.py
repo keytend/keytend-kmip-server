@@ -18,6 +18,7 @@ import argparse,hashlib,json,os,pathlib,subprocess,tempfile,time
 from image_evidence import local_image_id,packaged_evidence,source_commit,native_sha256
 from test_database import ContainerServer
 from test_runtime import ROOT,Server
+import python_env
 parser=argparse.ArgumentParser();parser.add_argument('--image');parser.add_argument('--skip-build',action='store_true',help='use the frozen prebuilt server binary');parser.add_argument('--engine',default='podman');a=parser.parse_args()
 CACHE=ROOT/'.cache'
 OUTPUT='interop-image.json' if a.image else 'interop.json'
@@ -40,10 +41,10 @@ for name,entry in lock.items():
     if sha!=entry['commit']:
         subprocess.run(['git','-C',str(dest),'fetch','--quiet','origin',entry['commit']],check=True)
         subprocess.run(['git','-C',str(dest),'checkout','--quiet',entry['commit']],check=True)
-venv=CACHE/'venv'
-if not venv.exists():subprocess.run(['python3','-m','venv',str(venv)],check=True)
-run('install-client-deps',[str(venv/'bin/pip'),'install','--disable-pip-version-check','-q','-r',str(ROOT/'interop/requirements.lock')])
-run('install-pykmip',[str(venv/'bin/pip'),'install','--disable-pip-version-check','--no-deps','-q',str(CACHE/'PyKMIP')])
+# PyKMIP's dependencies and build backend from the hash-locked interop/requirements.txt; PyKMIP itself
+# from its pinned commit, built with that setuptools and nothing else downloaded.
+venv=python_env.ensure(lock=python_env.INTEROP_LOCK)
+run('install-pykmip',[str(venv/'bin/pip'),'install','--disable-pip-version-check','--no-deps','--no-build-isolation','--no-index','-q',str(CACHE/'PyKMIP')])
 run('build-libkmip',['make','-s','-C',str(CACHE/'libkmip'),'libs'])
 run('build-libkmip-adapter',['cc','-Wall','-Wextra','-Werror','-I',str(CACHE/'libkmip/include'),str(ROOT/'interop/libkmip.c'),str(CACHE/'libkmip/lib/libkmip.a'),'-lssl','-lcrypto','-o',str(CACHE/'libkmip-test')])
 if not a.skip_build:run('build-server',['cargo','build','--locked'])

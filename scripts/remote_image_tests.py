@@ -22,8 +22,10 @@ files, the packaged archive and image.json (scripts/package.py --arch) and the
 trace archives to a temporary directory there, loads the archive, checks that
 the loaded image is the packaged one, runs the selected tests with the same
 scripts and fetches each report back with its SHA-256 checked on both ends.
-The host needs python3 >= 3.11, podman and openssl. The scan reads only the
-archive, so it can also run locally (scripts/scan_image.py --arch).
+The host needs python3 >= 3.12 with venv, access to PyPI, podman and openssl.
+The tests run in the scripts' virtual environment (scripts/python_env.py), kept
+under the remote root. The scan reads only the archive, so it can also run
+locally (scripts/scan_image.py --arch).
 
 --host local runs the same steps on this host, when it is a native host of the
 platform (the release workflow's arm64 runner): the files are copied to a
@@ -41,6 +43,7 @@ import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from image_evidence import PLATFORMS, ROOT, artifacts_dir
+import python_env
 from remote_host import Host
 
 
@@ -107,7 +110,7 @@ def main():
     facts = host.facts(args.engine)
     assert facts['machine'] in NATIVE[args.arch], f"{args.host} is {facts['machine']}, not a native {args.arch} host"
     python = host.text("python3 -c 'import sys;print(sys.version.split()[0])'").strip()
-    assert tuple(map(int, python.split('.')[:2])) >= (3, 11), f'{args.host} has python3 {python}; 3.11 or later is needed'
+    assert tuple(map(int, python.split('.')[:2])) >= python_env.MINIMUM, f'{args.host} has python3 {python}; 3.12 or later is needed'
     files, image = tree(args.arch, any(t.startswith('variations') for t in args.tests))
     out = artifacts_dir(args.arch)
     relative = out.relative_to(ROOT)
@@ -119,7 +122,12 @@ def main():
     try:
         summary['pushed_tar_sha256'] = host.push(files, directory)
         summary['pushed_files'] = len(files)
-        cd = f'cd {shlex.quote(directory)} && '
+        if args.host == 'local':
+            venv = str(python_env.ensure())
+        else:
+            venv = host.text(f'cd {shlex.quote(directory)} && KEYTEND_CACHE_DIR="$KEYTEND_ROOT/.cache" python3 scripts/python_env.py', timeout=1800).strip().splitlines()[-1]
+        summary['python_environment'] = venv
+        cd = f'cd {shlex.quote(directory)} && PATH={shlex.quote(venv)}/bin:"$PATH" && export PATH && '
         assert host.sha256(f'{directory}/{relative}/{image["archive"]}') == image['sha256'], 'pushed archive differs'
         host.run(cd+f'{args.engine} load --input {shlex.quote(str(relative/image["archive"]))} >/dev/null', timeout=1800)
         loaded = json.loads(host.text(f'{args.engine} image inspect {shlex.quote(image["image_tag"])}'))[0]['Id']

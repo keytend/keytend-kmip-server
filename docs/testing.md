@@ -77,10 +77,13 @@ After [verifying a release](release-signing.md), read the reports with
 
 The native build needs Linux with OpenSSL 3.5 or later, Rust 1.97 or later and the
 packages listed under [run from source](manual-install.md#run-from-source).
-The test scripts need Python 3.11 or later with the `cryptography` and PyYAML
-modules (on Debian 13, `sudo apt install python3-cryptography python3-yaml`).
+The test scripts need Python 3.12 or later with `venv`. Their modules come
+from the hash-locked `scripts/requirements.txt` in a virtual environment
+(in `.cache/python/`), never from system packages. The first line below
+creates it and puts it first on `PATH`.
 
 ```sh
+export PATH="$(python3 scripts/python_env.py)/bin:$PATH"
 python3 scripts/check_license.py
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings

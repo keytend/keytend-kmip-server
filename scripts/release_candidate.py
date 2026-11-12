@@ -44,7 +44,8 @@ run as one (scripts/image_server.py). cargo test tests the source code, not the 
 The run exits 1 if any step failed; manifest.json records every step with its log.
 Steps that cannot run in a mode are recorded as not run, with the reason.
 
-External tools and caches come from scripts/toolchain.py.
+External tools and caches come from scripts/toolchain.py. The run and its steps use the
+scripts' virtual environment (scripts/python_env.py).
 --platforms adds image platforms (default amd64 only). A non-amd64 image is built
 natively on --arm64-host over SSH (scripts/package.py --build-host); its archive is
 transferred back with its SHA-256 checked, and its runtime tests run on that host
@@ -75,7 +76,7 @@ VERSION=tomllib.loads((ROOT/'Cargo.toml').read_text())['package']['version']
 sys.path.insert(0,str(ROOT/'scripts'))
 from image_evidence import PLATFORMS,artifacts_dir,archive_name,base_images
 from image_server import wrapper as image_wrapper,remove as remove_containers
-import toolchain
+import python_env,toolchain
 
 PHASES=['preflight','rust','build','image','conformance','integration','kubernetes','security','java','release']
 # Steps recorded as not run, with the reason.
@@ -157,6 +158,8 @@ def main():
     a.add_argument('--db-slots',type=int,help='concurrent database groups (test_integration_parallel.py --db-slots)')
     a.add_argument('--merge',nargs='+',type=pathlib.Path,default=[],help='with --ci, release phase: the bundles of the other jobs')
     args=a.parse_args()
+    # Steps run in the scripts' virtual environment: this restarts the run in it, its bin/ first on PATH.
+    python_env.activate()
     args.kind_provider=args.kind_provider or ('docker' if args.ci else 'podman')
     if 'amd64' not in args.platforms and not args.ci:raise SystemExit('--platforms must include amd64')
     args.platforms=[x for x in ['amd64'] if x in args.platforms]+sorted(set(args.platforms)-{'amd64'})
@@ -193,7 +196,7 @@ def main():
     # A new release checkout finds the shared cache without a hand-made symlink.
     manifest['cache']={'canonical':str(toolchain.canonical_cache()),'link':toolchain.ensure_cache_link()}
     if manifest['cache']['link']=='differs':raise SystemExit(f'{ROOT/".cache"} is not the shared cache {manifest["cache"]["canonical"]}')
-    manifest['tools']=toolchain.tools_record(args.kind,args.kubectl)
+    manifest['tools']={**toolchain.tools_record(args.kind,args.kubectl),'python':python_env.record()}
     cargo=['python3','scripts/ci_builder.py','run','cargo'] if args.ci else ['cargo']
     if 'preflight' in args.phases:
         run.step('preflight','license',['python3','scripts/check_license.py'])

@@ -42,5 +42,6 @@ kmip-go, and Cosmian's BUSL-1.1 licence allows test use only.
 
 [`clients.lock.json`](clients.lock.json) pins the Git commits that
 `scripts/test_interop.py` checks out, and
-[`requirements.lock`](requirements.lock) the Python packages. Commands and
+[`requirements.txt`](requirements.txt) the Python packages, hash-locked from
+[`requirements.in`](requirements.in). Commands and
 prerequisites are in [testing](../docs/testing.md#process-and-client-suites).

@@ -15,7 +15,8 @@
 
 """Unit tests for the release workflow's side of scripts/release_candidate.py: the
 merge of the jobs' partial bundles, and the records of steps that did not run."""
-import json, pathlib, re, subprocess, sys, tempfile, unittest
+import json, os, pathlib, re, subprocess, sys, tempfile, unittest
+from unittest import mock
 
 import yaml
 
@@ -158,8 +159,18 @@ class Merge(unittest.TestCase):
             subprocess.run([*git, 'add', '-A'], cwd=root, check=True)
             subprocess.run([*git, 'commit', '-q', '-m', 't'], cwd=root, check=True)
             bundle = pathlib.Path(d)/'bundle'
+            env = dict(os.environ)
+            import python_env
+            if not python_env.current():
+                # Outside the scripts' venv the run would build one from PyPI: stand in a venv of this
+                # Python, marked as built from the lock, where the run restarts.
+                env['KEYTEND_CACHE_DIR'] = str(pathlib.Path(d)/'cache')
+                with mock.patch.dict('os.environ', env):
+                    venv = python_env.default_dir()
+                subprocess.run([sys.executable, '-m', 'venv', '--without-pip', '--system-site-packages', str(venv)], check=True)
+                (venv/python_env.MARKER).write_text(python_env.lock_sha256()+'\n')
             result = subprocess.run([sys.executable, str(root/'scripts/release_candidate.py'), '--ci', '--phases', 'java',
-                                     '--bundle', str(bundle)], capture_output=True, text=True, cwd=root)
+                                     '--bundle', str(bundle)], capture_output=True, text=True, cwd=root, env=env)
             self.assertEqual(result.returncode, 1, result.stdout+result.stderr)
             manifest = json.loads((bundle/'manifest.json').read_text())
             self.assertEqual(manifest['failed_steps'], ['java/precondition'])

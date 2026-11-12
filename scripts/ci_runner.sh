@@ -16,7 +16,7 @@
 # Prepare a GitHub-hosted runner for a job of the release workflow, and run the
 # job's part of the qualification (.github/workflows/release.yml).
 #
-#   scripts/ci_runner.sh python             virtual environment from scripts/ci-requirements.txt, first on PATH
+#   scripts/ci_runner.sh python             the scripts' virtual environment (scripts/python_env.py), first on PATH
 #   scripts/ci_runner.sh podman             podman, checked to run a container with CPU, memory and PID limits
 #                                           (the tests set them); if it cannot, the runner's user session gets
 #                                           delegated cgroup controllers, and the check runs again; the
@@ -37,11 +37,10 @@ cd "$(dirname "$0")/.."
 
 case $1 in
   python)
-    python3 -m venv "$RUNNER_TEMP/venv" 2>/dev/null || {
+    python3 scripts/python_env.py --venv "$RUNNER_TEMP/venv" 2>/dev/null || {
       sudo -n apt-get update -q && sudo -n apt-get install -y -q python3-venv
-      python3 -m venv "$RUNNER_TEMP/venv"
+      python3 scripts/python_env.py --venv "$RUNNER_TEMP/venv"
     }
-    "$RUNNER_TEMP/venv/bin/pip" install -q --disable-pip-version-check --require-hashes --only-binary=:all: -r scripts/ci-requirements.txt
     echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
     ;;
   podman)

@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Python client test dependencies; PyKMIP itself is pinned by commit.
-certifi==2026.10.23
-cffi==2.1.1
-charset-normalizer==3.5.2
-cryptography==50.0.2
-enum-compat==0.0.3
-idna==3.20
-pycparser==3.12
-requests==2.34.2
-six==1.17.0
-SQLAlchemy==2.1.8
-typing_extensions==4.16.0
-urllib3==2.8.0
+# The interop clients' Python modules: the dependencies of PyKMIP, which
+# scripts/test_interop.py installs from its pinned commit (interop/clients.lock.json)
+# with --no-deps --no-build-isolation, so setuptools, its build backend, is here too.
+# After a change, regenerate the lock, requirements.txt: python3 scripts/python_env.py lock
+cryptography
+enum-compat
+requests
+setuptools
+six
+SQLAlchemy

@@ -34,8 +34,6 @@ import subprocess
 import tarfile
 import urllib.request
 
-import yaml
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CHART = ROOT/'deploy/helm/keytend-kmip-server'
 # The chart's copy of the suggested alert rules; test_helm_tool.py keeps it equal to the original.
@@ -107,6 +105,7 @@ def run(args, check=True, helm=None, **kwargs):
 
 def documents(text):
     """The non-empty YAML documents of rendered manifests."""
+    import yaml  # from the scripts' venv; fetch and version need only the standard library
     return [d for d in yaml.safe_load_all(text) if d]
 
 
