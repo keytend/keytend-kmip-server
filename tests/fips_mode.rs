@@ -846,27 +846,26 @@ fn ec_curves_and_ecdsa_hashes_in_fips_mode() {
             ),
         ]
     };
-    // secp256k1 and brainpoolP256r1: only with `--ec-curves extended`
-    // outside FIPS mode. The default `nist` refuses them outside FIPS mode;
-    // FIPS mode refuses them as before under either value (FIPS mode only
-    // disables).
+    // secp256k1 and brainpoolP256r1: offered outside FIPS mode under the
+    // default `extended`, refused with `--ec-curves nist`. FIPS mode refuses
+    // them as before under either value (FIPS mode only disables).
     for curve in [25, 61] {
         assert_eq!(
-            status(&b.default.call(2, pair(curve))),
-            (1, FEATURE_NOT_SUPPORTED, "Unsupported EC curve".to_owned()),
-            "curve {curve}"
-        );
-        refused(&b.fips.call(2, pair(curve)), FEATURE_NOT_SUPPORTED);
-        let mut extended = server(false);
-        extended.e = extended.e.with_ec_curves(EcCurves::Extended);
-        assert_eq!(
-            status(&extended.call(2, pair(curve))).0,
+            status(&b.default.call(2, pair(curve))).0,
             OK,
             "curve {curve}"
         );
-        let mut extended_fips = server(true);
-        extended_fips.e = extended_fips.e.with_ec_curves(EcCurves::Extended);
-        refused(&extended_fips.call(2, pair(curve)), FEATURE_NOT_SUPPORTED);
+        refused(&b.fips.call(2, pair(curve)), FEATURE_NOT_SUPPORTED);
+        let mut nist = server(false);
+        nist.e = nist.e.with_ec_curves(EcCurves::Nist);
+        assert_eq!(
+            status(&nist.call(2, pair(curve))),
+            (1, FEATURE_NOT_SUPPORTED, "Unsupported EC curve".to_owned()),
+            "curve {curve}"
+        );
+        let mut nist_fips = server(true);
+        nist_fips.e = nist_fips.e.with_ec_curves(EcCurves::Nist);
+        refused(&nist_fips.call(2, pair(curve)), FEATURE_NOT_SUPPORTED);
     }
     // P-192 is not supported in either mode (docs/interpretations.md), so
     // both answer alike, without naming FIPS mode.

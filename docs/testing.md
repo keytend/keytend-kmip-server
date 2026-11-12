@@ -75,7 +75,7 @@ After [verifying a release](release-signing.md), read the reports with
 
 ## Checks before a change
 
-The native build needs Linux with OpenSSL 3.5 or later, Rust 1.92 or later and the
+The native build needs Linux with OpenSSL 3.5 or later, Rust 1.97 or later and the
 packages listed under [run from source](manual-install.md#run-from-source).
 The test scripts need Python 3.11 or later with the `cryptography` and PyYAML
 modules (on Debian 13, `sudo apt install python3-cryptography python3-yaml`).

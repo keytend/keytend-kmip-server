@@ -14,7 +14,7 @@
 
 //! `--ec-curves nist|extended`
 //! (docs/interpretations.md#supported-elliptic-curves), per edition.
-//! `nist` (default) offers P-224, P-256, P-384 and P-521; `extended` adds
+//! `nist` offers P-224, P-256, P-384 and P-521; `extended` (default) adds
 //! secp256k1 (25) and brainpoolP256r1 through brainpoolP512t1 (61-68). Under
 //! `nist` every operation that needs an extended curve fails with Feature Not
 //! Supported, "Unsupported EC curve" (1.0-1.4 section 6.10; 2.x section 11),
@@ -325,9 +325,9 @@ fn request(key: &PKey<Private>) -> Vec<u8> {
     b.build().to_der().unwrap()
 }
 
-/// The default is `nist`.
+/// The default is `extended`.
 #[test]
-fn the_default_is_nist() {
+fn the_default_is_extended() {
     let store_dir = tempfile::tempdir().unwrap();
     let key = store_dir.path().join("master");
     std::fs::write(&key, [9; 32]).unwrap();
@@ -337,8 +337,8 @@ fn the_default_is_nist() {
         std::fs::set_permissions(&key, std::fs::Permissions::from_mode(0o600)).unwrap();
     }
     let store = Store::open(&store_dir.path().join("keys.sqlite"), &key).unwrap();
-    assert_eq!(Engine::new(store, true).ec_curves(), EcCurves::Nist);
-    assert_eq!(EcCurves::default(), EcCurves::Nist);
+    assert_eq!(Engine::new(store, true).ec_curves(), EcCurves::Extended);
+    assert_eq!(EcCurves::default(), EcCurves::Extended);
 }
 
 /// Create Key Pair: the NIST curves under both values, the extended curves
@@ -566,12 +566,16 @@ fn keys_on_extended_curves_stay_retrievable_but_unusable_under_nist() {
 }
 
 /// The setting never adds curves to FIPS mode, and never removes the NIST
-/// curves or the KMIP 1.0/1.1 version check.
+/// curves or the KMIP 1.0/1.1 version check. Under the default and an
+/// explicit `extended`, FIPS mode also refuses certificates and certificate
+/// requests on secp256k1 and brainpoolP256r1, as under `nist`.
 #[test]
 fn fips_mode_keeps_the_nist_curves_under_both_values() {
-    for curves in [EcCurves::Nist, EcCurves::Extended] {
+    // `EcCurves::default()` is what `Engine::new` uses (the_default_is_extended).
+    for curves in [EcCurves::default(), EcCurves::Nist, EcCurves::Extended] {
         let mut s = server(curves);
         let engine = s.e.take().unwrap().with_fips(true);
+        assert_eq!(engine.curve_set(), EcCurves::Nist, "{curves:?}");
         s.e = Some(engine);
         for v in [Version(1, 4), Version(2, 1), Version(3, 0)] {
             for curve in NIST {
@@ -584,6 +588,38 @@ fn fips_mode_keeps_the_nist_curves_under_both_values() {
                 assert_eq!((result, reason), (1, FEATURE_NOT_SUPPORTED));
                 // FIPS mode answers alike under both values.
                 assert_eq!(message, "EC curve is not available in FIPS mode");
+            }
+            for curve in [7, 25, 61] {
+                let what = format!("{curves:?} {v:?} curve {curve}");
+                let key = ec_key(curve);
+                let cert = self_signed(&key);
+                let mut items = vec![(
+                    s.call(v, REGISTER, register_certificate(v, cert.clone())),
+                    "certificate",
+                )];
+                // Validate and Certificate Request objects are 2.0 and later.
+                if v.0 >= 2 {
+                    items.push((s.call(v, VALIDATE, vec![certificate(cert)]), "validate"));
+                    let csr = vec![
+                        Node::enumeration(OBJECT_TYPE, 10),
+                        Node::structure(ATTRIBUTES, vec![]),
+                        Node::structure(
+                            CERTIFICATE_REQUEST,
+                            vec![
+                                Node::enumeration(CERTIFICATE_REQUEST_TYPE, 2),
+                                Node::bytes(CERTIFICATE_REQUEST_VALUE, request(&key)),
+                            ],
+                        ),
+                    ];
+                    items.push((s.call(v, REGISTER, csr), "request"));
+                }
+                for (item, op) in &items {
+                    if curve == 7 {
+                        assert_eq!(status(item).0, 0, "{what} {op}: {:?}", status(item));
+                    } else {
+                        unsupported(item, &format!("{what} {op}"));
+                    }
+                }
             }
         }
     }

@@ -12,26 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Pinned upstream images (per-architecture manifests of registry.access.redhat.com UBI 9.8).
-# Refresh deliberately with security updates; see docs/container-image.md.
+# Pinned upstream images (per-architecture manifests of registry.access.redhat.com UBI 9.9).
+# Refreshed to the latest before each release (scripts/check_image_updates.py, docs/release-builds.md).
 # UBI_BUILDER/UBI_MICRO are the linux/amd64 manifests (the default build). scripts/package.py --arch arm64
-# passes the *_ARM64 linux/arm64 manifests of the same releases (ubi 9.8-1793861509, ubi-micro
-# 9.8-1793860449) as UBI_BUILDER/UBI_MICRO. All four were taken from these multi-architecture indexes:
-# index UBI_BUILDER: registry.access.redhat.com/ubi9/ubi@sha256:1963e00991088221a3405be7eb315a3dbc0be0f1f7440f0bd537d481cf33c83e
-# index UBI_MICRO: registry.access.redhat.com/ubi9/ubi-micro@sha256:6d9eff186ce3ccf399c1835265e7fd3f83bd112cc3422da2d39fd44e234aab59
-ARG UBI_BUILDER=registry.access.redhat.com/ubi9/ubi@sha256:6d1350f9221acceae45f0b61df60f1d117c9c9bd7e53c7ebaacd1cd8a605d084
-ARG UBI_MICRO=registry.access.redhat.com/ubi9/ubi-micro@sha256:13df0c7843e3a70b0d149a151eccf8180d2034d041566076cf72d4a2886fa215
-ARG UBI_BUILDER_ARM64=registry.access.redhat.com/ubi9/ubi@sha256:5eccb5d57e89601f20fcbce7fa9b725a7c4d98af0db5040d04dedacaf788f247
-ARG UBI_MICRO_ARM64=registry.access.redhat.com/ubi9/ubi-micro@sha256:e3468f0ee6e048d5088c18320bc3331d65ebf5d69e1c2fc7a18ee0396affb704
-# Red Hat's signed rust-toolset (>= rust-version 1.92 in Cargo.toml) and OpenSSL headers.
-ARG BUILD_PACKAGES="rust-toolset-1.92.0-2.el9_8 openssl-devel-3.5.8-2.el9_8"
+# passes the *_ARM64 linux/arm64 manifests of the same releases (ubi 9.9-1793830043, ubi-micro
+# 9.9-1793867126) as UBI_BUILDER/UBI_MICRO. All four were taken from these multi-architecture indexes:
+# index UBI_BUILDER: registry.access.redhat.com/ubi9/ubi@sha256:8b212f75a0e5a156ac28b1c5c030d2e8a07715254e19d522286118279399af81
+# index UBI_MICRO: registry.access.redhat.com/ubi9/ubi-micro@sha256:b59ac4f291d86027c2681f7a7b1cbf7448972fc55a6cb8e25cab5aa5eef5ce5f
+ARG UBI_BUILDER=registry.access.redhat.com/ubi9/ubi@sha256:961b1473e79d0bfe6dcd11c0c2e7fbf824716319e31f9acda2789b191989c3d5
+ARG UBI_MICRO=registry.access.redhat.com/ubi9/ubi-micro@sha256:c55b3d2c48728e4a4ebc3f63a716e5ba135a5f44097667eaea8ccd3f8404fa66
+ARG UBI_BUILDER_ARM64=registry.access.redhat.com/ubi9/ubi@sha256:b921e23e046a3c6d77e7d11c66cb026b1a432e4ef10a34b18d888a4e81409574
+ARG UBI_MICRO_ARM64=registry.access.redhat.com/ubi9/ubi-micro@sha256:7db0e5dd87ab34c048a07e389e523dde4ad42903563e813bb887d6e7500cd939
+# Red Hat's signed rust-toolset (>= rust-version 1.97 in Cargo.toml) and OpenSSL headers.
+ARG BUILD_PACKAGES="rust-toolset-1.97.1-4.el9_9 openssl-devel-3.5.9-1.el9_9"
 # Exact RPMs (name-version-release) shipped in the runtime root. The kept ubi-micro packages
 # plus OpenSSL 3.5 libraries, the separately packaged RHEL 9 OpenSSL FIPS provider 3.0.7
 # (fips.so), the system crypto policy OpenSSL reads, and zlib, which libcrypto links.
 # Everything else ubi-micro or dnf brings (bash, coreutils-single, glibc-common, tzdata,
 # ca-certificates, p11-kit, ...) is erased with its files and RPM database record, so
 # scanners and the SBOM see exactly what ships. A retired version fails the build.
-ARG RUNTIME_PACKAGES="basesystem-11-13.el9 filesystem-3.16-5.el9 setup-2.13.7-10.el9 redhat-release-9.8-1.0.el9 glibc-2.34-284.el9_8.4 libgcc-11.5.0-14.el9 zlib-1.2.11-40.el9 crypto-policies-20260224-1.gitea0f072.el9_8 openssl-libs-3.5.8-2.el9_8 openssl-fips-provider-3.0.7-11.el9_8 openssl-fips-provider-so-3.0.7-11.el9_8"
+ARG RUNTIME_PACKAGES="basesystem-11-13.el9 filesystem-3.16-5.el9 setup-2.13.7-10.el9 redhat-release-9.9-1.0.el9 glibc-2.34-290.el9_9 libgcc-11.5.0-17.el9_9 zlib-1.2.11-40.el9 crypto-policies-20260714-1.git65b74f7.el9 openssl-libs-3.5.9-1.el9_9 openssl-fips-provider-3.0.7-11.el9_8 openssl-fips-provider-so-3.0.7-11.el9_8"
 
 FROM ${UBI_MICRO} AS micro
 

@@ -207,12 +207,9 @@ NOT_CLAIMED_1X=[('6.5','Complete Server Basic'),('6.6','Complete Server TLS v1.2
 # Non-passing mandatory cases ('-M-' in the case name under mandatory/) per
 # edition, as reported by the trace inventory. CS-BC-M-4-12-3DES-13 sits in the
 # 1.3 mandatory folder but is not listed in Profiles 1.3 section 5.9.7.
-# CS-AC-M-3-ECC-13 (also unlisted) uses secp256k1, which needs
-# KMIP_EC_CURVES=extended; the committed rc.4
-# inventory predates that setting and still reports it as passed.
 NON_PASSING_MANDATORY={
     '1.3':{'CS-BC-M-13-13':'passed (corrected fixture)','CS-BC-M-6-13':'passed (corrected fixture)',
-           'CS-BC-M-4-12-3DES-13':'documented deviation','CS-AC-M-3-ECC-13':'ec',
+           'CS-BC-M-4-12-3DES-13':'documented deviation',
            'SKFF-M-4-13':'3des','SKFF-M-8-13':'3des','SKFF-M-12-13':'3des'},
     '1.4':{'CS-AC-M-2-14':'passed (corrected fixture)','CS-BC-M-13-14':'passed (corrected fixture)',
            'SKFF-M-4-14':'3des','SKFF-M-8-14':'3des','SKFF-M-12-14':'3des'},
@@ -229,8 +226,7 @@ NON_PASSING_MANDATORY={
            'SKFF-M-4-30':'3des','SKFF-M-8-30':'3des','SKFF-M-12-30':'3des'},
 }
 SHORT={'skipped (configuration: passes with KMIP_TRIPLE_DES=enabled)':'3des',
-       'skipped (configuration: passes with KMIP_INTEROP_TEST_MODE=true (test events only; forbidden in production))':'interop',
-       'skipped (configuration: passes with KMIP_EC_CURVES=extended)':'ec'}
+       'skipped (configuration: passes with KMIP_INTEROP_TEST_MODE=true (test events only; forbidden in production))':'interop'}
 
 class ProfileClaims(unittest.TestCase):
     @classmethod
@@ -321,10 +317,7 @@ class ProfileClaims(unittest.TestCase):
             case=path.rsplit('/',1)[-1].removesuffix('.xml')
             if '-M-' not in case or e.get('reported')=='passed':continue
             got.setdefault(v,{})[case]=SHORT.get(e.get('reported'),e.get('reported'))
-        expected=json.loads(json.dumps(NON_PASSING_MANDATORY))
-        if inv['1.3|test-cases/kmip-v1.3/mandatory/CS-AC-M-3-ECC-13.xml'].get('reported')=='passed':
-            del expected['1.3']['CS-AC-M-3-ECC-13']
-        self.assertEqual(got,expected)
+        self.assertEqual(got,NON_PASSING_MANDATORY)
 
 def re_cite(text,digest):
     return re.search(r'REQ:(?:[a-z]+-\d\.\d:)?'+digest,text)

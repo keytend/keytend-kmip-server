@@ -26,7 +26,7 @@ use openssl::{
 /// (docs/interpretations.md#supported-elliptic-curves); every other KMIP curve
 /// is refused.
 const SUPPORTED: [u32; 13] = [4, 7, 10, 13, 25, 61, 62, 63, 64, 65, 66, 67, 68];
-/// The `--ec-curves nist` set (the default).
+/// The `--ec-curves nist` set.
 const NIST: [u32; 4] = [4, 7, 10, 13];
 
 #[test]
@@ -156,7 +156,7 @@ fn extended_curve_keys_are_unusable_under_nist() {
         let private = key.private_key_to_pkcs8().unwrap();
         let public = key.public_key_to_der().unwrap();
         let sec1 = key.ec_key().unwrap().private_key_to_der().unwrap();
-        assert_eq!(ec::active(), EcCurves::Nist, "the default outside a scope");
+        assert_eq!(ec::active(), EcCurves::Nist, "`nist` outside a scope");
         assert!(!ec::supported(curve));
         assert_eq!(ec::key_curve(&private), Some(curve));
         assert_eq!(ec::key_curve(&public), Some(curve));

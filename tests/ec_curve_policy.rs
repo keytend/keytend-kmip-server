@@ -14,8 +14,8 @@
 
 //! The server implements 13 KMIP Recommended Curves on every OpenSSL build
 //! (docs/interpretations.md#supported-elliptic-curves): P-224, P-256, P-384,
-//! P-521, secp256k1 and brainpoolP256-512 r1/t1. `--ec-curves nist` (default)
-//! offers the P curves only, `extended` all 13 (tests/ec_curve_setting.rs).
+//! P-521, secp256k1 and brainpoolP256-512 r1/t1. `--ec-curves nist` offers
+//! the P curves only, `extended` (default) all 13 (tests/ec_curve_setting.rs).
 //! FIPS mode keeps only the P curves. Every request that needs another KMIP
 //! curve fails with Feature Not Supported, "Unsupported EC curve", decided by the
 //! server before OpenSSL is asked.

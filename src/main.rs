@@ -172,12 +172,13 @@ struct ServeOptions {
     /// prose). See docs/interpretations.md.
     #[arg(long, env = "KMIP_GET_ATTRIBUTES_NONE", value_enum, default_value_t = GetAttributesNone::EmptyAttributes)]
     get_attributes_none: GetAttributesNone,
-    /// Elliptic curves KMIP operations may use: `nist` (default) P-224,
-    /// P-256, P-384 and P-521; `extended` also secp256k1 and
-    /// brainpoolP256/320/384/512 r1 and t1. Keys stored on the extended
-    /// curves stay readable as stored under `nist` but cannot be used. TLS and
-    /// FIPS mode (NIST curves only) do not change (docs/interpretations.md).
-    #[arg(long, env = "KMIP_EC_CURVES", value_enum, default_value_t = EcCurves::Nist)]
+    /// Elliptic curves KMIP operations may use: `extended` (default) all 13
+    /// implemented curves, P-224, P-256, P-384, P-521, secp256k1 and
+    /// brainpoolP256/320/384/512 r1 and t1; `nist` the first four only. Keys
+    /// stored on the other curves stay readable as stored under `nist` but
+    /// cannot be used. TLS does not change; FIPS mode offers the NIST curves
+    /// only (docs/interpretations.md).
+    #[arg(long, env = "KMIP_EC_CURVES", value_enum, default_value_t = EcCurves::Extended)]
     ec_curves: EcCurves,
     #[command(flatten)]
     text_encoding: keytend_kmip_server::encoding::TextEncodingArgs,
@@ -365,6 +366,18 @@ fn older_schema_note(verification: &keytend_kmip_server::store::Verification) ->
         verification.storage_schema,
         keytend_kmip_server::store::STORAGE_SCHEMA
     )
+}
+/// Whether `serve` got `--ec-curves` or `KMIP_EC_CURVES` rather than the
+/// default. FIPS mode notes an explicit `extended` only, so the default does
+/// not log on every FIPS start.
+fn ec_curves_chosen(matches: &clap::ArgMatches) -> bool {
+    use clap::parser::ValueSource;
+    matches.subcommand_matches("serve").is_some_and(|m| {
+        matches!(
+            m.value_source("ec_curves"),
+            Some(ValueSource::CommandLine | ValueSource::EnvVariable)
+        )
+    })
 }
 /// The idle limit, or `None` when idle connections stay open.
 fn idle_limit(seconds: u64) -> Option<Duration> {
@@ -1178,7 +1191,10 @@ async fn main() -> Result<()> {
         )
         .init();
     // Restrict newly created database/WAL files without unsafe process-global umask changes.
-    let args = Args::parse();
+    let matches = <Args as clap::CommandFactory>::command().get_matches();
+    let args =
+        <Args as clap::FromArgMatches>::from_arg_matches(&matches).unwrap_or_else(|e| e.exit());
+    let ec_curves_chosen = ec_curves_chosen(&matches);
     if let Err(message) = check_combinations(&args.command) {
         <Args as clap::CommandFactory>::command()
             .error(clap::error::ErrorKind::ArgumentConflict, message)
@@ -1534,16 +1550,10 @@ async fn main() -> Result<()> {
             if fips {
                 tracing::info!(tls_profile = %cli_name(&tls_profile), triple_des = %cli_name(&triple_des), "FIPS mode: non-approved services are refused and not advertised (docs/fips.md)");
             }
-            if ec_curves == EcCurves::Extended {
-                if fips {
-                    tracing::info!(
-                        "--ec-curves extended has no effect in FIPS mode: only P-224, P-256, P-384 and P-521 are offered"
-                    );
-                } else {
-                    tracing::warn!(
-                        "--ec-curves extended: KMIP operations also use secp256k1 and brainpool curves, whose ECDSA runs on OpenSSL's generic curve code (open image finding CVE-2026-54872, docs/container-image.md)"
-                    );
-                }
+            if fips && ec_curves_chosen && ec_curves == EcCurves::Extended {
+                tracing::info!(
+                    "--ec-curves extended has no effect in FIPS mode: only P-224, P-256, P-384 and P-521 are offered"
+                );
             }
             if interop_test_mode {
                 tracing::warn!(
@@ -1789,7 +1799,7 @@ async fn main() -> Result<()> {
             });
             let limit = Arc::new(Semaphore::new(max_connections as usize));
             let mut tasks = tokio::task::JoinSet::new();
-            tracing::info!(version=env!("CARGO_PKG_VERSION"),%listen,https_listen=%https_listen.map_or_else(|| "off".to_string(), |a| a.to_string()),%health_listen,experimental_v3,fips,triple_des=%cli_name(&triple_des),tls_profile=%cli_name(&tls_profile),idle_timeout,destroyed_name_reuse=%cli_name(&destroyed_name_reuse),lease_states=%cli_name(&lease_states),get_attributes_none=%cli_name(&get_attributes_none),ec_curves=%cli_name(&ec_curves),text_encoding=%text_encoding_label(&text_encoding),metrics=%cli_name(&metrics_setting),metrics_object_census_interval,object_cache_mib,object_cache_ttl,max_connections,max_lease_seconds,https_path=%logged_https_path,interop_test_mode,allow_stored_credential_secrets,users=users_set,crl=crl_set,validation_ca=validation_ca_set,provisioning=provisioning_set,audit_checkpoint=audit_checkpoint_verified,"KMIP listener ready");
+            tracing::info!(version=env!("CARGO_PKG_VERSION"),%listen,https_listen=%https_listen.map_or_else(|| "off".to_string(), |a| a.to_string()),%health_listen,experimental_v3,fips,triple_des=%cli_name(&triple_des),tls_profile=%cli_name(&tls_profile),idle_timeout,destroyed_name_reuse=%cli_name(&destroyed_name_reuse),lease_states=%cli_name(&lease_states),get_attributes_none=%cli_name(&get_attributes_none),ec_curves=%cli_name(&keytend_kmip_server::crypto::ec::effective(ec_curves, fips)),text_encoding=%text_encoding_label(&text_encoding),metrics=%cli_name(&metrics_setting),metrics_object_census_interval,object_cache_mib,object_cache_ttl,max_connections,max_lease_seconds,https_path=%logged_https_path,interop_test_mode,allow_stored_credential_secrets,users=users_set,crl=crl_set,validation_ca=validation_ca_set,provisioning=provisioning_set,audit_checkpoint=audit_checkpoint_verified,"KMIP listener ready");
             let shutdown = async {
                 #[cfg(unix)]
                 {
@@ -2910,11 +2920,53 @@ mod tests {
             options.get_attributes_none,
             GetAttributesNone::EmptyAttributes
         );
-        assert_eq!(options.ec_curves, EcCurves::Nist);
         assert_eq!(
             options.text_encoding.resolve(),
             keytend_kmip_server::encoding::TextEncoding::default()
         );
+    }
+
+    /// The default is `extended`; FIPS mode notes `--ec-curves extended`
+    /// only when the operator chose it, not for the default.
+    #[test]
+    fn only_an_explicit_ec_curves_value_counts_as_chosen() {
+        let chosen = |extra: &[&str]| {
+            let base = [
+                "keytend-kmip-server",
+                "serve",
+                "--cert",
+                "c",
+                "--key",
+                "k",
+                "--ca",
+                "a",
+                "--policy",
+                "p",
+                "--master-key",
+                "m",
+            ];
+            // Without the KMIP_EC_CURVES binding, so a value in the test
+            // environment cannot stand in for the default.
+            let matches = <Args as clap::CommandFactory>::command()
+                .mut_subcommand("serve", |s| s.mut_arg("ec_curves", |a| a.env(None)))
+                .try_get_matches_from(base.iter().chain(extra))
+                .unwrap();
+            let args = <Args as clap::FromArgMatches>::from_arg_matches(&matches).unwrap();
+            let Command::Serve(options) = args.command else {
+                panic!("expected serve")
+            };
+            (ec_curves_chosen(&matches), options.ec_curves)
+        };
+        assert_eq!(chosen(&[]), (false, EcCurves::Extended));
+        assert_eq!(
+            chosen(&["--ec-curves", "extended"]),
+            (true, EcCurves::Extended)
+        );
+        assert_eq!(chosen(&["--ec-curves", "nist"]), (true, EcCurves::Nist));
+        let other = <Args as clap::CommandFactory>::command()
+            .try_get_matches_from(["keytend-kmip-server", "tls-profiles"])
+            .unwrap();
+        assert!(!ec_curves_chosen(&other));
     }
 
     fn serve_options(extra: &[&str]) -> Result<Box<ServeOptions>, clap::Error> {
@@ -2970,6 +3022,10 @@ mod tests {
             GetAttributesNone::IdentifierOnly
         );
         assert_eq!(options.ec_curves, EcCurves::Extended);
+        assert_eq!(
+            serve_options(&["--ec-curves", "nist"]).unwrap().ec_curves,
+            EcCurves::Nist
+        );
         assert!(serve_options(&["--ec-curves", "brainpool"]).is_err());
         assert!(serve_options(&["--ec-curves", "all"]).is_err());
         assert_eq!(options.destroyed_name_reuse, DestroyedNameReuse::Reserve);

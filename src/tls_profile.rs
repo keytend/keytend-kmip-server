@@ -1340,7 +1340,7 @@ mod tests {
     //   OpenSSL's RFC 6460 Suite B rules (the complete RFC 5759 profile is not pinned and not checked)
     /// `--ec-curves` does not change TLS: a
     /// server certificate on a non-NIST implemented curve is still accepted
-    /// at startup. Measured for the open image finding (CVE-2026-54872,
+    /// at startup. Measured for the former image finding (CVE-2026-54872,
     /// OpenSSL's generic-curve ECDSA): the default `modern` policy never
     /// signs a handshake with such a key. TLS 1.2 finds no shared cipher (the
     /// policy's groups are P-256, P-384 and P-521) and TLS 1.3 has no

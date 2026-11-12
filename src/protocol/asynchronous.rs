@@ -485,7 +485,7 @@ impl Engine {
     /// Run one queued batch, prioritized first. Returns whether one ran.
     pub fn run_asynchronous(&mut self) -> bool {
         let _fips = crate::fips::enter(self.fips);
-        let _curves = crate::crypto::ec::enter(self.ec_curves);
+        let _curves = crate::crypto::ec::enter(self.curve_set());
         let queue = &mut self.side.queue;
         queue.purge();
         if queue.running {

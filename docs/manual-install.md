@@ -163,18 +163,21 @@ fingerprint, and the server refuses to start with it: create it again first.
 ## Run from source
 
 Running from source needs Linux with OpenSSL 3.5 or later, such as Debian 13
-or RHEL and UBI 9.8. On distributions with OpenSSL 3.0, such as Debian 12
+or RHEL and UBI 9.9. On distributions with OpenSSL 3.0, such as Debian 12
 and Ubuntu 24.04, and on macOS, use the
-[container](quick-start.md#run-the-container).
+[container](quick-start.md#run-the-container). KMIP operations use
+secp256k1 and the brainpool curves by default; on an OpenSSL without the fix
+for CVE-2026-54872 (ECDSA on those curves), set `--ec-curves nist`
+([curves](algorithms.md#elliptic-curves)).
 
-You need Rust 1.92 or later, a C compiler, `pkg-config`, the OpenSSL
+You need Rust 1.97 or later, a C compiler, `pkg-config`, the OpenSSL
 development headers, and `openssl`, `curl`, Git and Python 3 (with `venv`) for
 the test certificates and requests:
 
 ```sh
 # Debian 13 (its Rust 1.85 is too old: install Rust with https://rustup.rs)
 sudo apt install build-essential pkg-config libssl-dev openssl curl git python3 python3-venv
-# RHEL 9.8 or a UBI 9 container (rust-toolset is new enough)
+# RHEL 9.9 or a UBI 9 container (rust-toolset is new enough)
 sudo dnf install gcc pkgconf-pkg-config openssl-devel openssl curl git python3 rust-toolset
 ```
 

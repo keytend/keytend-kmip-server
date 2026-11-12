@@ -120,7 +120,7 @@ count toward the four-per-batch validation quota described under [RSA](#rsa).
 
 | Property | Support |
 | --- | --- |
-| Curves | P-224, P-256, P-384, P-521 by default; more with `--ec-curves extended` (below) |
+| Curves | P-224, P-256, P-384, P-521, secp256k1 and the brainpool r1/t1 curves; NIST only with `--ec-curves nist` (below) |
 | Key types | ECDSA, ECDH and generic EC (1.2+) keys; P-256 when neither curve nor length is given |
 | Formats | PKCS#8 and SEC1 (private), X.509 SubjectPublicKeyInfo (public), Transparent ECDSA/ECDH keys and Transparent EC keys (1.3+). Get converts between them. |
 | Point encoding | Transparent public keys accept uncompressed, compressed and hybrid points |
@@ -138,8 +138,8 @@ selects which of these 13 curves KMIP operations may use
 
 | `--ec-curves` | Curves |
 | --- | --- |
-| `nist` (default) | P-224, P-256, P-384, P-521 |
-| `extended` | also secp256k1 and the eight brainpool curves; logs a warning at startup |
+| `extended` (default) | P-224, P-256, P-384, P-521, secp256k1 and the eight brainpool curves |
+| `nist` | P-224, P-256, P-384, P-521 |
 
 A request that needs a curve the setting does not offer fails with Feature
 Not Supported, "Unsupported EC curve": key generation, Register and Import,
@@ -147,7 +147,9 @@ certificates and certificate requests, Validate, Certify, Sign, Signature
 Verify, Create Split Key and format conversions. KMIP 1.0 and 1.1 also refuse
 curves above 15 ("Curve requires KMIP 1.2"). Keys already stored on a curve
 the setting does not offer can still be read in their stored format, but not
-used, converted, re-keyed or split. FIPS mode allows only the NIST curves.
+used, converted, re-keyed or split. FIPS mode works as `nist` whatever the
+setting, so it refuses the other curves in all of these operations; it logs
+a note at startup when `extended` is set explicitly.
 
 The TLS listeners accept certificates on any of the 13 curves, whatever
 `--ec-curves` says. The default `modern` policy completes no handshake with a

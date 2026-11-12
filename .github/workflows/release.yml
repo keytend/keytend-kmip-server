@@ -14,8 +14,10 @@
 
 # Build and qualify a release from a v<version> tag on main (docs/release-builds.md).
 #
-# A tag push builds the amd64 and arm64 images natively and runs the
-# qualification, one job per phase of scripts/release_candidate.py --ci: rust
+# A tag push first checks that the base image and package pins are current
+# (scripts/check_image_updates.py; a manual run only warns), then builds the
+# amd64 and arm64 images natively and runs the qualification, one job per
+# phase of scripts/release_candidate.py --ci: rust
 # (Clippy and cargo test of the source), then on the release image conformance,
 # the arm64 image tests on an arm64 runner, the integration matrix in slices,
 # kubernetes, security and java. Every qualification test runs the image. The assemble job merges the jobs'
@@ -51,7 +53,7 @@ env:
 jobs:
   check:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 30
     outputs:
       version: ${{ steps.version.outputs.version }}
       prerelease: ${{ steps.version.outputs.prerelease }}
@@ -71,6 +73,17 @@ jobs:
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
           case $version in *-*) echo prerelease=true ;; *) echo prerelease=false ;; esac >> "$GITHUB_OUTPUT"
+      # Base images and packages are refreshed before each release (docs/release-builds.md). A tag on
+      # stale pins fails here, before anything is built; a manual run only warns. A pin that is no longer
+      # published, or a check that cannot reach the registry or repositories, fails either way.
+      - name: Base image and package pins
+        run: |
+          command -v podman >/dev/null || { sudo -n apt-get update -q && sudo -n apt-get install -y -q podman; }
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            python3 scripts/check_image_updates.py --engine podman --annotate error
+          else
+            python3 scripts/check_image_updates.py --engine podman --annotate warning || [ $? = 1 ]
+          fi
 
   # The server needs OpenSSL 3.5, which the runner's Ubuntu does not have: cargo runs in the
   # pinned UBI builder image with the image build's OpenSSL (scripts/ci_builder.py). This builds and

@@ -31,10 +31,26 @@ import subprocess
 from image_evidence import PLATFORMS, ROOT, artifacts_dir, base_images, check_platform, local_image_id, packaged_evidence
 from image_rootfs import RPMDB, RPMFILE_LICENSE, RPMFILE_STATE_NORMAL, Rootfs, elf_info, rpm_packages
 
-# Unsatisfied RPM requirements reviewed as not needed at run time (rpm -Va output).
+
+def dockerfile_arg(name):
+    return re.search(rf'^ARG {name}="?([^"\n]+)"?$', (ROOT/'Dockerfile').read_text(), re.M).group(1)
+
+
+def pins():
+    """{name: version-release} from the Dockerfile's RUNTIME_PACKAGES."""
+    result = {}
+    for nvr in dockerfile_arg('RUNTIME_PACKAGES').split():
+        name, version, release = nvr.rsplit('-', 2)
+        result[name] = f'{version}-{release}'
+    return result
+
+
+# Unsatisfied RPM requirements reviewed as not needed at run time (rpm -Va output). The glibc
+# subpackages follow the glibc pin.
+GLIBC = pins()['glibc']
 REVIEWED_UNSATISFIED = {
-    ('glibc', 'glibc-common = 2.34-284.el9_8.4'): 'locale utilities, C.UTF-8 data and tzdata hook; the server calls no locale, iconv or getent utilities',
-    ('glibc', 'glibc-langpack = 2.34-284.el9_8.4'): 'empty minimal-langpack meta package; the server does not call setlocale',
+    ('glibc', f'glibc-common = {GLIBC}'): 'locale utilities, C.UTF-8 data and tzdata hook; the server calls no locale, iconv or getent utilities',
+    ('glibc', f'glibc-langpack = {GLIBC}'): 'empty minimal-langpack meta package; the server does not call setlocale',
     ('openssl-libs', 'ca-certificates >= 2008-5'): 'the server never loads a system trust store; it trusts only the configured KMIP_CA',
     ('openssl-fips-provider-so', 'coreutils'): 'package-tooling requirement; fips.so links only libc and no scriptlet runs in the image',
     ('crypto-policies', '/usr/bin/bash'): 'update-crypto-policies and fips-mode-setup helper scripts; the image runs no scripts',
@@ -52,19 +68,6 @@ GENERATED = ['/var/lib/rpm/rpmdb.sqlite', '/usr/local/bin/keytend-kmip-server', 
 OPENSSL_CONF = '/etc/keytend-kmip-server/openssl.cnf'
 TOOLS_ABSENT = ['/bin/sh', '/usr/bin/bash', '/usr/bin/cat', '/usr/bin/id', '/usr/bin/openssl', '/usr/bin/rpm',
     '/usr/bin/dnf', '/usr/bin/microdnf', '/usr/bin/getent', '/usr/bin/iconv']
-
-
-def dockerfile_arg(name):
-    return re.search(rf'^ARG {name}="?([^"\n]+)"?$', (ROOT/'Dockerfile').read_text(), re.M).group(1)
-
-
-def pins():
-    """{name: version-release} from the Dockerfile's RUNTIME_PACKAGES."""
-    result = {}
-    for nvr in dockerfile_arg('RUNTIME_PACKAGES').split():
-        name, version, release = nvr.rsplit('-', 2)
-        result[name] = f'{version}-{release}'
-    return result
 
 
 def canonical(rootfs, path):
@@ -95,7 +98,8 @@ def static_checks(rootfs, expected, report, arch='amd64'):
     checks.append(f'config: linux/{arch}, UID/GID 10001, exec-form entrypoint and healthcheck, license/author labels, runtime-root and base labels match the pinned {arch} ubi-micro digest, UBI license-terms label')
 
     release = rootfs.read('/etc/os-release').decode()
-    assert 'ID="rhel"' in release and 'VERSION_ID="9.8"' in release, release
+    rhel = pins()['redhat-release'].split('-')[0]  # os-release follows the redhat-release pin
+    assert 'ID="rhel"' in release and f'VERSION_ID="{rhel}"' in release, release
     packages = rpm_packages(rootfs.read(RPMDB))
     installed = installed_versions(packages)
     assert installed == expected, dict(unexpected=sorted(set(installed.items())-set(expected.items())), missing=sorted(set(expected.items())-set(installed.items())))
@@ -106,7 +110,7 @@ def static_checks(rootfs, expected, report, arch='amd64'):
     report['server_elf'] = dict(machine=machine, interpreter=interpreter)
     report['packages'] = {name: dict(evr=fields['evr'], arch=fields['arch'], sourcerpm=fields.get('sourcerpm'), license=fields.get('license'))
         for name, fields in sorted(packages.items())}
-    checks.append(f'RPM database lists exactly the {len(expected)} pinned packages at their pinned versions, all {rpm_arch} or noarch (os-release: RHEL 9.8); the server is an ELF for {arch} using {interpreter}')
+    checks.append(f'RPM database lists exactly the {len(expected)} pinned packages at their pinned versions, all {rpm_arch} or noarch (os-release: RHEL {rhel}); the server is an ELF for {arch} using {interpreter}')
 
     # File digests, modes and owners are rpm -Va's (rpm_verify); this records what no package owns.
     owned, not_installed = set(), 0

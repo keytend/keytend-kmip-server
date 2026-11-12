@@ -18,17 +18,17 @@ limitations under the License.
 
 Part of [configuration and operations](README.md#configuration-and-operations).
 
-The server image is built from Red Hat Universal Base Image 9.8 (UBI 9 micro)
+The server image is built from Red Hat Universal Base Image 9.9 (UBI 9 micro)
 for linux/amd64 and linux/arm64. FIPS provider
 status is in [FIPS mode](fips.md#provider-and-validation-status); signatures,
 SBOMs and provenance are in [release verification](release-signing.md).
 
 ## What ships
 
-The `Dockerfile` pins the UBI 9.8 builder (`ubi9/ubi`, label 9.8-1793861509)
-and runtime (`ubi9/ubi-micro`, label 9.8-1793860449) images by
+The `Dockerfile` pins the UBI 9.9 builder (`ubi9/ubi`, label 9.9-1793830043)
+and runtime (`ubi9/ubi-micro`, label 9.9-1793867126) images by
 per-architecture manifest digest. The server is built with Red Hat's signed
-`rust-toolset` 1.92 and `openssl-devel` 3.5.8. The runtime root is the
+`rust-toolset` 1.97 and `openssl-devel` 3.5.9. The runtime root is the
 ubi-micro filesystem plus the pinned RPMs below (signatures verified against
 the Red Hat release key); every other package is erased, so scanners and the
 SBOM see exactly what ships, and the build fails if a pinned version is
@@ -36,13 +36,13 @@ retired. Both platforms ship the same RPM versions:
 
 | RPM | Version | Why it ships |
 | --- | --- | --- |
-| `glibc` | 2.34-284.el9_8.4 | C runtime |
-| `libgcc` | 11.5.0-14.el9 | unwinder loaded by the server |
-| `openssl-libs` | 1:3.5.8-2.el9_8 | `libssl.so.3`/`libcrypto.so.3`, `/etc/pki/tls/openssl.cnf` |
+| `glibc` | 2.34-290.el9_9 | C runtime |
+| `libgcc` | 11.5.0-17.el9_9 | unwinder loaded by the server |
+| `openssl-libs` | 1:3.5.9-1.el9_9 | `libssl.so.3`/`libcrypto.so.3`, `/etc/pki/tls/openssl.cnf` |
 | `openssl-fips-provider`, `openssl-fips-provider-so` | 3.0.7-11.el9_8 | the separately packaged RHEL 9 FIPS provider, `/usr/lib64/ossl-modules/fips.so` |
-| `crypto-policies` | 20260224-1.gitea0f072.el9_8 | required by `openssl-libs`; the server does not read the system policy |
+| `crypto-policies` | 20260714-1.git65b74f7.el9 | required by `openssl-libs`; the server does not read the system policy |
 | `zlib` | 1.2.11-40.el9 | linked by libcrypto |
-| `filesystem`, `setup`, `basesystem`, `redhat-release` | 3.16-5.el9, 2.13.7-10.el9, 11-13.el9, 9.8-1.0.el9 | directory layout, `/etc` skeleton, `/etc/os-release` for scanner OS detection |
+| `filesystem`, `setup`, `basesystem`, `redhat-release` | 3.16-5.el9, 2.13.7-10.el9, 11-13.el9, 9.9-1.0.el9 | directory layout, `/etc` skeleton, `/etc/os-release` for scanner OS detection |
 
 The image has no shell, coreutils, OpenSSL CLI or package manager. Besides
 the RPM-owned files it holds only the server binary, `LICENSE` and `NOTICE`,
@@ -81,10 +81,9 @@ mode therefore behaves like a native build. In the file:
 
 RHEL's OpenSSL offers 13 named elliptic curves (P-224, P-256, P-384, P-521,
 secp256k1 and the brainpool r1 and t1 curves). The server supports exactly
-these 13 in native and image builds alike, so both give the same answers; by
-default KMIP operations may use only the four NIST curves, and
-`--ec-curves extended` adds the rest
-([supported curves](algorithms.md#elliptic-curves)).
+these 13 in native and image builds alike, so both give the same answers. By
+default KMIP operations may use all 13; `--ec-curves nist` limits them to the
+four NIST curves ([supported curves](algorithms.md#elliptic-curves)).
 
 ## Reviewed findings
 

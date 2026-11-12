@@ -18,7 +18,7 @@ version = "0.1.0"
 edition = "2024"
 license = "Apache-2.0"
 authors = ["Jeremiah Jordan"]
-rust-version = "1.92"
+rust-version = "1.97"
 description = "ML-KEM, ML-DSA and SLH-DSA through the OpenSSL 3.5 default provider"
 publish = false
 

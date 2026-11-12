@@ -24,7 +24,7 @@ version = "0.10.0-rc.2-dev"
 edition = "2024"
 license = "Apache-2.0"
 authors = ["Jeremiah Jordan"]
-rust-version = "1.92"
+rust-version = "1.97"
 description = "Keytend KMIP server: mutually authenticated KMIP key lifecycle service"
 
 [dependencies]

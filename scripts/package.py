@@ -23,7 +23,7 @@ with its SHA-256 checked on both ends. The provenance statement
 signatures over its SHA256SUMS (scripts/release_artifacts.py).
 Packaging does not imply full conformance or production approval.
 """
-import argparse,datetime,hashlib,io,json,os,pathlib,platform,shlex,subprocess,tarfile,tempfile,tomllib,uuid
+import argparse,datetime,hashlib,io,json,os,pathlib,platform,shlex,subprocess,sys,tarfile,tempfile,tomllib,uuid
 from image_evidence import PLATFORMS,archive_name,artifacts_dir,base_images,base_indexes,check_platform,dockerfile_arg,source_commit,source_fingerprints
 from image_rootfs import RPMDB,Rootfs,elf_info,rpm_packages
 from remote_host import Host,deterministic_tar
@@ -44,6 +44,10 @@ def checksum(path):
     with path.open('rb') as f:
         for block in iter(lambda:f.read(1024*1024),b''):h.update(block)
     return h.hexdigest()
+def build_failed(log,lines=60):
+    """The build output goes only to its log; print the end of it, so a failed CI job shows why."""
+    tail=log.read_text(errors='replace').splitlines()[-lines:] if log.exists() else []
+    print(f'image build failed; last {len(tail)} lines of {log}:',*tail,sep='\n',file=sys.stderr,flush=True)
 sources=source_fingerprints()
 # The build context the Dockerfile copies is exactly the fingerprinted runtime sources.
 context=deterministic_tar({name:ROOT/name for name in sources})
@@ -58,7 +62,9 @@ if a.build_host:
     directory=host.mktemp('keytend-kmip-server-build');build=[a.engine,'build',*build_flags,'.']
     try:
         host.push({name:ROOT/name for name in sources},directory)
-        with open(OUT/'image-build.log','wb') as log:host.run(f'cd {shlex.quote(directory)} && '+shlex.join(build),stdout=log,timeout=4*3600)
+        try:
+            with open(OUT/'image-build.log','wb') as log:host.run(f'cd {shlex.quote(directory)} && '+shlex.join(build),stdout=log,timeout=4*3600)
+        except Exception:build_failed(OUT/'image-build.log');raise
         host.run(f'{a.engine} save --format docker-archive --output {shlex.quote(directory)}/image.tar {shlex.quote(a.tag)}' if a.engine=='podman' else f'docker save --output {shlex.quote(directory)}/image.tar {shlex.quote(a.tag)}',timeout=1800)
         remote_id=json.loads(host.text(f'{a.engine} image inspect {shlex.quote(a.tag)}'))[0]['Id']
         try:host.fetch(f'{directory}/image.tar',temporary);temporary.replace(archive)
@@ -78,7 +84,9 @@ else:
     # image does not depend on the checkout's umask and local and remote builds are comparable.
     with tempfile.TemporaryDirectory(prefix='keytend-kmip-server-context-') as directory:
         with tarfile.open(fileobj=io.BytesIO(context)) as tar:tar.extractall(directory,filter='data')
-        with open(OUT/'image-build.log','w') as log:subprocess.run(build,cwd=directory,stdout=log,stderr=subprocess.STDOUT,check=True)
+        try:
+            with open(OUT/'image-build.log','w') as log:subprocess.run(build,cwd=directory,stdout=log,stderr=subprocess.STDOUT,check=True)
+        except Exception:build_failed(OUT/'image-build.log');raise
     finished=now()
     try:
         subprocess.run([a.engine,'save']+(['--format','docker-archive'] if a.engine=='podman' else [])+['--output',str(temporary),a.tag],check=True,cwd=ROOT)

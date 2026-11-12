@@ -41,7 +41,8 @@ impl Fixture {
             engine: Engine::new(store, false),
         }
     }
-    /// With `--ec-curves extended` (secp256k1 and brainpool curves).
+    /// With `--ec-curves extended` (secp256k1 and brainpool curves), set
+    /// explicitly so the cases do not depend on the default.
     fn extended_curves() -> Self {
         let Fixture { _dir, engine } = Self::new();
         Self {

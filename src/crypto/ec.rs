@@ -117,18 +117,26 @@ pub fn nist(curve: u32) -> bool {
 /// docs/interpretations.md#supported-elliptic-curves).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, clap::ValueEnum)]
 pub enum EcCurves {
-    /// P-224, P-256, P-384 and P-521 only (default).
-    #[default]
+    /// P-224, P-256, P-384 and P-521 only.
     Nist,
-    /// Also secp256k1 and brainpoolP256/320/384/512 r1 and t1.
+    /// All 13 implemented curves: also secp256k1 and brainpoolP256/320/384/512
+    /// r1 and t1 (default).
+    #[default]
     Extended,
+}
+/// The curve set KMIP operations get: FIPS mode offers only the NIST curves
+/// whatever the setting says, so `extended` has no effect there.
+pub fn effective(curves: EcCurves, fips: bool) -> EcCurves {
+    if fips { EcCurves::Nist } else { curves }
 }
 thread_local! {
     /// The curve set of the request being processed on this thread.
     static ACTIVE: std::cell::Cell<EcCurves> = const { std::cell::Cell::new(EcCurves::Nist) };
 }
 /// The curve set that applies on this thread. The engine sets it around each
-/// request (`enter`); it is `nist` everywhere else.
+/// request (`enter`) to its effective set (`effective`: its setting, default
+/// `extended`, or `nist` in FIPS mode); code outside a request gets the
+/// narrower `nist`.
 pub fn active() -> EcCurves {
     ACTIVE.with(std::cell::Cell::get)
 }
@@ -154,8 +162,8 @@ impl Drop for Guard {
 /// the supported curves to the server: the Cryptographic Domain Parameters
 /// are OPTIONAL fields (1.0-1.4 section 3.7, 2.0/2.1 section 4.14), and an
 /// unsupported optional feature is Feature Not Supported (1.0-1.4 section
-/// 6.10). FIPS mode further limits them to the NIST curves (src/fips.rs) in
-/// either setting.
+/// 6.10). In FIPS mode the engine enters `nist` (`effective`) in either
+/// setting.
 pub fn supported(curve: u32) -> bool {
     nist(curve) || active() == EcCurves::Extended && implemented(curve)
 }

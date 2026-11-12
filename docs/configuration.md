@@ -279,7 +279,7 @@ or client:
 | `--destroyed-name-reuse` (`KMIP_DESTROYED_NAME_REUSE`) | `allow` | `allow`: a Name held only by destroyed objects can be reused; `reserve`: destroyed objects keep their Names. |
 | `--get-attributes-none` (`KMIP_GET_ATTRIBUTES_NONE`) | `empty-attributes` | 2.x/3.0 Get Attributes when none of the requested attributes exist: an empty Attributes structure, or `identifier-only`. |
 | `--triple-des` (`KMIP_TRIPLE_DES`) | `disabled` | Three-key 3DES: `disabled`, `legacy-decrypt` (Register, Import, Decrypt) or `enabled` ([3DES](algorithms.md#3des)). Single DES is never offered. |
-| `--ec-curves` (`KMIP_EC_CURVES`) | `nist` | Curves KMIP operations may use: `nist` (P-224, P-256, P-384, P-521) or `extended` (also secp256k1 and the brainpool r1/t1 curves) ([curves](algorithms.md#elliptic-curves)). |
+| `--ec-curves` (`KMIP_EC_CURVES`) | `extended` | Curves KMIP operations may use: `extended` (P-224, P-256, P-384, P-521, secp256k1 and the brainpool r1/t1 curves) or `nist` (the first four only) ([curves](algorithms.md#elliptic-curves)). |
 | `--interop-test-mode` (`KMIP_INTEROP_TEST_MODE`) | off | Offer the KMIP Interop operation (52) for test runs. KMIP forbids it on a production server. |
 | `--fips` (`KMIP_FIPS`) | off | [FIPS mode](fips.md); also entered when `/proc/sys/crypto/fips_enabled` is 1. Restricts `--tls-profile` and `--triple-des`. |
 
@@ -514,7 +514,8 @@ version and every `serve` setting except file paths:
 
 - Each field is the flag's name with `_` for `-` (`--idle-timeout` is
   `idle_timeout`), with the value in its command-line spelling;
-  `https_listen` is `off` without an HTTPS listener.
+  `https_listen` is `off` without an HTTPS listener, and `ec_curves` is
+  `nist` in FIPS mode.
 - The certificate, key, CA bundle, policy, master key and database are not
   logged. For the optional files (`users`, `crl`, `validation_ca`,
   `provisioning` for `--provisioning-ca` and its key, `audit_checkpoint`) it

@@ -19,12 +19,13 @@ One run over one clean commit, in this order. Every qualification test runs the
 server from the release image: harnesses that start a server executable get the image
 run as one (scripts/image_server.py). cargo test tests the source code, not the image.
 
-1. preflight: licence check, kind/kubectl and the pinned helm;
+1. preflight: licence check, kind/kubectl, the pinned helm, and that the base image
+   and package pins are current (scripts/check_image_updates.py);
 2. rust: cargo test, Clippy and the replay unit tests;
 3. build: `cargo build --locked`, a compile check; the executable is recorded, never run;
 4. image: scripts/package.py builds and exports the image archive per platform;
 5. conformance: on the image, the strict replay, the Profiles 4.1 variation and
-   corrected-fixture replays, the configuration replays (3DES, Interop, extended curves),
+   corrected-fixture replays, the configuration replays (3DES, Interop),
    the HTTPS transports, the legacy notes and the case inventory; the variation replay
    also on an emulated FIPS host (labelled `fips-emulated`) and on each other platform's
    native host;
@@ -201,6 +202,10 @@ def main():
             run.step('preflight','kubernetes-tools',['sh','-c',f'{args.kind} version && {args.kubectl} version --client'])
             # Downloads and checks the pinned helm on first use; the kubernetes phase runs the chart with it.
             run.step('preflight','helm',['python3','scripts/helm_tool.py','fetch'],timeout=600)
+            # Base images and packages are refreshed before each release: a stale or unpublished pin, or a
+            # check that cannot reach the registry or repositories, fails (the workflow's check job does this in CI).
+            run.step('preflight','image-pins',['python3','scripts/check_image_updates.py','--engine',args.engine],timeout=1200,
+                     outputs=[ROOT/'artifacts/image-updates.json'])
         if args.soak_duration:
             # The soak starts detached hours later; fetch and verify its signed client release now.
             run.step('preflight','soak-client',['python3','scripts/keytend_kmip_release.py'],timeout=3600)
@@ -296,7 +301,7 @@ def main():
             # Configuration-dependent and corrected-fixture cases are reported from
             # the runs under that setting or with corrected fixtures, never as failed.
             extra=[]
-            for name,report in (('3des','variations-3des.json'),('interop','variations-interop.json'),('ec','variations-ec.json'),('fips','variations-fips-emulated.json')):
+            for name,report in (('3des','variations-3des.json'),('interop','variations-interop.json'),('fips','variations-fips-emulated.json')):
                 if (out/report).exists():extra+=['--configured',f'{name}={out/report}']
             if (out/'corrected.json').exists():extra+=['--corrected',out/'corrected.json']
             run.step('conformance','inventory',['python3','scripts/oasis_inventory.py',out/'strict.json',out/'variations.json',*extra,'--output',bundle/'oasis-case-inventory.json'],outputs=[bundle/'oasis-case-inventory.json'])
@@ -556,8 +561,6 @@ EXTRA_REPLAYS=[
     ('image-variations-3des',['env','KMIP_TRIPLE_DES=enabled','python3','scripts/oasis_profile_replay.py','--binary','{binary}','--image','{image}','--output','{out}/conformance-image/variations-3des.json']),
     # Interop exists only in test mode; the Query traces that list it use that setting.
     ('image-variations-interop',['env','KMIP_INTEROP_TEST_MODE=true','python3','scripts/oasis_profile_replay.py','--binary','{binary}','--image','{image}','--output','{out}/conformance-image/variations-interop.json']),
-    # The non-NIST curves (secp256k1, brainpool) are opt-in; CS-AC-M-3-ECC-13 uses secp256k1.
-    ('image-variations-ec',['env','KMIP_EC_CURVES=extended','python3','scripts/oasis_profile_replay.py','--binary','{binary}','--image','{image}','--output','{out}/conformance-image/variations-ec.json']),
     ('image-https-transports',['python3','scripts/oasis_https_replay.py','--binary','{binary}','--image','{image}','--output','{out}/conformance-image/https.json']),
     # Legacy 1.1/1.2 notes: default run plus every recorded configuration and corrected-document
     # run, with reported statuses; fails if any case changed status or is untriaged.

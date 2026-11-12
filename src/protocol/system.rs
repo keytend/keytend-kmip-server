@@ -363,7 +363,7 @@ impl Engine {
         allowed: Option<&[u32]>,
     ) -> crate::credentials::Work {
         let _fips = crate::fips::enter(self.fips);
-        let _curves = crate::crypto::ec::enter(self.ec_curves);
+        let _curves = crate::crypto::ec::enter(self.curve_set());
         let mut work = crate::credentials::Work::default();
         if allowed.is_some_and(<[u32]>::is_empty) {
             return work;

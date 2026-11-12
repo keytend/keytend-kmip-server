@@ -62,18 +62,6 @@
    }
   },
   {
-   "id": "extended-ec-curves",
-   "workstream": "policy",
-   "status": "failed",
-   "detail": "ResultStatus mismatch; reason=8; message='Unsupported EC curve'",
-   "cases": "CS-AC-M-3-ECC-13",
-   "note": "CS-AC-M-3-ECC-13 registers a secp256k1 key pair. The non-NIST curves (secp256k1, brainpool) are off by default (--ec-curves nist, docs/interpretations.md#supported-elliptic-curves); the extended-curves replay is reported separately.",
-   "configuration": {
-    "report": "ec",
-    "setting": "KMIP_EC_CURVES=extended"
-   }
-  },
-  {
    "id": "chacha20poly1305-truncated-tag",
    "workstream": "interpretation",
    "status": "failed",

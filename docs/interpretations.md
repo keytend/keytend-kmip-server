@@ -38,7 +38,7 @@ Most of these settings only change how the server answers. Two of them,
 | `--destroyed-name-reuse` (`KMIP_DESTROYED_NAME_REUSE`) | `allow`, `reserve` | `allow` | [below](#names-held-only-by-destroyed-objects) |
 | `--lease-states` (`KMIP_LEASE_STATES`) | `active-deactivated`, `active` | `active-deactivated` | [leases](lifecycle.md#leases) |
 | `--idle-timeout` (`KMIP_IDLE_TIMEOUT`) | seconds, 0–604800 | `300` | [below](#idle-timeout) |
-| `--ec-curves` (`KMIP_EC_CURVES`) | `nist`, `extended` | `nist` | [below](#supported-elliptic-curves) |
+| `--ec-curves` (`KMIP_EC_CURVES`) | `extended`, `nist` | `extended` | [below](#supported-elliptic-curves) |
 | `--triple-des` (`KMIP_TRIPLE_DES`) | `disabled`, `legacy-decrypt`, `enabled` | `disabled` | [3DES](algorithms.md#3des) |
 | `--interop-test-mode` (`KMIP_INTEROP_TEST_MODE`) | flag | off | [Interop](#interop) |
 
@@ -99,9 +99,9 @@ its single request. There is no overall connection lifetime.
 KMIP defines 68 Recommended Curves and lets a server choose which it offers.
 This server implements the 13 that the RHEL 9 OpenSSL in the image offers, so
 native and container builds answer the same way, and by default lets KMIP
-operations use only the four NIST curves, the ones FIPS mode allows.
-`--ec-curves extended` adds secp256k1 and the brainpool curves. The curve
-list, the operations each setting affects and the TLS consequences are in
+operations use all 13. `--ec-curves nist` limits them to the four NIST
+curves, the ones FIPS mode allows. The curve list, the operations each
+setting affects and the TLS consequences are in
 [elliptic curves](algorithms.md#elliptic-curves).
 
 ## Message extensions

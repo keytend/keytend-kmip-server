@@ -14,11 +14,11 @@
 
 
 # Test consumer only; this image is separate from the delivered server image.
-# UBI 9.8 minimal (linux/amd64 manifest of index sha256:4b79c93106c14ad1c234907f83441ff0e4f8d24e78426a36e159098e9f7e6fa5).
+# UBI 9.9 minimal (linux/amd64 manifest of index sha256:ecb40c7bdfa5b0bb71e978c98c7cf56ce38edf1f8fb3561078acbc4b13698c07).
 # UBI has json-c but not its headers, so json-c 0.19 is built from the upstream release tarball
 # (pinned SHA-256; its contents match the json-c-0.19-20260627 tag). integration/ibm-mrs builds on this
 # image, so the compiler stays in it.
-FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:ee7fd2977589d1f776d703e99a03b2ee1c332868bb2b2e2f921c3c1abc55ce9b
+FROM registry.access.redhat.com/ubi9/ubi-minimal@sha256:f8700bef6b1c99d806c13e43542ce9f2534b137914ade791e4ced7283221147b
 ARG JSON_C=https://s3.amazonaws.com/json-c_releases/releases/json-c-0.19.tar.gz
 ARG JSON_C_SHA256=37ad0249902e301bd9052bf712e511fcc6acff4ecaad4b5900aad9ce564e26de
 RUN microdnf -y --nodocs --setopt=install_weak_deps=0 install gcc make cmake pkgconf-pkg-config openssl-devel libxml2-devel libcurl-devel tar gzip && microdnf clean all

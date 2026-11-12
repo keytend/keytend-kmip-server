@@ -77,13 +77,6 @@
    "label": "the client principal has a client_endpoint for server-to-client Notify/Put (harness mTLS listener, as in the profile replay); Query then lists Notify and Put",
    "setting": "a client_endpoint for Notify and Put in the policy file",
    "client_endpoint": true
-  },
-  "ec-extended": {
-   "label": "the non-NIST curves secp256k1 and brainpoolP256-512 r1/t1 offered to KMIP operations (off by default: --ec-curves nist, docs/interpretations.md#supported-elliptic-curves)",
-   "setting": "KMIP_EC_CURVES=extended",
-   "environment": {
-    "KMIP_EC_CURVES": "extended"
-   }
   }
  },
  "families": {
@@ -271,19 +264,12 @@
    "description": "Every exchange passes, but the comparator cannot independently verify the returned Transparent RSA Private Key fields (no recognised object type for that key material), so the case stays unverified rather than passed.",
    "spec": "Profiles 1.3+ section 4.1 variable output: generated key material must be checked independently, never copied from the sample."
   },
-  "untriaged": {},
-  "extended_ec_curves": {
-   "kind": "server_policy",
-   "workstream": "configuration",
-   "description": "Register or Create Key Pair of a secp256k1 key is refused with Feature Not Supported (\"Unsupported EC curve\"). With KMIP_EC_CURVES=extended the cases pass.",
-   "spec": "Supporting a curve is optional: the Cryptographic Domain Parameters are OPTIONAL fields (1.0-1.4 section 3.7) and an unsupported optional feature is Feature Not Supported (section 6.10). The non-NIST curves are opt-in (docs/interpretations.md#supported-elliptic-curves).",
-   "configuration": "ec-extended"
-  }
+  "untriaged": {}
  },
  "summary": {
-  "passed": 78,
+  "passed": 80,
   "unverified": 3,
-  "failed": 66,
+  "failed": 64,
   "partial": 6,
   "document_defect": 2
  },
@@ -1521,16 +1507,8 @@
   {
    "id": "TC-ECC-1-12",
    "messages_sha256": "429db218a6a9e4db4bc86769fbc716fa2d9726a9e7ff83096e43fcabb1192d24",
-   "status": "failed",
-   "family": "extended_ec_curves",
-   "exchange": 0,
-   "reason": "/BatchItem ResultStatus mismatch; reason=8; message='Unsupported EC curve'",
-   "reported": "skipped (configuration: passes with KMIP_EC_CURVES=extended)",
-   "evidence": {
-    "ec-extended": {
-     "status": "passed"
-    }
-   }
+   "status": "passed",
+   "reported": "passed"
   },
   {
    "id": "TC-ECC-2-12",
@@ -1544,16 +1522,8 @@
   {
    "id": "TC-ECC-3-12",
    "messages_sha256": "1c08b81f45a3dd0268545523987c8c698e11c9a056bd62a1848a128ef5af3de5",
-   "status": "failed",
-   "family": "extended_ec_curves",
-   "exchange": 0,
-   "reason": "/BatchItem ResultStatus mismatch; reason=8; message='Unsupported EC curve'",
-   "reported": "skipped (configuration: passes with KMIP_EC_CURVES=extended)",
-   "evidence": {
-    "ec-extended": {
-     "status": "passed"
-    }
-   }
+   "status": "passed",
+   "reported": "passed"
   },
   {
    "id": "TC-PGP-1-12",
@@ -1643,9 +1613,8 @@
   "document defect (no passing correction)": 6,
   "documented deviation": 18,
   "not applicable (alternative outcome)": 15,
-  "passed": 78,
+  "passed": 80,
   "passed (corrected document)": 14,
-  "skipped (configuration: passes with KMIP_EC_CURVES=extended)": 2,
   "skipped (configuration: passes with KMIP_MAX_LEASE_SECONDS=0 and a corrected document)": 1,
   "skipped (configuration: passes with KMIP_MAX_LEASE_SECONDS=0)": 1,
   "skipped (configuration: passes with KMIP_TRIPLE_DES=enabled)": 4,
@@ -1762,22 +1731,6 @@
    "finished_utc": "2026-10-30T13:14:00.023582+00:00",
    "summary": {
     "passed": 1,
-    "unverified": 0,
-    "failed": 0,
-    "partial": 0,
-    "document_defect": 0
-   }
-  },
-  "ec-extended": {
-   "selection": [
-    "TC-ECC-1-12",
-    "TC-ECC-3-12"
-   ],
-   "runtime_binary_sha256": "09f51c1b092abd3abe87b917ed541469c1a0a9936efdd27761f4d3ff9a6714ad",
-   "corrections_sha256": "b8f6da8ba491e0b6047aeaa3f2d1d59a2c9c78b7db6834175f06a4746df8c38e",
-   "finished_utc": "2026-11-01T16:25:08.583891+00:00",
-   "summary": {
-    "passed": 2,
     "unverified": 0,
     "failed": 0,
     "partial": 0,

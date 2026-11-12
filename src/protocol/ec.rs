@@ -17,16 +17,23 @@ use super::*;
 pub use crate::crypto::ec::EcCurves;
 
 impl Engine {
-    /// Elliptic curves KMIP operations may use (default: `nist`;
-    /// docs/interpretations.md#supported-elliptic-curves): `extended` adds
-    /// secp256k1 and brainpoolP256-512 r1/t1. FIPS mode keeps only the NIST
-    /// curves in either setting.
+    /// Elliptic curves KMIP operations may use (default: `extended`;
+    /// docs/interpretations.md#supported-elliptic-curves): `nist` offers only
+    /// P-224, P-256, P-384 and P-521. FIPS mode keeps only the NIST curves in
+    /// either setting (`curve_set`).
     pub fn with_ec_curves(mut self, curves: EcCurves) -> Self {
         self.ec_curves = curves;
         self
     }
+    /// The configured setting.
     pub fn ec_curves(&self) -> EcCurves {
         self.ec_curves
+    }
+    /// The curve set each request runs under: the setting, or `nist` in
+    /// FIPS mode, so every curve check (keys, certificates, requests) refuses
+    /// the other curves there.
+    pub fn curve_set(&self) -> EcCurves {
+        crypto::ec::effective(self.ec_curves, self.fips)
     }
 }
 
@@ -42,8 +49,8 @@ pub(super) fn validate_algorithm(alg: u32, v: Version) -> R<()> {
 /// A Recommended Curve the server can use: KMIP 1.0/1.1 list only curves
 /// 1-15; the server implements 13 curves
 /// (docs/interpretations.md#supported-elliptic-curves), of which `crypto::ec::supported` offers the
-/// NIST curves under `--ec-curves nist` (default) and all 13 under
-/// `extended`; FIPS mode only the NIST curves in either setting.
+/// NIST curves under `--ec-curves nist` and all 13 under `extended`
+/// (default); FIPS mode only the NIST curves in either setting.
 pub(super) fn curve(curve: u32, v: Version) -> R<openssl::ec::EcGroup> {
     if curve > 15 && v < Version(1, 2) {
         return Err(fail(8, "Curve requires KMIP 1.2"));
@@ -77,7 +84,8 @@ pub(super) fn stored_curve(obj: &Object, v: Version) -> R<()> {
 }
 /// An X.509 certificate with an EC subject key on an unsupported curve
 /// (Register, Validate, signature verification with a certificate). Not a
-/// FIPS check: FIPS mode stores certificates without one (docs/fips.md).
+/// FIPS check: FIPS mode stores certificates without one (docs/fips.md), but
+/// its curve set is `nist` (`Engine::curve_set`).
 pub(super) fn certificate_curve(der: &[u8]) -> R<()> {
     match crypto::ec::certificate_curve(der) {
         Some(c) if !crypto::ec::supported(c) => Err(unsupported_curve()),

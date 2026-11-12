@@ -726,7 +726,7 @@ impl Engine {
         wire: &mut Wire,
     ) -> R<Node> {
         let _fips = crate::fips::enter(self.fips);
-        let _curves = crate::crypto::ec::enter(self.ec_curves);
+        let _curves = crate::crypto::ec::enter(self.curve_set());
         self.streams.purge();
         self.authorization = Authorization::default();
         crate::authorization::validate(grants)

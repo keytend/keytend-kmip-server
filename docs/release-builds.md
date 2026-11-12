@@ -58,21 +58,26 @@ Pushing a tag `v<version>` on `main` starts the release workflow
 ([`.github/workflows/release.yml`](../.github/workflows/release.yml)). The tag
 must match the version in `Cargo.toml`. The workflow:
 
-1. builds the amd64 and arm64 images natively, on GitHub's amd64 and arm64
+1. checks that the base image digests and pinned packages are the latest
+   available (`scripts/check_image_updates.py`); a tag on stale pins fails
+   here, before anything is built, so refresh them before each release.
+   UBI repositories carry one version of each package, so a stale package
+   pin usually shows up as unpublished and fails even a dry run;
+2. builds the amd64 and arm64 images natively, on GitHub's amd64 and arm64
    runners, with `scripts/package.py`, and scans each with
    `scripts/scan_image.py`;
-2. qualifies the commit on GitHub-hosted runners, one job per phase of
+3. qualifies the commit on GitHub-hosted runners, one job per phase of
    `scripts/release_candidate.py --ci`; every test runs the release image
    ([test reports](testing.md#test-reports));
-3. merges the jobs' results into the test reports archive and assembles the
+4. merges the jobs' results into the test reports archive and assembles the
    release set with it under `reports/`;
-4. if every job passed, signs `SHA256SUMS` with cosign keyless (the
+5. if every job passed, signs `SHA256SUMS` with cosign keyless (the
    workflow's GitHub identity, recorded in the Sigstore transparency log) and
    with the OpenPGP CI signing subkey, so the signatures cover the reports;
-5. creates a draft GitHub release with the assets below.
+6. creates a draft GitHub release with the assets below.
 
 A manual run of the workflow does the same on `main` without signing or
-releasing; its test reports and unsigned release set are the run's
+releasing, and only warns about stale pins; its test reports and unsigned release set are the run's
 artifacts.
 
 Publishing the draft starts

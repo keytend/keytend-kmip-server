@@ -257,7 +257,7 @@ def main():
         observations['server_fips_check'] = status
         report['checks'].append(f"forced FIPS mode: `keytend-kmip-server --fips fips-check` loads only the fips and base providers ({status['library']}); {'; '.join(status['checks'])}")
         report['checks'].append(f"forced FIPS mode: the server reports provider '{fips_provider['name']}' version {fips_provider['version']}, build info {fips_provider['build_info']}, status {fips_provider['status']} (running: its self-tests and integrity check passed at load)")
-        # Recorded, not asserted: the UBI 9.8 repositories carry only the 3.0.7-11 rebuild (RHSA-2026:28832,
+        # Recorded, not asserted: the UBI 9 repositories carry only the 3.0.7-11 rebuild (RHSA-2026:28832,
         # CVE-2026-31790), which Red Hat describes as submitted to NIST for certification.
         report['certificate'] = dict(CERTIFIED_MODULE, shipped_module_version=fips_provider['version'],
             shipped_module_is_certified_build=fips_provider['version'] == CERTIFIED_MODULE['module_version'])

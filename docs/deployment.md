@@ -56,7 +56,7 @@ hold is the dedicated provisioning sub-CA's, and only when
 Ports: 5696 binary KMIP, 5697 HTTPS KMIP (when enabled), 8080 health and
 metrics (plain HTTP; keep it on a management network).
 
-The image is Red Hat UBI 9.8 micro (linux/amd64 and linux/arm64) with no shell
+The image is Red Hat UBI 9.9 micro (linux/amd64 and linux/arm64) with no shell
 or package manager; its entry point is the server binary, so subcommands run
 as `docker run … <image> backup …` ([container image](container-image.md)).
 

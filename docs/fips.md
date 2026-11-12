@@ -68,16 +68,16 @@ the same way.
 
 ## What FIPS mode refuses
 
-Every refusal's Result Message names FIPS mode. The Result Reason is the one
-the operation already uses for an unsupported mechanism, usually Feature Not
-Supported (Invalid Field for Create and Register of a non-approved symmetric
-algorithm).
+Every refusal's Result Message names FIPS mode, except for the EC certificates
+noted below. The Result Reason is the one the operation already uses for an
+unsupported mechanism, usually Feature Not Supported (Invalid Field for
+Create and Register of a non-approved symmetric algorithm).
 
 | Service | Refused in FIPS mode |
 | --- | --- |
 | ChaCha20, ChaCha20-Poly1305, HMAC-MD5, DSA | all use, including Register of such keys |
 | Triple-DES | the server refuses to start unless `--triple-des disabled` |
-| EC curves | everything but P-224, P-256, P-384 and P-521 (secp256k1, brainpool) |
+| EC curves | everything but P-224, P-256, P-384 and P-521 (secp256k1, brainpool), whatever `--ec-curves` says; certificates and certificate requests on them get "Unsupported EC curve", as under `--ec-curves nist` |
 | RSA signing | keys under 2048 bits (also as Certify issuer keys), SHA-1, PSS with an MGF1 SHA-1 hash or a salt longer than the hash (both are the KMIP defaults: set them explicitly, as the [RSA signing example](clients/https.md#sign-and-verify-with-rsa) does) |
 | RSA and ECDSA verification | SHA-1 signatures (the RHEL provider refuses them) |
 | RSA-OAEP (encrypt, decrypt, wrap) | keys under 2048 bits |
@@ -103,7 +103,7 @@ Still allowed as legacy use: signature verification with RSA keys from 1024
 bits or with a SHA-1 MGF1 hash, MAC verification with HMAC keys under 112
 bits, and Register of RSA keys under 2048 bits (which can then only verify).
 Certificates, PGP keys, Secret Data and Opaque Objects are stored without an
-algorithm check.
+algorithm check; only the EC curve of a certificate is checked (above).
 
 ## Provider and validation status
 
