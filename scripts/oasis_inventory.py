@@ -22,6 +22,8 @@ docs/specs/oasis-variation-families.json; an unexplained or doubly explained
 case is an error. The output grants no conformance credit.
 """
 import argparse,collections,hashlib,json,pathlib,re,sys
+sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent))
+from image_evidence import runtime_identity
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 FAMILIES=ROOT/'docs/specs/oasis-variation-families.json'
 
@@ -134,8 +136,8 @@ def main():
     used={f for _,f in counts}|{c['configured_family'] for c in cases.values() if 'configured_family' in c}|fips_used;unused=[f['id'] for f in families if f['id'] not in used and (fips is not None or f.get('mode')!='fips')]
     out={'schema':1,'conformance_credit':'none',
          'scope':'Strict result unchanged; variation mode separately labelled (Profiles 4.1). Families name the first blocker only.',
-         'strict_report':{'sha256':hashlib.sha256(a.strict.read_bytes()).hexdigest(),'runtime_binary_sha256':strict['runtime_binary_sha256'],'summary':strict['summary']},
-         'variation_report':{'sha256':hashlib.sha256(a.variation.read_bytes()).hexdigest(),'runtime_binary_sha256':variation['runtime_binary_sha256'],'summary':variation['summary']},
+         'strict_report':{'sha256':hashlib.sha256(a.strict.read_bytes()).hexdigest(),'runtime':runtime_identity(strict),'summary':strict['summary']},
+         'variation_report':{'sha256':hashlib.sha256(a.variation.read_bytes()).hexdigest(),'runtime':runtime_identity(variation),'summary':variation['summary']},
          'reported_counts':dict(sorted(report_counts.items())),
          'family_counts':{f'{w}/{f}':n for (w,f),n in sorted(counts.items())},'unused_families':unused,'cases':cases}
     if fips is not None:

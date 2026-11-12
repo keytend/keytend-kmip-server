@@ -16,24 +16,33 @@
 """Real encrypted Percona workload against the deliverable container image.
 Runs only disposable named containers and directories; no external database is used.
 """
-import argparse,json,os,pathlib,shutil,socket,subprocess,tempfile,time,uuid
+import argparse,json,os,pathlib,re,shutil,socket,subprocess,tempfile,time,uuid
 from test_runtime import ROOT,Server,free_port,stable_port
 from wire import *
 from image_evidence import local_image_id,packaged_evidence
+import image_server
 PERCONA='docker.io/percona/percona-server-mongodb@sha256:e1004538c31619ec471aa39423ef9ffa39a598750661c2d6c66d785de852d538'
 ART=ROOT/'artifacts';ART.mkdir(exist_ok=True)
 def command(args,**kwargs):return subprocess.check_output(args,text=True,stderr=subprocess.STDOUT,**kwargs)
 class ContainerServer(Server):
     def __init__(self,directory,engine,image,*,pki=None,data=None,binary=None,draft=False,log_path=None):
         if (pki is None)!=(data is None):raise ValueError('provide both pki and data, or neither')
+        # Set first: Server.__init__ generates the master key, which the image does here (generate_master_key).
+        self.engine=engine;self.image=image
         if pki is None:super().__init__(directory,binary=binary,draft=draft)
         else:
             self.root=pathlib.Path(directory);self.root.mkdir(parents=True,exist_ok=True)
             self.pki=pathlib.Path(pki);self.data=pathlib.Path(data);self.port=stable_port();self.health=free_port();self.draft=draft
         self.log_path=pathlib.Path(log_path) if log_path else ART/'database-kmip.log'
-        self.engine=engine;self.image=image;self.extra_args=[];self.name='keytend-server-'+uuid.uuid4().hex[:12];self.tls=self.root/'server-tls';self.tls.mkdir(mode=0o700)
+        # The image is the server: nothing here runs a native executable.
+        self.binary=None;self.extra_args=[];self.name='keytend-server-'+uuid.uuid4().hex[:12];self.tls=self.root/'server-tls';self.tls.mkdir(mode=0o700)
         for name in ['server.pem','server.key','ca.pem','master.key','policy.json']:shutil.copy(self.pki/name,self.tls/name)
-    def base(self):return [self.engine,'run','--rm']+(['--userns','keep-id:uid=10001,gid=10001'] if self.engine=='podman' else ['--user',f'{os.getuid()}:{os.getgid()}'])+['--read-only','--tmpfs','/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1777','--cap-drop=all','--security-opt=no-new-privileges','--pids-limit=128','--memory=256m','--cpus=2','-v',f'{self.tls}:/tls:ro','-v',f'{self.data}:/data']
+    def generate_master_key(self,path):
+        """generate-master-key run by the image, writing as this user into the PKI directory."""
+        user=['--userns','keep-id'] if self.engine=='podman' else []
+        subprocess.run([self.engine,'run','--rm','--network','none',*user,'--user',f'{os.getuid()}:{os.getgid()}','--no-healthcheck',
+                        '-v',f'{path.parent}:/out',self.image,'generate-master-key','--output','/out/'+path.name],check=True,stdout=subprocess.DEVNULL)
+    def base(self):return [self.engine,'run','--rm','--label',f'{image_server.LABEL}={image_server.run_label()}']+(['--userns','keep-id:uid=10001,gid=10001'] if self.engine=='podman' else ['--user',f'{os.getuid()}:{os.getgid()}'])+['--read-only','--tmpfs','/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1777','--cap-drop=all','--security-opt=no-new-privileges','--pids-limit=128','--memory=256m','--cpus=2','-v',f'{self.tls}:/tls:ro','-v',f'{self.data}:/data']
     def start(self):
         # Only readiness checks use the health port, so each start takes a new one: the old one
         # is in the ephemeral range and may be taken while the container is down (pasta then fails
@@ -41,13 +50,21 @@ class ContainerServer(Server):
         # below the ephemeral range (stable_port), and a start is retried while the previous
         # container's forward is still being released.
         self.health=free_port()
-        args=self.base()+['-d','--name',self.name,'-p',f'127.0.0.1:{self.port}:5696','-p',f'127.0.0.1:{self.health}:8080',self.image,'serve','--cert','/tls/server.pem','--key','/tls/server.key','--ca','/tls/ca.pem','--master-key','/tls/master.key','--policy','/tls/policy.json','--database','/data/kmip.sqlite']
+        # The server settings a native Server takes from this process's environment, except any base() sets.
+        base=self.base();fixed={base[i+1].split('=',1)[0] for i,x in enumerate(base[:-1]) if x=='-e'}
+        forwarded=image_server.passed(os.environ,fixed)
+        args=base+['-d','--name',self.name,'-p',f'127.0.0.1:{self.port}:5696','-p',f'127.0.0.1:{self.health}:8080',*forwarded,self.image,'serve','--cert','/tls/server.pem','--key','/tls/server.key','--ca','/tls/ca.pem','--master-key','/tls/master.key','--policy','/tls/policy.json','--database','/data/kmip.sqlite']
         if self.draft:args+=['--experimental-v3']
+        # As Server: draft 3.0 credential traces use the PKI's users file; otherwise an explicit one, and a CRL.
+        users=self.pki/'users.json' if self.draft and (self.pki/'users.json').exists() else getattr(self,'users',None)
+        if users:shutil.copy(users,self.tls/'users.json');args+=['--users','/tls/users.json']
+        if getattr(self,'crl',None):shutil.copy(self.crl,self.tls/'ca.crl');args+=['--crl','/tls/ca.crl']
         args+=self.extra_args
         for attempt in range(10):
             try:command(args);break
             except subprocess.CalledProcessError as error:
-                if 'Address already in use' not in (error.output or '') or attempt==9:raise
+                # pasta, slirp4netns/rootlessport and Docker word a port collision differently.
+                if not re.search(r'address already in use|port is already allocated',error.output or '',re.I) or attempt==9:raise
                 subprocess.run([self.engine,'rm','-f',self.name],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                 time.sleep(.5)
         until=time.monotonic()+20

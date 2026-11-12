@@ -15,7 +15,7 @@
 
 """Audit floor export, independent HMAC, startup denial and storage-key transition."""
 import argparse, hashlib, hmac, json, os, pathlib, shutil, sqlite3, tempfile
-from image_evidence import source_commit, local_image_id, packaged_evidence
+from image_evidence import source_commit, local_image_id, packaged_evidence, native_sha256
 from test_runtime import ROOT, Server
 from test_database import ContainerServer
 from test_storage_rotation import cli
@@ -112,7 +112,7 @@ def run(server):
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--image');parser.add_argument('--engine',default='podman');a=parser.parse_args()
-    binary=hashlib.sha256((ROOT/'target/debug/keytend-kmip-server').read_bytes()).hexdigest()
+    binary=native_sha256(a.image)
     evidence=packaged_evidence(local_image_id(a.engine,a.image)) if a.image else {'runtime_binary_sha256':binary,'source_commit':source_commit()[0]}
     out=ROOT/'artifacts/audit-checkpoint';out.mkdir(exist_ok=True);path=out/('image.json' if a.image else 'native.json')
     report=dict(status='running',**evidence)

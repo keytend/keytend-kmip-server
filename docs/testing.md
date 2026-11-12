@@ -23,23 +23,55 @@ are in its [test reports](#test-reports), not in these pages.
 
 ## Test reports
 
-Each release publishes the reports of the run that produced it, as
-`reports/keytend-kmip-server-<version>-test-reports.tar.gz` in the release set.
-`SHA256SUMS` lists it, so the release signatures cover it, and the GitHub
-release also offers it on its own. It holds:
+Each release publishes the reports of the qualification run that produced it,
+as `reports/keytend-kmip-server-<version>-test-reports.tar.gz` in the release
+set. `SHA256SUMS` lists it, so the release signatures cover it, and the GitHub
+release also offers it on its own.
 
-- `manifest.json`: every step of the run, with its command, exit code and log;
-- `logs/`: those logs;
-- the OASIS trace replays, the case inventory and the requirement matrix;
+The release workflow ([how releases are built](release-builds.md#how-releases-are-built))
+runs the qualification on GitHub-hosted runners, one job per phase of
+`scripts/release_candidate.py --ci`. Every test in it runs the server from the
+release image; a harness that starts a server executable gets the image run as
+one (`scripts/image_server.py`). A local release run does the same. While
+those tests run, a stand-in at the native executable's build path fails the
+run if any step calls it.
+
+| Job | Runner | What it runs |
+| --- | --- | --- |
+| rust | amd64 | licence check; Clippy and `cargo test` in the pinned UBI builder image, which has the OpenSSL 3.5 the server needs (`scripts/ci_builder.py`); this tests the source code, not the image |
+| conformance | amd64 | the OASIS trace replays, also in emulated FIPS mode, and the case inventory |
+| platform | arm64 | the arm64 image's variation replay, hardening, FIPS image test and scan |
+| integration | amd64 | the integration matrix (`scripts/test_integration_parallel.py`) in five slices that each fit a runner |
+| kubernetes | amd64 | kind on the runner's Docker: the Kustomize base, storage rotation and the Helm chart |
+| security | amd64 | image scan, hardening, FIPS image test, TLS probes and the dependency scan |
+| java | amd64 | the keytend-kmip Java client suite on Corretto 17, 21 and 25 |
+
+The assemble job merges the jobs' results. It fails if a step failed, a job
+did not finish, a phase did not run or lacked its inputs, a job tested
+another image or executable, or the slices missed an integration group. The
+release is signed only if every job passed and the image archives are the
+ones the image jobs built. Steps the workflow does not run, such as the
+24-hour Java soak, are listed with the reason under `not_run` in
+`manifest.json`.
+
+The archive holds:
+
+- `manifest.json`: every step of the run, with its job, command, exit code and log;
+- `logs/`: those logs, by job;
+- `image-server.sh`: how the tests ran the image as the server;
+- the OASIS trace replays and the case inventory;
 - the TLS probes of the image, and the arm64 image tests;
+- `integration/`: the integration matrix's records, by slice;
 - `java/`: the keytend-kmip Java client suite;
 - `outputs/`: other step reports, such as the Helm chart and image hardening.
 
-Paths, host names and the user name are replaced by placeholders, which
-`README.txt` in the archive lists. Test keys, kubeconfigs and database files
-are not included. After [verifying a release](release-signing.md), read the
-reports with `tar -xzf reports/keytend-kmip-server-<version>-test-reports.tar.gz`
-in its `release/` directory.
+Paths, host names and, on a workstation, the user name are replaced by
+placeholders, which `README.txt` in the archive lists. On a runner its work,
+temporary and tool directories are replaced too, and its generic account
+name is kept. Test keys, kubeconfigs and database files are not included.
+After [verifying a release](release-signing.md), read the reports with
+`tar -xzf reports/keytend-kmip-server-<version>-test-reports.tar.gz` in its
+`release/` directory.
 
 ## Checks before a change
 
@@ -234,8 +266,9 @@ rotation Job and cutover. kind's default CNI does not enforce NetworkPolicy.
 `scripts/test_helm_chart.py` runs the chart end to end in its own namespace
 (`keytend-helm`, deleted at the end) on the same kind cluster, with the pinned
 Helm ([`scripts/helm_tool.py`](../scripts/helm_tool.py) downloads it into
-`.cache/bin` and checks its SHA-256) and the native executable for the
-operator's local steps:
+`.cache/bin` and checks its SHA-256) and the server executable for the
+operator's local steps (a release run passes the image, run as one, as
+`--binary`):
 
 ```sh
 python3 scripts/helm_tool.py fetch

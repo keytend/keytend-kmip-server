@@ -51,6 +51,19 @@ def check_platform(config,arch):
     assert (config.get('os'),config.get('architecture'))==('linux',arch),f"image is {config.get('os')}/{config.get('architecture')}, expected linux/{arch}"
 
 def normalized_id(value):return value.removeprefix('sha256:')
+NATIVE=ROOT/'target/debug/keytend-kmip-server'
+def runtime_evidence(binary,image=None,engine='podman'):
+    """What a report records as the server under test: the image (its ID, archive digest and source
+    commit) when `binary` runs it (scripts/image_server.py), else the native executable's SHA-256."""
+    if image:return {'runtime':{'kind':'image','image':image,**packaged_evidence(local_image_id(engine,image))}}
+    return {'runtime_binary_sha256':hashlib.sha256(pathlib.Path(binary).read_bytes()).hexdigest()}
+def runtime_identity(report):
+    """The server-under-test record of a report written with runtime_evidence (either form)."""
+    return report.get('runtime') or {'runtime_binary_sha256':report.get('runtime_binary_sha256')}
+def native_sha256(image=None):
+    """SHA-256 of the native debug executable for a run against it; None for a run against an image,
+    which never needs the native executable (it may not exist)."""
+    return None if image else hashlib.sha256(NATIVE.read_bytes()).hexdigest()
 def local_image_id(engine,image):
     return normalized_id(json.loads(subprocess.check_output([engine,'image','inspect',image]))[0]['Id'])
 def packaged_evidence(config_id,arch='amd64'):

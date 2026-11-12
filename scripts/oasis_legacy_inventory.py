@@ -33,11 +33,11 @@ any case changed status or any evidence is untriaged.
 import argparse,hashlib,json,pathlib,subprocess,sys
 import oasis_legacy_replay as R
 
-def rerun(binary,outdir):
+def rerun(binary,outdir,image=None,engine='podman'):
     outdir.mkdir(parents=True,exist_ok=True)
     def replay(name,flags):
         out=outdir/f'legacy-{name}.json'
-        subprocess.run([sys.executable,str(R.ROOT/'scripts/oasis_legacy_replay.py'),'--binary',str(binary),*flags,'--output',str(out)],cwd=R.ROOT,check=False)
+        subprocess.run([sys.executable,str(R.ROOT/'scripts/oasis_legacy_replay.py'),'--binary',str(binary),*(['--image',image,'--engine',engine] if image else []),*flags,'--output',str(out)],cwd=R.ROOT,check=False)
         return json.loads(out.read_text())
     committed=R.load_ledger()
     ledger=R.update_ledger(replay('default',[])['cases'],json.loads(json.dumps(committed)))
@@ -47,7 +47,8 @@ def rerun(binary,outdir):
             flags+=['--corrected-documents'] if part=='corrected' else ['--configuration',part]
         report=replay(label,flags+['--filter',*run['selection']])
         ledger=R.record_evidence(ledger,report)
-        ledger['evidence_runs'][label]={**run,'runtime_binary_sha256':report['runtime_binary_sha256'],'finished_utc':report['finished_utc'],'summary':report['summary']}
+        identity={'runtime':report['runtime']} if 'runtime' in report else {'runtime_binary_sha256':report['runtime_binary_sha256']}
+        ledger['evidence_runs'][label]={**{k:v for k,v in run.items() if k not in ('runtime','runtime_binary_sha256')},**identity,'finished_utc':report['finished_utc'],'summary':report['summary']}
     ledger=R.finish_ledger(ledger)
     (outdir/'legacy-ledger.json').write_text(json.dumps(ledger,indent=1)+'\n')
     before={r['id']:r.get('reported') for r in committed['cases']}
@@ -63,16 +64,19 @@ def main():
     p.add_argument('reports',nargs='*',type=pathlib.Path,help='complete non-default runs of scripts/oasis_legacy_replay.py')
     p.add_argument('--rerun',type=pathlib.Path,metavar='BINARY',help='release mode: replay default and recorded evidence runs against BINARY')
     p.add_argument('--outdir',type=pathlib.Path,help='output directory for --rerun')
+    p.add_argument('--image',help='with --rerun: the image that BINARY runs (scripts/image_server.py), recorded as the server under test')
+    p.add_argument('--engine',default='podman')
     a=p.parse_args()
     if a.rerun:
         if not a.outdir:p.error('--rerun needs --outdir')
-        sys.exit(rerun(a.rerun.resolve(),a.outdir.resolve()))
+        sys.exit(rerun(a.rerun.resolve(),a.outdir.resolve(),a.image,a.engine))
     if not a.reports:p.error('give reports or --rerun')
     ledger=R.load_ledger()
     for path in a.reports:
         report=json.loads(path.read_text())
         ledger=R.record_evidence(ledger,report)
-        ledger.setdefault('evidence_runs',{})[report['run']]={'selection':report['selection'],'runtime_binary_sha256':report['runtime_binary_sha256'],
+        identity={'runtime':report['runtime']} if 'runtime' in report else {'runtime_binary_sha256':report['runtime_binary_sha256']}
+        ledger.setdefault('evidence_runs',{})[report['run']]={'selection':report['selection'],**identity,
             'corrections_sha256':hashlib.sha256(R.CORRECTIONS.read_bytes()).hexdigest(),'finished_utc':report['finished_utc'],'summary':report['summary']}
     ledger=R.finish_ledger(ledger)
     R.LEDGER.write_text(json.dumps(ledger,indent=1)+'\n')

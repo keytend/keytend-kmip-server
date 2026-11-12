@@ -181,23 +181,50 @@ def read_policy(binary, name, client):
 
 
 class Client:
-    """Pinned OpenSSL command-line client; records version, binary and library hashes and config."""
+    """Pinned OpenSSL command-line client; records version, binary and library hashes and config.
 
-    def __init__(self, binary=None):
-        self.binary = str(pathlib.Path(binary or shutil.which('openssl')).resolve())
+    With image, the client is the `openssl` command of that image (a pinned UBI image), run with
+    `exec` in one long-lived container on the host network, with the temporary directory and
+    `shares` mounted at the same paths; close() removes the container."""
+
+    def __init__(self, binary=None, image=None, engine='podman', shares=()):
+        self.image, self.engine, self.container = image, engine, None
+        if image:
+            self.container = f'keytend-tls-client-{uuid.uuid4().hex[:12]}'
+            tmp = os.environ.get('TMPDIR') or '/tmp'
+            volumes = [x for p in dict.fromkeys([tmp, *map(str, shares)]) for x in ('-v', f'{p}:{p}')]
+            run([engine, 'run', '-d', '--rm', '--name', self.container, '--network', 'host', '--userns', 'keep-id',
+                 '--user', f'{os.getuid()}:{os.getgid()}', *volumes, '--entrypoint', 'sleep', image, 'infinity'])
+            self.command = [engine, 'exec', '-i', self.container, 'openssl']
+            self.binary = f'{image}: openssl'
+        else:
+            self.binary = str(pathlib.Path(binary or shutil.which('openssl')).resolve())
+            self.command = [self.binary]
         self.names = {}
-        for line in run([self.binary, 'ciphers', '-stdname', 'ALL:COMPLEMENTOFALL:@SECLEVEL=0']).splitlines():
+        for line in run([*self.command, 'ciphers', '-stdname', 'ALL:COMPLEMENTOFALL:@SECLEVEL=0']).splitlines():
             parts = line.split()
             if len(parts) >= 3 and parts[1] == '-':
                 self.names[parts[0]] = parts[2]
         self.iana = {v: k for k, v in self.names.items()}
         self.groups = set()
         try:
-            self.groups = set(run([self.binary, 'list', '-tls-groups', '-tls1_3']).replace(':', ' ').split())
+            self.groups = set(run([*self.command, 'list', '-tls-groups', '-tls1_3']).replace(':', ' ').split())
         except subprocess.CalledProcessError:
             pass
 
+    def close(self):
+        if self.container:
+            subprocess.run([self.engine, 'rm', '-f', '-t', '0', self.container], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self.container = None
+
     def identity(self):
+        if self.image:
+            config = run([self.engine, 'image', 'inspect', '--format', '{{.Id}}', self.image]).strip()
+            m = re.search(r'OPENSSLDIR: "([^"]+)"', run([*self.command, 'version', '-d']))
+            conf = f'{m.group(1)}/openssl.cnf'
+            text = subprocess.run([self.engine, 'exec', self.container, 'cat', conf], stdout=subprocess.PIPE).stdout
+            return {'image': self.image, 'image_id': config, 'version': run([*self.command, 'version']).strip(),
+                    'openssl_conf': {'path': conf, 'source': 'OPENSSLDIR default', 'sha256': sha256(text) if text else None}}
         libs = {}
         for line in run(['ldd', self.binary]).splitlines():
             m = re.search(r'(lib(?:ssl|crypto)\.so\S*) => (\S+)', line)
@@ -206,11 +233,11 @@ class Client:
                 libs[m.group(1)] = {'path': str(path), 'sha256': sha256(path.read_bytes())}
         conf = os.environ.get('OPENSSL_CONF')
         if not conf:
-            m = re.search(r'OPENSSLDIR: "([^"]+)"', run([self.binary, 'version', '-d']))
+            m = re.search(r'OPENSSLDIR: "([^"]+)"', run([*self.command, 'version', '-d']))
             conf = str(pathlib.Path(m.group(1), 'openssl.cnf'))
         conf_path = pathlib.Path(conf).resolve()
         return {'binary': self.binary, 'sha256': sha256(pathlib.Path(self.binary).read_bytes()),
-                'version': run([self.binary, 'version']).strip(), 'libraries': libs,
+                'version': run([*self.command, 'version']).strip(), 'libraries': libs,
                 'openssl_conf': {'path': str(conf_path), 'source': 'OPENSSL_CONF' if os.environ.get('OPENSSL_CONF') else 'OPENSSLDIR default',
                                  'sha256': sha256(conf_path.read_bytes()) if conf_path.exists() else None}}
 
@@ -220,7 +247,7 @@ class Client:
         legacy = p['proto'] in LEGACY_PROTOCOLS
         if legacy:
             params = ['-cipher', LEGACY_CLIENT_CIPHER]
-            if not run([self.binary, 'ciphers', '-s', f'-{p["proto"]}', LEGACY_CLIENT_CIPHER]).strip():
+            if not run([*self.command, 'ciphers', '-s', f'-{p["proto"]}', LEGACY_CLIENT_CIPHER]).strip():
                 return False, params, 'client offers no suite for this protocol'
         if 'unlisted' in p:
             # Everything the client implements except the policy's suites (security level 0 so the
@@ -234,14 +261,14 @@ class Client:
             if not name:
                 return False, params, 'suite not implemented by the pinned client'
             level = ':@SECLEVEL=0' if legacy else ''
-            r = subprocess.run([self.binary, 'ciphers', '-s', '-stdname', f'-{p["proto"]}', name + level], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            r = subprocess.run([*self.command, 'ciphers', '-s', '-stdname', f'-{p["proto"]}', name + level], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             if p['cipher'] not in r.stdout.split():
                 return False, params, 'client would not offer this suite at this protocol version (security level, version or missing credential type)'
             if 'PSK' in p['cipher']:
                 return False, params, 'PSK suite needs a pre-shared key the profile fixture does not define'
             params = ['-cipher', name + (':@SECLEVEL=0' if legacy else '')]
         if p.get('suite'):
-            r = subprocess.run([self.binary, 'ciphers', '-s', '-stdname', '-tls1_3', '-ciphersuites', p['suite']], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            r = subprocess.run([*self.command, 'ciphers', '-s', '-stdname', '-tls1_3', '-ciphersuites', p['suite']], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             if r.returncode or p['suite'] not in r.stdout.split():
                 return False, params, 'TLS 1.3 suite not available in the pinned client'
             params = ['-ciphersuites', p['suite']]
@@ -407,7 +434,7 @@ def kmip_result(data, http):
 
 def attempt(client, pki, port, p, params, http_path=None, timeout=10):
     """One bounded s_client connection. Returns (command, stdout bytes, stderr text, application response)."""
-    args = [client.binary, 's_client', '-connect', f'127.0.0.1:{port}', '-servername', 'localhost',
+    args = [*client.command, 's_client', '-connect', f'127.0.0.1:{port}', '-servername', 'localhost',
             '-verify_hostname', p['verify_name'], '-verify_return_error', '-CAfile', str(pki / 'ca.pem'), '-brief',
             f'-{p["proto"]}'] + params
     if p['identity']:
@@ -927,12 +954,14 @@ def evaluate_policy(policy, results, credential):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--binary', required=True, help='frozen native keytend-kmip-server executable (read-only copy)')
+    ap.add_argument('--binary', required=True, help='keytend-kmip-server executable for tls-profiles and key generation: '
+                    'a frozen native copy, or the image run as one (scripts/image_server.py)')
     ap.add_argument('--engine', default='podman')
     ap.add_argument('--image', help='image reference; probed only when given')
     ap.add_argument('--image-id', help='required image ID when --image is given')
     ap.add_argument('--output', required=True, help='new directory outside Git for PKI, raw logs and summary')
     ap.add_argument('--openssl', help='client OpenSSL binary (default: openssl on PATH)')
+    ap.add_argument('--openssl-image', help='run the client OpenSSL from this image instead (its openssl command)')
     ap.add_argument('--fixtures', help='comma-separated <native|image>-<rsa|ecdsa|p256|p384> (default: rsa and ecdsa, plus p256 '
                     'and p384 under a Suite B --tls-profile). rsa/ecdsa use an RSA CA; p256/p384 use all-ECDSA Suite B PKIs')
     ap.add_argument('--image-archive', help='exported archive of --image; its TLS libraries are hashed and its config must match --image-id')
@@ -943,8 +972,7 @@ def main():
     out = pathlib.Path(a.output).resolve()
     out.mkdir(parents=True)
     binary = str(pathlib.Path(a.binary).resolve())
-    binary_sha256 = sha256(pathlib.Path(binary).read_bytes())
-    client = Client(a.openssl)
+    client = Client(a.openssl, a.openssl_image, a.engine, shares=[out, ROOT])
     inventory = json.loads(INVENTORY.read_text())
     image_tls = None
     if a.image:
@@ -957,7 +985,6 @@ def main():
     pki = make_pki(out / 'pki', binary)
     from image_evidence import source_commit
     summary = {'started': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'client': client.identity(),
-               'native_binary': {'path': binary, 'sha256': binary_sha256},
                'inventory_sha256': sha256(INVENTORY.read_bytes()),
                'source_commit': source_commit()[0], 'image': {'reference': a.image, 'id': a.image_id, 'archive': image_tls},
                'pki': pki_identity(pki), 'fixtures': {},
@@ -969,6 +996,13 @@ def main():
     owned = []
     fixtures = a.fixtures or ','.join(f'{k}-{s}' for k in ['native', 'image']
                                       for s in ['rsa', 'ecdsa', *(SUITE_B_SERVERS if policy and policy.get('suite_b') else [])])
+    # The server under test: the native executable when a native fixture runs; otherwise only the
+    # image runs, and --binary (the image run as one) only lists policies and makes keys.
+    if any(name.startswith('native-') for name in fixtures.split(',')):
+        summary['native_binary'] = {'path': binary, 'sha256': sha256(pathlib.Path(binary).read_bytes())}
+    else:
+        from image_evidence import runtime_evidence
+        summary.update(runtime_evidence(binary, a.image, a.engine))
     try:
         for name in fixtures.split(','):
             kind, server = name.split('-')
@@ -1025,6 +1059,7 @@ def main():
                     f'{e}/{s}': evaluation.get(f'{e}/{s}', 'no protocol/cipher record (HTTPS reuses Basic)') for e, s in policy['derived_from']}
             print(f'{name}: ' + ', '.join(f'{k}={v}' for k, v in sorted(count(results).items())), flush=True)
     finally:
+        client.close()
         summary['cleanup'] = cleanup_proof(a.engine, owned, out)
         summary['finished'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
         (out / 'summary.json').write_text(json.dumps(summary, indent=2, sort_keys=True) + '\n')
@@ -1148,10 +1183,11 @@ def checkpoint(output, *summary_paths):
             if 'results' in f:
                 f['rows'] = ['|'.join(str(r.get(k) or '') for k in ROW_FORMAT) for r in f.pop('results')]
         runs[name] = c
-    binaries = {c['native_binary']['sha256'] for c in runs.values()}
+    binaries = {c['native_binary']['sha256'] for c in runs.values() if 'native_binary' in c}
     images = sorted({(c.get('image') or {}).get('id') for c in runs.values()} - {None})
-    out = {'description': 'Live --tls-profile probe runs (scripts/tls_profile_probe.py). Observations of the native '
-                          'binary' + (' and the image' if images else '') + ' only; not a profile qualification.',
+    tested = ' and '.join(x for x, present in (('native binary', binaries), ('image', images)) if present) or 'server'
+    out = {'description': 'Live --tls-profile probe runs (scripts/tls_profile_probe.py). Observations of the '
+                          + tested + ' only; not a profile qualification.',
            'native_binary_sha256': sorted(binaries), 'image_id': images, 'runs': runs,
            'row_format': '|'.join(ROW_FORMAT),
            'verdicts': {n: {f: (v.get('policy_evaluation') or {}).get('verdict', 'server refused to start' if 'server_refused_to_start' in v else None)
@@ -1168,10 +1204,10 @@ def compact_data(summary_path, archive=None):
     out = {'summary_sha256': sha256(summary_bytes), 'started': s['started'], 'finished': s['finished'],
            'inventory_sha256': s['inventory_sha256'], 'compacted_with_inventory_sha256': sha256(INVENTORY.read_bytes()),
            'evaluation_scope':'Recomputed after the run with the current inventory; the evaluation recorded at probe time is kept separately, no new probes or profile qualification',
-           'client': s['client'], 'native_binary': {'sha256': s['native_binary']['sha256']},
+           'client': s['client'], **({'native_binary': {'sha256': s['native_binary']['sha256']}} if 'native_binary' in s else {}),
            'pki': {k: {x: v[x] for x in ['certificate_sha256', 'subject', 'issuer', 'public_key', 'bits', 'curve', 'signature']} for k, v in s['pki'].items()},
            'fixtures': {}}
-    for k in ['source_commit', 'image', 'cleanup', 'tls_profile']:
+    for k in ['source_commit', 'image', 'runtime', 'cleanup', 'tls_profile']:
         if k in s:
             out[k] = s[k]
     if archive:

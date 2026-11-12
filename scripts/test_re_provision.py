@@ -233,13 +233,16 @@ def run(s,results):
 def main():
     parser=argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--skip-build',action='store_true');parser.add_argument('--binary',type=pathlib.Path)
+    parser.add_argument('--image',help='the image that --binary runs (scripts/image_server.py), recorded as the tested runtime');parser.add_argument('--engine',default='podman')
     a=parser.parse_args()
     if not a.skip_build and not a.binary:subprocess.run(['cargo','build','--locked'],cwd=ROOT,check=True)
     binary=(a.binary or ROOT/'target/debug/keytend-kmip-server').resolve()
-    from image_evidence import source_commit
+    from image_evidence import source_commit,local_image_id,packaged_evidence
     out=ROOT/'artifacts/re-provision';out.mkdir(parents=True,exist_ok=True)
-    report=dict(status='running',source_commit=source_commit()[0],runtime_binary_sha256=sha(binary),passed=[])
-    (out/'native.json').write_text(json.dumps(report,indent=2)+'\n')
+    evidence=packaged_evidence(local_image_id(a.engine,a.image)) if a.image else {'source_commit':source_commit()[0],'runtime_binary_sha256':sha(binary)}
+    report=dict(status='running',server=str(binary),**evidence,passed=[])
+    mode='image' if a.image else 'native'
+    (out/f'{mode}.json').write_text(json.dumps(report,indent=2)+'\n')
     try:
         with tempfile.TemporaryDirectory(prefix='keytend-re-provision-') as d:
             s=Server(d,binary=binary)
@@ -247,11 +250,11 @@ def main():
                 startup(s,report['passed']);run(s,report['passed'])
             finally:
                 s.stop()
-                if (s.root/'server.log').exists():shutil.copyfile(s.root/'server.log',out/'native-server.log')
+                if (s.root/'server.log').exists():shutil.copyfile(s.root/'server.log',out/f'{mode}-server.log')
         report['status']='passed'
     except BaseException as error:
         report.update(status='failed',error=repr(error));raise
-    finally:(out/'native.json').write_text(json.dumps(report,indent=2)+'\n')
+    finally:(out/f'{mode}.json').write_text(json.dumps(report,indent=2)+'\n')
     for line in report['passed']:print('PASS',line)
 
 if __name__=='__main__':main()

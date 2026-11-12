@@ -14,14 +14,14 @@
 
 """Supplemental published-SDK wrapping probes; retain original catalog failures."""
 import argparse,json,os,subprocess,tempfile
-from image_evidence import source_commit,local_image_id,packaged_evidence
+from image_evidence import source_commit,local_image_id,packaged_evidence,native_sha256
 from test_runtime import ROOT,Server
 from test_database import ContainerServer
 from keytend_kmip_release import release,sha
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--image');p.add_argument('--engine',default='podman');p.add_argument('--java',action='append',required=True);a=p.parse_args()
-    client,jars,artifact=release();digest=sha(ROOT/'target/debug/keytend-kmip-server')
+    client,jars,artifact=release();digest=native_sha256(a.image)
     image_id=local_image_id(a.engine,a.image) if a.image else None;evidence=packaged_evidence(image_id) if image_id else {'runtime_binary_sha256':digest,'source_commit':source_commit()[0]}
     out=ROOT/'artifacts/java-release-wrapping';out.mkdir(parents=True,exist_ok=True);mode='image' if a.image else 'native'
     classes=ROOT/'.cache/java-release-wrapping-adapter';classes.mkdir(exist_ok=True);classpath=os.pathsep.join(map(str,[classes]+jars))

@@ -23,7 +23,7 @@ documents a known defect asserts the exact observed outcome.
 """
 import argparse,datetime,hashlib,json,os,pathlib,shutil,subprocess,tempfile,time,uuid
 from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
-from image_evidence import local_image_id,packaged_evidence
+from image_evidence import local_image_id,packaged_evidence,native_sha256
 from test_database import ContainerServer
 from test_runtime import ROOT,free_port
 from wire import *
@@ -453,7 +453,7 @@ def adverse(lane,uuid_,key2_id):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--engine',default='podman');p.add_argument('--image',required=True);p.add_argument('--output',type=pathlib.Path,default=OUT)
     a=p.parse_args();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
-    binary=sha(ROOT/'target/debug/keytend-kmip-server');evidence=packaged_evidence(local_image_id(a.engine,a.image))
+    binary=native_sha256(a.image);evidence=packaged_evidence(local_image_id(a.engine,a.image))
     subprocess.run([a.engine,'pull','--quiet',MYSQL],check=True,stdout=subprocess.DEVNULL)
     mysql_config=local_image_id(a.engine,MYSQL)
     identity=command([a.engine,'run','--rm','--entrypoint','bash',MYSQL,'-c',f'sha256sum {COMPONENT} /usr/sbin/mysqld; mysqld --version; rpm -q percona-server-server'])

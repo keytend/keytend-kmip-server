@@ -17,8 +17,9 @@
 
 Uses only its own namespace (default keytend-helm, deleted at the end). Load the image
 into the cluster first; --pki is a scripts/dev-pki.sh directory with master.key. The
-native executable (--binary) generates keys and exports audit checkpoints locally, as
-an operator would. Steps: lint and render, server-side dry run, install under the
+server executable (--binary; a release run passes the image run as one,
+scripts/image_server.py) generates keys and exports audit checkpoints locally, as an
+operator would. Steps: lint and render, server-side dry run, install under the
 `restricted` Pod Security level, helm test, scheduled backup (latest.json and the
 metric), a pre-upgrade hook that fails the release and one that passes, rollback,
 restore and its no-op repeat, audit checkpoint, master-key rotation with checkpoint

@@ -23,7 +23,7 @@ interoperability is exercised by the unchanged Java and Go client SDKs.
 import argparse,datetime,hashlib,http.client,json,os,sqlite3,ssl,subprocess,tempfile,time,xml.etree.ElementTree as ET
 import cryptography
 from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
-from image_evidence import local_image_id,packaged_evidence,source_commit
+from image_evidence import local_image_id,packaged_evidence,source_commit,native_sha256
 from test_database import ContainerServer
 from test_runtime import sha
 import keytend_kmip_release
@@ -234,10 +234,10 @@ def main():
     if javas:
         _,jars,artifact=keytend_kmip_release.release();pin=artifact['commit']
     art=ROOT/'artifacts';art.mkdir(parents=True,exist_ok=True);output=art/('https-image.json' if a.image else 'https.json');output.write_text(json.dumps({'status':'running'})+'\n')
-    binary=ROOT/'target/debug/keytend-kmip-server';digest=sha(binary);image_id=local_image_id(a.engine,a.image) if a.image else None;image=packaged_evidence(image_id) if image_id else {}
-    editions=[(1,0),(1,1),(1,2),(1,3),(1,4),(2,0),(2,1)]+([] if a.image else [(3,0)]);lanes=[]
+    digest=native_sha256(a.image);image_id=local_image_id(a.engine,a.image) if a.image else None;image=packaged_evidence(image_id) if image_id else {}
+    editions=[(1,0),(1,1),(1,2),(1,3),(1,4),(2,0),(2,1),(3,0)];lanes=[]
     with tempfile.TemporaryDirectory(prefix='keytend-https-') as directory:
-        s=HttpsContainer(directory,a.engine,a.image,log_path=art/'https-image-server.log') if a.image else HttpsServer(directory,draft=True)
+        s=HttpsContainer(directory,a.engine,a.image,draft=True,log_path=art/'https-image-server.log') if a.image else HttpsServer(directory,draft=True)
         try:
             s.start();results=run(s,editions)
             if a.go:

@@ -108,7 +108,8 @@ def to_xml(n,context=None):
     if kind!=1:e.set('type',TYPE_NAMES[kind])
     if kind==1:
         label=[c[2] for c in value if c[0]==TAGS['AttributeName']] if name=='Attribute' else []
-        e.extend(to_xml(c,normalized(label[0]) if label else None) for c in value)
+        # A list: before Python 3.13, Element.extend takes only a sequence.
+        e.extend([to_xml(c,normalized(label[0]) if label else None) for c in value])
     elif kind==5:e.set('value',enum_name(context if name=='AttributeValue' and context else name,value))
     elif kind in (4,8):e.set('value',value.hex())
     elif kind==6:e.set('value','true' if value else 'false')

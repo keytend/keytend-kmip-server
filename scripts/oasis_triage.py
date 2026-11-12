@@ -28,13 +28,14 @@ FULL_SELECTION={'versions':['1.1','1.2','1.3','1.4','2.0','2.1','3.0'],'filter':
 
 def case_key(case):return case['version']+'|'+case['case']
 def report_identity(report):
-    return {'runtime_binary_sha256':report.get('runtime_binary_sha256'),'selection':report.get('selection')}
+    """The runtime a report tested (native executable digest, or the image's runtime block) and its selection."""
+    runtime={'runtime':report['runtime']} if report.get('runtime') else {'runtime_binary_sha256':report.get('runtime_binary_sha256')}
+    return {**runtime,'selection':report.get('selection')}
 
 def validate_ledger(ledger):
     problems=[];seen={};ids=set()
     identity=ledger.get('identity')
-    required={'runtime_binary_sha256','selection'}
-    if not isinstance(identity,dict) or any(not identity.get(k) for k in required):
+    if not isinstance(identity,dict) or not identity.get('selection') or not (identity.get('runtime_binary_sha256') or identity.get('runtime')):
         problems.append('ledger must pin the runtime binary and selection identity')
     if ledger.get('conformance_credit')!='none':problems.append('ledger must grant no conformance credit')
     for family in ledger.get('families',[]):

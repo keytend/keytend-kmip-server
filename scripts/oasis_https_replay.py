@@ -424,13 +424,15 @@ def main():
     parser.add_argument('--forms',nargs='+',default=['normative','numeric'],choices=['normative','numeric'],help='Request forms for non-MSGENC traces')
     parser.add_argument('--http-versions',nargs='+',default=['1.0','1.1'],choices=['1.0','1.1'],help='HTTP versions for non-MSGENC traces')
     parser.add_argument('--binary',type=pathlib.Path,default=ROOT/'target/debug/keytend-kmip-server')
+    parser.add_argument('--image',help='the image that --binary runs (scripts/image_server.py), recorded as the server under test');parser.add_argument('--engine',default='podman')
     parser.add_argument('--output',type=pathlib.Path,default=ROOT/'artifacts/oasis-https-replay.json')
     parser.add_argument('--diagnose',action='store_true')
     parser.add_argument('--skip-binary-baseline',action='store_true',help='Do not also run each trace over the binary port')
     a=parser.parse_args()
     inventory=json.loads(P.INVENTORY.read_text())
     subprocess.run(['python3',str(ROOT/'scripts/fetch_specs.py')],check=True,stdout=subprocess.DEVNULL)
-    binary_sha=hashlib.sha256(a.binary.read_bytes()).hexdigest()
+    from image_evidence import runtime_evidence
+    runtime=runtime_evidence(a.binary,a.image,a.engine)
     a.output.parent.mkdir(parents=True,exist_ok=True)
     sequences={(v,c) for seq in inventory['sequences'] for v in seq['versions'] for c in seq['chain']}
     report=[];probes=[];negatives=[]
@@ -511,7 +513,7 @@ def main():
     failed=any(r['status']=='failed' for r in report+probes+negatives)
     a.output.write_text(json.dumps({'status':'failed' if failed else 'passed','mode':'profiles-4.1-variations-over-https',
         'conformance_credit':'none; separately labelled transport replay, the strict and TTLV variation reports are unchanged',
-        'selection':{'versions':a.versions,'filter':a.filter,'encodings':a.encodings,'forms':a.forms,'http_versions':a.http_versions},'runtime_binary_sha256':binary_sha,'source_commit':source_commit()[0],
+        'selection':{'versions':a.versions,'filter':a.filter,'encodings':a.encodings,'forms':a.forms,'http_versions':a.http_versions},**runtime,'source_commit':source_commit()[0],
         'summary':summary,'cases':report,'maximum_response_size_probe':probes,'negative_transport':negatives},indent=2)+'\n')
     print(summary)
 if __name__=='__main__':main()

@@ -35,7 +35,7 @@ collects it):
 | `index/keytend-kmip-server-<version>.oci.tar` | OCI image layout archive: the multi-architecture image index and every platform's image |
 | `index/oci-image-index.json` | the raw OCI image index blob; its SHA-256 is the index digest |
 | `index/image-index.json` | index digest, each platform's manifest digest and the bindings to the Docker archives |
-| `reports/keytend-kmip-server-<version>-test-reports.tar.gz` | the reports of the qualification run that produced the release ([test reports](testing.md#test-reports)); a release built by the release workflow has none |
+| `reports/keytend-kmip-server-<version>-test-reports.tar.gz` | the reports of the qualification run that produced the release ([test reports](testing.md#test-reports)) |
 | `SHA256SUMS` | SHA-256 of every file above |
 | `SHA256SUMS.sigstore.json` | cosign signature of `SHA256SUMS` (a Sigstore bundle: keyless for a release built by the release workflow) |
 | `SHA256SUMS.asc` | detached ASCII-armored OpenPGP signature of `SHA256SUMS` (see [OpenPGP signature](release-signing.md#openpgp-signature)) |
@@ -48,7 +48,8 @@ signed. The archives are build artifacts and stay out of Git.
 A GitHub release publishes `SHA256SUMS`, `SHA256SUMS.sigstore.json` and
 `SHA256SUMS.asc` as assets, and the release directory as one tar asset named
 `keytend-kmip-server-<version>-signed-release.tar` (release assets cannot hold
-directories). Other assets, such as a `.sha256` of the tar or a copy of
+directories). It also attaches the test reports archive, the same file as in
+`reports/`. Other assets, such as a `.sha256` of the tar or a copy of
 `cosign.pub`, are not needed for verification.
 
 ## How releases are built
@@ -57,16 +58,22 @@ Pushing a tag `v<version>` on `main` starts the release workflow
 ([`.github/workflows/release.yml`](../.github/workflows/release.yml)). The tag
 must match the version in `Cargo.toml`. The workflow:
 
-1. runs Clippy and `cargo test` in the pinned UBI builder image, which has
-   the OpenSSL 3.5 the server needs (`scripts/ci_test.sh`), and the license
-   check;
-2. builds the amd64 and arm64 images natively, on GitHub's amd64 and arm64
+1. builds the amd64 and arm64 images natively, on GitHub's amd64 and arm64
    runners, with `scripts/package.py`, and scans each with
    `scripts/scan_image.py`;
-3. assembles the release set and signs `SHA256SUMS` with cosign keyless (the
+2. qualifies the commit on GitHub-hosted runners, one job per phase of
+   `scripts/release_candidate.py --ci`; every test runs the release image
+   ([test reports](testing.md#test-reports));
+3. merges the jobs' results into the test reports archive and assembles the
+   release set with it under `reports/`;
+4. if every job passed, signs `SHA256SUMS` with cosign keyless (the
    workflow's GitHub identity, recorded in the Sigstore transparency log) and
-   with the OpenPGP CI signing subkey;
-4. creates a draft GitHub release with the assets below.
+   with the OpenPGP CI signing subkey, so the signatures cover the reports;
+5. creates a draft GitHub release with the assets below.
+
+A manual run of the workflow does the same on `main` without signing or
+releasing; its test reports and unsigned release set are the run's
+artifacts.
 
 Publishing the draft starts
 [`.github/workflows/publish-image.yml`](../.github/workflows/publish-image.yml).

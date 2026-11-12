@@ -22,7 +22,8 @@ from test_runtime import ROOT, free_port
 from wire import *
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--kubeconfig',required=True);p.add_argument('--kubectl',default='kubectl');p.add_argument('--pki',required=True);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--kubeconfig',required=True);p.add_argument('--kubectl',default='kubectl');p.add_argument('--pki',required=True)
+    p.add_argument('--binary',default=str(ROOT/'target/debug/keytend-kmip-server'),help='server executable that generates the new master key, such as the image run as one (scripts/image_server.py)');a=p.parse_args()
     k=[a.kubectl,'--kubeconfig',str(pathlib.Path(a.kubeconfig).resolve()),'-n','keytend-kmip-server'];pki=pathlib.Path(a.pki).resolve()
     def command(*args):return subprocess.check_output(k+list(args),text=True,stderr=subprocess.STDOUT)
     def apply(value):subprocess.run(k+['apply','-f','-'],input=json.dumps(value),text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True)
@@ -58,7 +59,7 @@ def main():
         token=uuid.uuid4().hex[:10];new_secret='keytend-kmip-server-rotated-'+token;job_name='keytend-kmip-server-rotate-'+token;directory='rotation-'+token
         with tempfile.TemporaryDirectory(prefix='keytend-kube-rotation-') as d:
             new_key=pathlib.Path(d)/'master.key'
-            subprocess.run([str(ROOT/'target/debug/keytend-kmip-server'),'generate-master-key','--output',str(new_key)],stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True)
+            subprocess.run([a.binary,'generate-master-key','--output',str(new_key)],stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True)
             secret=json.loads(command('create','secret','generic',new_secret,'--from-file='+str(new_key),'--dry-run=client','-o','json'));apply(secret)
         command('scale','statefulset/keytend-kmip-server','--replicas=0');command('wait','--for=delete','pod/keytend-kmip-server-0','--timeout=90s')
         security={'runAsNonRoot':True,'runAsUser':10001,'runAsGroup':10001,'fsGroup':10001,'seccompProfile':{'type':'RuntimeDefault'}}

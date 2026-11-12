@@ -18,10 +18,10 @@
 A lease-honouring client's key rotation (docs/lifecycle.md#leases): the old
 key is re-keyed, deactivated, leased again to read its data, the data is
 re-encrypted under the replacement, and the old key is destroyed; a restart
-keeps the outcome. Natively, the server is also started with
+keeps the outcome. The server is also started with
 `KMIP_LEASE_STATES=active` and `KMIP_MAX_LEASE_SECONDS=0` to check both
-settings. With --image only the default settings run (the container harness
-passes no extra server options).
+settings, natively and with --image (the container gets the KMIP_* settings
+of this process's environment).
 """
 import argparse
 import hashlib
@@ -32,7 +32,7 @@ import platform
 import ssl
 import tempfile
 
-from image_evidence import ROOT, local_image_id, packaged_evidence, source_commit
+from image_evidence import ROOT, local_image_id, packaged_evidence, source_commit, native_sha256
 from test_database import ContainerServer
 from test_runtime import Server
 from wire import binary, create_key, enumeration, exchange, get, payload, reason, request, status, structure, uid
@@ -106,7 +106,7 @@ def rotation(server, v):
     return old, new, rewrapped
 
 
-def run(server, editions, native):
+def run(server, editions, settings):
     rows = []
     with server:
         kept = {v: rotation(server, v) for v in editions}
@@ -118,7 +118,7 @@ def run(server, editions, native):
             assert lease(server, v, new) == 3600
             assert get(payload(crypt(server, v, 32, new, rewrapped)), DATA)[2] == RECORD
         rows.append('restart keeps the destroyed old key unleased and the re-encrypted data readable')
-    if not native:
+    if not settings:
         return rows
     for name, value in [('KMIP_LEASE_STATES', 'active'), ('KMIP_MAX_LEASE_SECONDS', '0')]:
         previous = os.environ.get(name)
@@ -152,21 +152,18 @@ def main():
     args = parser.parse_args()
     output = ROOT/'artifacts/lease-lifecycle'
     output.mkdir(parents=True, exist_ok=True)
-    binary_sha = hashlib.sha256((ROOT/'target/debug/keytend-kmip-server').read_bytes()).hexdigest()
+    binary_sha = native_sha256(args.image)
     config = local_image_id(args.engine, args.image) if args.image else None
     package = packaged_evidence(config) if config else {'runtime_binary_sha256': binary_sha, 'source_commit': source_commit()[0]}
     report = dict(status='running', **package, python_version=platform.python_version(), python_openssl=ssl.OPENSSL_VERSION)
     path = output/('image.json' if args.image else 'native.json')
     path.write_text(json.dumps(report, indent=2)+'\n')
     try:
-        editions = [(1, 4), (2, 1)]
+        editions = [(1, 4), (2, 1), (3, 0)]
         with tempfile.TemporaryDirectory(prefix='keytend-lease-') as directory:
-            if args.image:
-                server = ContainerServer(directory, args.engine, args.image)
-            else:
-                server = Server(directory, draft=True)
-                editions.append((3, 0))
-            report['passed'] = run(server, editions, not args.image)
+            # The image takes the KMIP_* settings of the second part from the environment too (ContainerServer).
+            server = ContainerServer(directory, args.engine, args.image, draft=True) if args.image else Server(directory, draft=True)
+            report['passed'] = run(server, editions, True)
             if not args.image:
                 (output/'native-server.log').write_text((pathlib.Path(directory)/'server.log').read_text())
         report['status'] = 'passed'

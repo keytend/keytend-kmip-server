@@ -24,7 +24,7 @@ import sqlite3
 import subprocess
 import tempfile
 
-from image_evidence import ROOT, source_commit, local_image_id, packaged_evidence
+from image_evidence import ROOT, source_commit, local_image_id, packaged_evidence, native_sha256
 from test_database import ContainerServer, command
 from test_object_state import verify_format
 from test_runtime import Server
@@ -152,7 +152,7 @@ def main():
     parser.add_argument('--engine', default='podman')
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
-    binary = sha(ROOT/'target/debug/keytend-kmip-server')
+    binary = native_sha256(args.image)
     evidence = packaged_evidence(local_image_id(args.engine, args.image)) if args.image else {'source_commit': source_commit()[0]}
     report = dict(status='running', runtime_binary_sha256=binary, lanes=[], **evidence,
         limits='Process-local freshness and readiness tests on local SQLite under actual mTLS. No database-client, Kubernetes, remote witness, cross-restart freshness without a required independent floor, privileged memory attacker, production durability/capacity or full-spec qualification.')

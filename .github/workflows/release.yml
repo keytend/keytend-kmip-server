@@ -12,14 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Build a release from a v<version> tag on main (docs/release-builds.md).
+# Build and qualify a release from a v<version> tag on main (docs/release-builds.md).
 #
-# A tag push tests the commit, builds the amd64 and arm64 images natively,
-# scans them, assembles the release set, signs SHA256SUMS (cosign keyless with
-# this workflow's identity, and OpenPGP with the CI signing subkey) and creates
-# a draft release. Publishing the draft starts publish-image.yml, which pushes
-# the images to ghcr.io. A manual run builds and tests main without signing or
-# releasing anything.
+# A tag push builds the amd64 and arm64 images natively and runs the
+# qualification, one job per phase of scripts/release_candidate.py --ci: rust
+# (Clippy and cargo test of the source), then on the release image conformance,
+# the arm64 image tests on an arm64 runner, the integration matrix in slices,
+# kubernetes, security and java. Every qualification test runs the image. The assemble job merges the jobs'
+# results into the test reports archive and assembles the release set with it
+# under reports/. The release job signs SHA256SUMS (cosign keyless with this
+# workflow's identity, and OpenPGP with the CI signing subkey) and creates a
+# draft release; it runs only if every job passed. Publishing the draft starts
+# publish-image.yml, which pushes the images to ghcr.io. A manual run does all
+# of this except signing and releasing: its reports and unsigned release set
+# are the run's artifacts.
 #
 # Repository settings (scripts/ci_signing_subkey.sh sets both): secret
 # KEYTEND_SIGNING_KEY, the armored CI subkey secret without a passphrase (the
@@ -40,10 +46,12 @@ concurrency:
 
 env:
   RUST_TOOLCHAIN: 1.99.1
+  PYTHONUNBUFFERED: '1'
 
 jobs:
   check:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.version.outputs.version }}
       prerelease: ${{ steps.version.outputs.prerelease }}
@@ -64,28 +72,49 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           case $version in *-*) echo prerelease=true ;; *) echo prerelease=false ;; esac >> "$GITHUB_OUTPUT"
 
-  test:
+  # The server needs OpenSSL 3.5, which the runner's Ubuntu does not have: cargo runs in the
+  # pinned UBI builder image with the image build's OpenSSL (scripts/ci_builder.py). This builds and
+  # tests the source; every qualification job below runs the release image.
+  rust:
     needs: check
     runs-on: ubuntu-24.04
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      # The server needs OpenSSL 3.5, which the runner's Ubuntu does not have: run Clippy
-      # and the tests in the pinned UBI builder image with the image build's OpenSSL.
-      - name: Clippy and tests
+      - name: Runner
         run: |
-          chmod -R a+rX .
-          read -r builder openssl < <(python3 -c 'import sys; sys.path.insert(0, "scripts")
-          from image_evidence import base_images, dockerfile_arg
-          print(base_images("amd64")["UBI_BUILDER"], *[p for p in dockerfile_arg("BUILD_PACKAGES").split() if p.startswith("openssl-devel")])')
-          podman run --rm -v "$PWD:/src:Z" -w /src -e RUST_TOOLCHAIN -e OPENSSL_CONF=/src/image/openssl.cnf \
-            "$builder" bash /src/scripts/ci_test.sh "$openssl"
-      - name: License headers
-        run: python3 scripts/check_license.py
+          scripts/ci_runner.sh python
+          python3 scripts/ci_builder.py start
+      - name: Licence check, Clippy and tests
+        timeout-minutes: 90
+        run: scripts/ci_runner.sh qualify rust --phases preflight rust
+      - name: Pack this job's results
+        if: always()
+        run: scripts/ci_runner.sh part rust
+      - name: Stop the builder
+        if: always()
+        run: python3 scripts/ci_builder.py stop
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: part-rust
+          path: ${{ runner.temp }}/part/
+          retention-days: 3
+          if-no-files-found: error
+          overwrite: true
 
+  # Each leg publishes its archive's SHA-256 and image ID as job outputs; the assemble and
+  # release jobs check the downloaded archives against them before using them.
   image:
     needs: check
+    timeout-minutes: 120
+    outputs:
+      sha256_amd64: ${{ steps.identity.outputs.sha256_amd64 }}
+      image_id_amd64: ${{ steps.identity.outputs.image_id_amd64 }}
+      sha256_arm64: ${{ steps.identity.outputs.sha256_arm64 }}
+      image_id_arm64: ${{ steps.identity.outputs.image_id_arm64 }}
     strategy:
       fail-fast: true
       matrix:
@@ -104,7 +133,7 @@ jobs:
           persist-credentials: false
       - name: Tools
         run: |
-          command -v podman >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q podman; }
+          command -v podman >/dev/null || { sudo -n apt-get update -q && sudo -n apt-get install -y -q podman; }
           command -v rustup >/dev/null || { curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none; echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"; }
       - name: Rust toolchain
         run: |
@@ -117,23 +146,277 @@ jobs:
         run: |
           if [ "$ARCH" = amd64 ]; then tag=localhost/keytend-kmip-server:$VERSION; else tag=localhost/keytend-kmip-server:$VERSION-$ARCH; fi
           python3 scripts/scan_image.py --engine podman --image "$tag" --arch "$ARCH"
+      - id: identity
+        name: Archive SHA-256 and image ID
+        run: scripts/ci_runner.sh identity "$ARCH"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: image-${{ matrix.arch }}
           path: artifacts/
           retention-days: 7
           if-no-files-found: error
+          overwrite: true
 
-  release:
-    needs: [check, test, image]
-    if: github.event_name == 'push'
+  # The qualification jobs run the images of the image jobs; no job runs a native server.
+  conformance:
+    needs: [check, image]
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write   # the draft release
-      id-token: write   # cosign keyless signing
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-amd64
+          path: artifacts/
+      - name: Runner
+        run: |
+          scripts/ci_runner.sh python
+          scripts/ci_runner.sh podman
+          python3 scripts/fetch_specs.py
+      - name: Qualify
+        timeout-minutes: 200
+        run: scripts/ci_runner.sh qualify conformance --phases image conformance
+      - name: Pack this job's results
+        if: always()
+        run: scripts/ci_runner.sh part conformance
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: part-conformance
+          path: ${{ runner.temp }}/part/
+          retention-days: 3
+          if-no-files-found: error
+          overwrite: true
+
+  # The arm64 image's variation replay, hardening, FIPS image test and scan, on an arm64 runner.
+  platform:
+    needs: [check, image]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-arm64
+          path: artifacts/
+      - name: Runner
+        run: |
+          scripts/ci_runner.sh podman
+          scripts/ci_runner.sh python
+          python3 scripts/fetch_specs.py
+      - name: Qualify
+        timeout-minutes: 200
+        run: scripts/ci_runner.sh qualify platform-arm64 --phases image platform --platforms arm64 --arm64-host local
+      - name: Pack this job's results
+        if: always()
+        run: scripts/ci_runner.sh part platform-arm64
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: part-platform-arm64
+          path: ${{ runner.temp }}/part/
+          retention-days: 3
+          if-no-files-found: error
+          overwrite: true
+
+  # The integration matrix in slices that fit a runner (4 CPUs, 16 GB). The assemble job
+  # checks that the slices cover every group of scripts/test_integration_parallel.py.
+  integration:
+    needs: [check, image]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - slice: core
+            groups: hash runtime re-provision live-history lease-lifecycle idle-timeout metrics policy-storage contract base-clients ibm-client
+            db-slots: 1
+          - slice: database
+            groups: database-baseline mysql psmdb-negatives
+            db-slots: 1
+          - slice: pbm-1
+            groups: pbm pbm-compromised
+            db-slots: 1
+          - slice: pbm-2
+            groups: pbm-destroyed pbm-missing-oplog
+            db-slots: 1
+          - slice: pbm-3
+            groups: pbm-corrupt-oplog pbm-interrupted
+            db-slots: 1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: interop/ovh/go.mod
+          cache: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-amd64
+          path: artifacts/
+      - name: Runner
+        run: |
+          scripts/ci_runner.sh python
+          scripts/ci_runner.sh podman
+          scripts/ci_runner.sh inotify
+          scripts/ci_runner.sh space
+          scripts/ci_runner.sh rust
+          sudo -n apt-get update -q && sudo -n apt-get install -y -q libssl-dev
+      - name: Qualify
+        timeout-minutes: 210
+        env:
+          SLICE_GROUPS: ${{ matrix.groups }}
+          SLICE: ${{ matrix.slice }}
+          DB_SLOTS: ${{ matrix.db-slots }}
+        run: |
+          read -ra groups <<< "$SLICE_GROUPS"
+          scripts/ci_runner.sh qualify "integration-$SLICE" --phases image integration \
+            --integration-groups "${groups[@]}" --integration-workers 4 --db-slots "$DB_SLOTS"
+      - name: Pack this job's results
+        if: always()
+        env:
+          SLICE: ${{ matrix.slice }}
+        run: scripts/ci_runner.sh part "integration-$SLICE"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: part-integration-${{ matrix.slice }}
+          path: ${{ runner.temp }}/part/
+          retention-days: 3
+          if-no-files-found: error
+          overwrite: true
+
+  kubernetes:
+    needs: [check, image]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-amd64
+          path: artifacts/
+      - name: Runner
+        run: |
+          scripts/ci_runner.sh python
+          scripts/ci_runner.sh podman
+          scripts/ci_runner.sh inotify
+      # kind runs on the runner's Docker; the pinned kind, kubectl and helm are downloaded and checked.
+      - name: Qualify
+        timeout-minutes: 90
+        run: scripts/ci_runner.sh qualify kubernetes --phases image kubernetes
+      - name: Pack this job's results
+        if: always()
+        run: scripts/ci_runner.sh part kubernetes
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: part-kubernetes
+          path: ${{ runner.temp }}/part/
+          retention-days: 3
+          if-no-files-found: error
+          overwrite: true
+
+  security:
+    needs: [check, image]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-amd64
+          path: artifacts/
+      - name: Runner
+        run: |
+          scripts/ci_runner.sh python
+          scripts/ci_runner.sh podman
+          scripts/ci_runner.sh rust
+          PATH=$HOME/.cargo/bin:$PATH cargo install --locked --quiet cargo-audit --version 0.22.2
+      - name: Qualify
+        timeout-minutes: 90
+        run: scripts/ci_runner.sh qualify security --phases image security
+      - name: Pack this job's results
+        if: always()
+        run: scripts/ci_runner.sh part security
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: part-security
+          path: ${{ runner.temp }}/part/
+          retention-days: 3
+          if-no-files-found: error
+          overwrite: true
+
+  java:
+    needs: [check, image]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Corretto 17, 21 and 25 (the newest of each; setup-java resolves Corretto by major version only).
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: corretto
+          java-version: |
+            17
+            21
+            25
+          overwrite-settings: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-amd64
+          path: artifacts/
+      - name: Runner
+        run: |
+          scripts/ci_runner.sh python
+          scripts/ci_runner.sh podman
+      # The suite downloads and verifies the signed keytend-kmip release with gh.
+      - name: Qualify
+        timeout-minutes: 200
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          export KEYTEND_JDK_17=$JAVA_HOME_17_X64 KEYTEND_JDK_21=$JAVA_HOME_21_X64 KEYTEND_JDK_25=$JAVA_HOME_25_X64
+          scripts/ci_runner.sh qualify java --phases image java
+      - name: Pack this job's results
+        if: always()
+        run: scripts/ci_runner.sh part java
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: part-java
+          path: ${{ runner.temp }}/part/
+          retention-days: 3
+          if-no-files-found: error
+          overwrite: true
+
+  # Merges the jobs' results into the reports archive and assembles the (unsigned) release set
+  # with it under reports/. It runs whatever the other jobs' results, so a failed run still has
+  # its reports, and fails if any step failed.
+  assemble:
+    needs: [check, rust, image, conformance, platform, integration, kubernetes, security, java]
+    if: ${{ !cancelled() && needs.check.result == 'success' && needs.image.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     env:
       VERSION: ${{ needs.check.outputs.version }}
-      PRERELEASE: ${{ needs.check.outputs.prerelease }}
+      IMAGE_SHA256_AMD64: ${{ needs.image.outputs.sha256_amd64 }}
+      IMAGE_ID_AMD64: ${{ needs.image.outputs.image_id_amd64 }}
+      IMAGE_SHA256_ARM64: ${{ needs.image.outputs.sha256_arm64 }}
+      IMAGE_ID_ARM64: ${{ needs.image.outputs.image_id_arm64 }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -143,12 +426,64 @@ jobs:
           pattern: image-*
           path: artifacts/
           merge-multiple: true
-      - name: Load the images
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: part-*
+          path: ${{ runner.temp }}/parts/
+          merge-multiple: true
+      - name: Runner
         run: |
-          podman load --input "artifacts/keytend-kmip-server-$VERSION.docker.tar"
-          podman load --input "artifacts/linux-arm64/keytend-kmip-server-$VERSION-linux-arm64.docker.tar"
-      - name: Assemble the release set
-        run: python3 scripts/release_artifacts.py assemble --dir "$RUNNER_TEMP/bundle/release" --platforms amd64 arm64
+          scripts/ci_runner.sh check-images artifacts
+          scripts/ci_runner.sh python
+      - name: Reports and release set
+        run: python3 scripts/release_candidate.py --ci --job assemble --bundle "$RUNNER_TEMP/bundle" --phases image release --platforms amd64 arm64 --merge "$RUNNER_TEMP"/parts/*.tar.gz
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: test-reports
+          path: ${{ runner.temp }}/bundle/reports/
+          retention-days: 30
+          if-no-files-found: error
+          overwrite: true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-set
+          path: ${{ runner.temp }}/bundle/release/
+          retention-days: 7
+          if-no-files-found: error
+          overwrite: true
+
+  release:
+    needs: [check, rust, image, conformance, platform, integration, kubernetes, security, java, assemble]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write   # the draft release
+      id-token: write   # cosign keyless signing
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+      PRERELEASE: ${{ needs.check.outputs.prerelease }}
+      IMAGE_SHA256_AMD64: ${{ needs.image.outputs.sha256_amd64 }}
+      IMAGE_ID_AMD64: ${{ needs.image.outputs.image_id_amd64 }}
+      IMAGE_SHA256_ARM64: ${{ needs.image.outputs.sha256_arm64 }}
+      IMAGE_ID_ARM64: ${{ needs.image.outputs.image_id_arm64 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-set
+          path: ${{ runner.temp }}/bundle/release/
+      # The set holds the image jobs' archives and the test reports, and SHA256SUMS lists both.
+      - name: Check the release set
+        run: |
+          scripts/ci_runner.sh check-images "$RUNNER_TEMP/bundle/release"
+          reports=$RUNNER_TEMP/bundle/release/reports/keytend-kmip-server-$VERSION-test-reports.tar.gz
+          test -f "$reports" || { echo "::error::the release set has no test reports"; exit 1; }
+          grep -qF "  reports/${reports##*/}" "$RUNNER_TEMP/bundle/release/SHA256SUMS" || { echo "::error::SHA256SUMS does not list the test reports"; exit 1; }
+          (cd "$RUNNER_TEMP/bundle/release" && sha256sum --quiet -c SHA256SUMS)
       - name: OpenPGP signing keyring
         env:
           SIGNING_KEY: ${{ secrets.KEYTEND_SIGNING_KEY }}
@@ -178,12 +513,15 @@ jobs:
           out=$RUNNER_TEMP/assets; mkdir -p "$out"
           tar -cf "$out/keytend-kmip-server-$VERSION-signed-release.tar" -C "$RUNNER_TEMP/bundle" release
           (cd "$out" && sha256sum "keytend-kmip-server-$VERSION-signed-release.tar" > "keytend-kmip-server-$VERSION-signed-release.tar.sha256")
-          cp "$RUNNER_TEMP/bundle/release/SHA256SUMS" "$RUNNER_TEMP/bundle/release/SHA256SUMS.asc" "$RUNNER_TEMP/bundle/release/SHA256SUMS.sigstore.json" "$out/"
+          cp "$RUNNER_TEMP/bundle/release/SHA256SUMS" "$RUNNER_TEMP/bundle/release/SHA256SUMS.asc" "$RUNNER_TEMP/bundle/release/SHA256SUMS.sigstore.json" \
+            "$RUNNER_TEMP/bundle/release/reports/keytend-kmip-server-$VERSION-test-reports.tar.gz" "$out/"
           flags=(--draft --verify-tag --title "keytend-kmip-server $VERSION")
           [ "$PRERELEASE" = true ] && flags+=(--prerelease)
-          printf '%s\n' "keytend-kmip-server $VERSION, built by the release workflow from $GITHUB_SHA." "" \
+          printf '%s\n' "keytend-kmip-server $VERSION, built and qualified by the release workflow from $GITHUB_SHA." "" \
             "Verify and load the image: \`scripts/verify_release.sh $VERSION\` (docs/release-signing.md)." \
+            "The test reports are under reports/ in the signed set, and attached here (docs/testing.md#test-reports)." \
             "Publishing this release pushes the images to ghcr.io/keytend/keytend-kmip-server." > "$out/notes.md"
           gh release create "v$VERSION" "${flags[@]}" --notes-file "$out/notes.md" \
             "$out/keytend-kmip-server-$VERSION-signed-release.tar" "$out/keytend-kmip-server-$VERSION-signed-release.tar.sha256" \
-            "$out/SHA256SUMS" "$out/SHA256SUMS.asc" "$out/SHA256SUMS.sigstore.json"
+            "$out/SHA256SUMS" "$out/SHA256SUMS.asc" "$out/SHA256SUMS.sigstore.json" \
+            "$out/keytend-kmip-server-$VERSION-test-reports.tar.gz"

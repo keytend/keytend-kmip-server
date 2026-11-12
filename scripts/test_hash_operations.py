@@ -22,7 +22,7 @@ import platform
 import ssl
 import tempfile
 
-from image_evidence import ROOT, local_image_id, packaged_evidence, source_commit
+from image_evidence import ROOT, local_image_id, packaged_evidence, source_commit, native_sha256
 from test_database import ContainerServer
 from test_runtime import Server
 from wire import binary, children, enumeration, exchange, get, integer, node, payload, reason, request, status, structure
@@ -132,18 +132,16 @@ def main():
     args = parser.parse_args()
     output = ROOT/'artifacts/hash-operations'
     output.mkdir(parents=True, exist_ok=True)
-    binary_sha = hashlib.sha256((ROOT/'target/debug/keytend-kmip-server').read_bytes()).hexdigest()
+    binary_sha = native_sha256(args.image)
     config = local_image_id(args.engine, args.image) if args.image else None
     package = packaged_evidence(config) if config else {'runtime_binary_sha256': binary_sha, 'source_commit': source_commit()[0]}
     report = dict(status='running', **package, python_version=platform.python_version(), python_openssl=ssl.OPENSSL_VERSION)
     path = output/('image.json' if args.image else 'native.json')
     path.write_text(json.dumps(report, indent=2)+'\n')
     try:
-        editions = [(1,0), (1,1), (1,2), (1,3), (1,4), (2,0), (2,1)]
+        editions = [(1,0), (1,1), (1,2), (1,3), (1,4), (2,0), (2,1), (3,0)]
         with tempfile.TemporaryDirectory(prefix='keytend-hash-') as directory:
-            server = ContainerServer(directory, args.engine, args.image) if args.image else Server(directory, draft=True)
-            if not args.image:
-                editions.append((3,0))
+            server = ContainerServer(directory, args.engine, args.image, draft=True) if args.image else Server(directory, draft=True)
             with server:
                 report['versions'] = run(server, editions)
             if not args.image:

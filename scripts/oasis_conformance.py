@@ -217,13 +217,15 @@ def compare(expected,actual,variables,context=None,path='',ignore_result_message
     assert want[2]==actual[2],path+f' value mismatch; expected {shown(want[2])}, received {shown(actual[2])}'
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--skip-build',action='store_true',help='use the existing target/debug executable');parser.add_argument('--binary',type=pathlib.Path,help='run this executable instead of target/debug (implies --skip-build)');parser.add_argument('--versions',nargs='+',default=['1.1','1.2','1.3','1.4','2.0','2.1','3.0']);parser.add_argument('--filter',default='');parser.add_argument('--report-only',action='store_true');parser.add_argument('--output',type=pathlib.Path,default=ROOT/'artifacts/oasis.json');parser.add_argument('--ignore-result-message-text',action='store_true',help='Diagnostic only: retain types/counts/status/reasons but ignore literal Result Message wording');a=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--skip-build',action='store_true',help='use the existing target/debug executable');parser.add_argument('--binary',type=pathlib.Path,help='run this executable instead of target/debug (implies --skip-build)');parser.add_argument('--versions',nargs='+',default=['1.1','1.2','1.3','1.4','2.0','2.1','3.0']);parser.add_argument('--filter',default='');parser.add_argument('--report-only',action='store_true');parser.add_argument('--image',help='the image that --binary runs (scripts/image_server.py), recorded as the server under test');parser.add_argument('--engine',default='podman');parser.add_argument('--output',type=pathlib.Path,default=ROOT/'artifacts/oasis.json');parser.add_argument('--ignore-result-message-text',action='store_true',help='Diagnostic only: retain types/counts/status/reasons but ignore literal Result Message wording');a=parser.parse_args()
     if a.ignore_result_message_text and a.output.resolve()==(ROOT/'artifacts/oasis.json').resolve():parser.error('diagnostic mode requires a separate --output; canonical strict results must be preserved')
     a.output.parent.mkdir(parents=True,exist_ok=True)
     a.output.write_text(json.dumps({'status':'running','selection':{'versions':a.versions,'filter':a.filter}})+'\n')
     subprocess.run(['python3',str(ROOT/'scripts/fetch_specs.py')],check=True)
     if not a.skip_build and not a.binary:subprocess.run(['cargo','build','--locked'],cwd=ROOT,check=True)
-    binary=(a.binary or ROOT/'target/debug/keytend-kmip-server').resolve();binary_sha256=hashlib.sha256(binary.read_bytes()).hexdigest()
+    binary=(a.binary or ROOT/'target/debug/keytend-kmip-server').resolve()
+    from image_evidence import runtime_evidence
+    runtime=runtime_evidence(binary,a.image,a.engine)
     report=[]
     with tempfile.TemporaryDirectory(prefix='keytend-kmip-server-oasis-') as d:
         server=Server(d,binary=binary,draft=True)
@@ -272,7 +274,7 @@ def main():
             summary={s:sum(e['status']==s for e in report if e['version']==version) for s in ['passed','failed','unexecuted']};print(version,summary,flush=True)
     summary={s:sum(e['status']==s for e in report) for s in ['passed','failed','unexecuted']}
     status='passed' if report and all(e['status']=='passed' for e in report) else 'failed'
-    a.output.write_text(json.dumps({'status':status,'scope':'official message traces over TTLV; transport and full profile conformance not certified','comparison_policy':'diagnostic_literal_message_text_ignored' if a.ignore_result_message_text else 'strict','diagnostic_only':a.ignore_result_message_text,'selection':{'versions':a.versions,'filter':a.filter},'source_commit':source_commit()[0],'runtime_binary_sha256':binary_sha256,'case_isolation':'independent encrypted database per case','summary':summary,'cases':report},indent=2)+'\n');print(summary)
+    a.output.write_text(json.dumps({'status':status,'scope':'official message traces over TTLV; transport and full profile conformance not certified','comparison_policy':'diagnostic_literal_message_text_ignored' if a.ignore_result_message_text else 'strict','diagnostic_only':a.ignore_result_message_text,'selection':{'versions':a.versions,'filter':a.filter},'source_commit':source_commit()[0],**runtime,'case_isolation':'independent encrypted database per case','summary':summary,'cases':report},indent=2)+'\n');print(summary)
     if not report or any(e['status']!='passed' for e in report):
         if not a.report_only:raise SystemExit(1)
 if __name__=='__main__':main()

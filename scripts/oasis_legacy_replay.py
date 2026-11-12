@@ -459,6 +459,7 @@ def write_atomic(path,document):
 def main():
     parser=argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--binary',type=pathlib.Path,default=ROOT/'target/debug/keytend-kmip-server')
+    parser.add_argument('--image',help='the image that --binary runs (scripts/image_server.py), recorded as the server under test');parser.add_argument('--engine',default='podman')
     parser.add_argument('--filter',nargs='*',default=[],help='Case identifiers to run (default: all 155)')
     parser.add_argument('--output',type=pathlib.Path,default=DEFAULT_OUTPUT)
     parser.add_argument('--diagnose',action='store_true',help='Include the decoded failing response in the report')
@@ -485,7 +486,8 @@ def main():
     # Private keys registered anywhere in the notes, indexed by public key, so a
     # public-key-only case can still be checked by independent decryption.
     corpus=P.corpus_private_keys({c['id']+str(i):ET.tostring(m['xml']) for item,cases in documents.values() for c in cases for i,m in enumerate(c['messages']) if m['xml'] is not None})
-    binary_sha=hashlib.sha256(a.binary.read_bytes()).hexdigest()
+    from image_evidence import runtime_evidence
+    runtime=runtime_evidence(a.binary,a.image,a.engine)
     started=datetime.datetime.now(datetime.timezone.utc).isoformat();report=[]
     write_atomic(a.output,{'status':'running','mode':MODE,'run':run_label,'started_utc':started,'cases':[]})
     with tempfile.TemporaryDirectory(prefix='keytend-kmip-server-legacy-variations-') as d:
@@ -552,7 +554,7 @@ def main():
         'server_environment':configuration.get('environment',{}),'client_endpoint':bool(endpoint),
         'conformance_credit':'none; separately labelled variation mode over non-normative Committee Notes; the strict legacy report is unchanged',
         'started_utc':started,'finished_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'selection':a.filter or 'all',
-        'runtime_binary_sha256':binary_sha,'source_commit':source_commit()[0],'hooks':HOOKS,
+        **runtime,'source_commit':source_commit()[0],'hooks':HOOKS,
         'summary':summary,'ledger_differences':differences,'cases':report})
     print(summary)
     for line in differences:print('ledger difference:',line)

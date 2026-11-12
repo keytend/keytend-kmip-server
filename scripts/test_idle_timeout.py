@@ -24,7 +24,7 @@ its next request, and the counter stays 0. Each case uses its own disposable
 server and PKI; nothing else is started, stopped or removed.
 """
 import argparse, datetime, hashlib, json, pathlib, ssl, tempfile, time
-from image_evidence import ROOT, local_image_id, packaged_evidence, source_commit
+from image_evidence import ROOT, local_image_id, packaged_evidence, source_commit, native_sha256
 from network_fixture import metrics
 from test_database import ContainerServer
 from test_runtime import Server
@@ -79,7 +79,7 @@ def main():
     a = p.parse_args()
     out = a.output or ROOT / 'artifacts' / ('idle-timeout-image.json' if a.image else 'idle-timeout.json')
     out.parent.mkdir(parents=True, exist_ok=True)
-    binary = hashlib.sha256((ROOT / 'target/debug/keytend-kmip-server').read_bytes()).hexdigest()
+    binary = native_sha256(a.image)
     identity = packaged_evidence(local_image_id(a.engine, a.image)) if a.image else {'source_commit': source_commit()[0]}
     report = dict(status='running', started_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
                   target='image' if a.image else 'native', image=a.image,

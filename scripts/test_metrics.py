@@ -25,7 +25,7 @@ and that `--metrics off` answers 404. Nothing else is started, stopped or
 removed (docs/metrics.md).
 """
 import argparse, datetime, hashlib, http.client, json, pathlib, re, socket, ssl, subprocess, tempfile, time
-from image_evidence import ROOT, local_image_id, packaged_evidence, source_commit
+from image_evidence import ROOT, local_image_id, packaged_evidence, source_commit, native_sha256
 from https_client import HttpsContainer, HttpsServer, post
 from wire import enumeration, exchange, get, integer, payload, reason, request, status, structure, text, uid
 
@@ -117,6 +117,17 @@ def healthcheck(server, image, engine):
     return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=30)
 
 
+def image_binary_sha256(engine, image):
+    """SHA-256 of the server executable in the image (the image has no shell; the file is copied out)."""
+    container = subprocess.check_output([engine, 'create', image], text=True).strip()
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            subprocess.run([engine, 'cp', f'{container}:/usr/local/bin/keytend-kmip-server', d], check=True)
+            return hashlib.sha256((pathlib.Path(d)/'keytend-kmip-server').read_bytes()).hexdigest()
+    finally:
+        subprocess.run([engine, 'rm', '-f', container], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def exercise(server, image, engine):
     results = {}
     before_text, before = scrape(server)
@@ -193,8 +204,9 @@ def exercise(server, image, engine):
     for secret in secrets:
         assert not any(secret in v for v in values), f'{secret} exposed in a label value'
     results['binary_sha256_reported'] = [dict(ls) for (n, ls), _ in after.items() if n == 'kmip_build_info'][0]['binary_sha256']
-    if not image:
-        assert results['binary_sha256_reported'] == hashlib.sha256(pathlib.Path(server.binary).read_bytes()).hexdigest()
+    # The executable that runs reports its own digest: the native file, or the image's.
+    assert results['binary_sha256_reported'] == (image_binary_sha256(engine, image) if image else
+                                                 hashlib.sha256(pathlib.Path(server.binary).read_bytes()).hexdigest())
     for path, want in [('/livez', 'alive\n'), ('/readyz', 'ready\n')]:
         assert http_get(server, path)[::2] == (200, want), path
     assert http_get(server, '/connection-metrics')[0] == 200
@@ -223,7 +235,7 @@ def main():
     a = p.parse_args()
     out = a.output or ROOT / 'artifacts' / ('metrics-image.json' if a.image else 'metrics.json')
     out.parent.mkdir(parents=True, exist_ok=True)
-    binary = hashlib.sha256((ROOT / 'target/debug/keytend-kmip-server').read_bytes()).hexdigest()
+    binary = native_sha256(a.image)
     identity = packaged_evidence(local_image_id(a.engine, a.image)) if a.image else {'source_commit': source_commit()[0]}
     report = dict(status='running', started_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
                   target='image' if a.image else 'native', image=a.image,

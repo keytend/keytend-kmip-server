@@ -20,6 +20,7 @@ Each group runs its scripts in order. Database groups additionally share --db-sl
 """
 import argparse,concurrent.futures,datetime,hashlib,json,pathlib,shutil,subprocess,tempfile,threading
 from image_evidence import ROOT,local_image_id,packaged_evidence
+import image_server
 
 DB_GROUPS=frozenset({'database-baseline','pbm','pbm-compromised','pbm-destroyed',
     'pbm-missing-oplog','pbm-corrupt-oplog','pbm-interrupted','psmdb-negatives','mysql'})
@@ -58,7 +59,9 @@ def new_attempt(directory):
 def now():return datetime.datetime.now(datetime.timezone.utc).isoformat()
 def sha(path):return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
 
-def jobs_for(image,ibm_client_image,out):
+def jobs_for(image,ibm_client_image,out,server=None):
+    """The groups' commands. `server` runs the image as the server executable (scripts/image_server.py),
+    for the groups whose harness starts the server itself."""
     def cmd(script,*args):return ['python3','scripts/'+script+'.py',*args]
     def img(script,*args):return cmd(script,*args,'--image',image)
     def fixture(name):return ['--output',str(out/(name+'-fixture'))]
@@ -66,10 +69,10 @@ def jobs_for(image,ibm_client_image,out):
         'hash':[img('test_hash_operations')],
         'base-clients':[img('test_interop','--skip-build')],
         'ibm-client':[img('test_ibm_client','--client-image',ibm_client_image)],
-        # Restart persistence, tenancy and hostile frames against the native executable.
-        'runtime':[cmd('test_runtime','--skip-build')],
-        # Re-Provision against the native executable (docs/re-provision.md).
-        're-provision':[cmd('test_re_provision','--skip-build')],
+        # Restart persistence, tenancy and hostile frames, with the image as the server executable.
+        'runtime':[cmd('test_runtime','--skip-build','--binary',str(server),'--image',image)],
+        # Re-Provision (docs/re-provision.md), with the image as the server executable.
+        're-provision':[cmd('test_re_provision','--skip-build','--binary',str(server),'--image',image)],
         'live-history':[img('test_live_history')],
         'lease-lifecycle':[img('test_lease_lifecycle')],
         'idle-timeout':[img('test_idle_timeout')],
@@ -131,7 +134,10 @@ def main(argv=None):
     out=new_attempt(ROOT/'artifacts/integration-qualification')
     print('qualification attempt:',out.relative_to(ROOT),flush=True)
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
-    jobs=jobs_for(a.image,a.ibm_client_image,out)
+    # The server executable for the groups that start it is the image (scripts/image_server.py).
+    label=image_server.run_label(out.name)
+    server=image_server.wrapper(out,a.image,run=label)
+    jobs=jobs_for(a.image,a.ibm_client_image,out,server)
     if a.groups:
         unknown=set(a.groups)-set(jobs)
         if unknown:p.error('unknown groups: '+', '.join(sorted(unknown)))
@@ -142,6 +148,8 @@ def main(argv=None):
         temp=out/'summary.json.tmp';temp.write_text(json.dumps(report,indent=2)+'\n');temp.replace(out/'summary.json')
     save()
     for name,result in run_groups(jobs,out,a.workers,a.db_slots):report['jobs'][name]=result;save()
+    # Groups run at once, so containers a killed wrapper left are removed only after all of them.
+    report['server_containers_removed']=len(image_server.remove(run=label))
     report['status']='failed' if any(r['status']!='passed' for r in report['jobs'].values()) else 'passed'
     report['finished_at']=now();save()
     if report['status']!='passed':raise SystemExit(1)

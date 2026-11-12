@@ -299,7 +299,10 @@ certificate names the workflow and the tag it ran for, and the signature is
 recorded in the public Rekor transparency log, so anyone can see when it was
 made. Its OpenPGP signature is made in the same job by a CI signing subkey
 held as a repository secret. It shows that the release workflow of this
-repository signed those bytes for that tag.
+repository signed those bytes for that tag. The signed set includes the
+reports of the tests the same workflow ran on that commit
+([test reports](testing.md#test-reports)); they record what was tested, not
+an independent audit.
 
 For a release built on a workstation, signing is offline: there is no Rekor transparency-log entry, no trusted
 timestamp and no keyless identity. Nobody can check from a public log when a

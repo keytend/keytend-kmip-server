@@ -895,6 +895,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument('--versions',nargs='+',default=['1.1','1.2','1.3','1.4','2.0','2.1','3.0'])
     parser.add_argument('--filter',default='');parser.add_argument('--binary',type=pathlib.Path,default=ROOT/'target/debug/keytend-kmip-server')
+    parser.add_argument('--image',help='the image that --binary runs (scripts/image_server.py), recorded as the server under test');parser.add_argument('--engine',default='podman')
     parser.add_argument('--output',type=pathlib.Path,default=ROOT/'artifacts/oasis-profile-variations.json')
     parser.add_argument('--diagnose',action='store_true',help='Include the decoded failing response in the report')
     parser.add_argument('--corrected-fixtures',action='store_true',help='Apply docs/specs/oasis-corrected-fixtures.json (proven corpus defects only); reported as a separate mode')
@@ -904,7 +905,8 @@ def main():
     fixtures={}
     if a.corrected_fixtures:
         for edit in json.loads((ROOT/'docs/specs/oasis-corrected-fixtures.json').read_text())['edits']:fixtures.setdefault(edit['case'],[]).append(edit)
-    binary_sha=hashlib.sha256(a.binary.read_bytes()).hexdigest()
+    from image_evidence import runtime_evidence
+    runtime=runtime_evidence(a.binary,a.image,a.engine)
     a.output.parent.mkdir(parents=True,exist_ok=True)
     report=[]
     sequences={(v,c):seq for seq in inventory['sequences'] for v in seq['versions'] for c in seq['chain']}
@@ -986,6 +988,6 @@ def main():
                 server.stop()
             summary={s:sum(e['status']==s for e in report if e['version']==version) for s in ['passed','unverified','failed','unexecuted','excluded_non_trace','delegated']};print(version,summary,flush=True)
     summary={s:sum(e['status']==s for e in report) for s in ['passed','unverified','failed','unexecuted','excluded_non_trace','delegated']}
-    a.output.write_text(json.dumps({'status':'complete','mode':'profiles-4.1-variations'+('+corrected-fixtures' if a.corrected_fixtures else ''),'conformance_credit':'none; separately labelled variation mode, the strict report is unchanged','selection':{'versions':a.versions,'filter':a.filter},'runtime_binary_sha256':binary_sha,'source_commit':source_commit()[0],'summary':summary,'cases':report},indent=2)+'\n')
+    a.output.write_text(json.dumps({'status':'complete','mode':'profiles-4.1-variations'+('+corrected-fixtures' if a.corrected_fixtures else ''),'conformance_credit':'none; separately labelled variation mode, the strict report is unchanged','selection':{'versions':a.versions,'filter':a.filter},**runtime,'source_commit':source_commit()[0],'summary':summary,'cases':report},indent=2)+'\n')
     print(summary)
 if __name__=='__main__':main()

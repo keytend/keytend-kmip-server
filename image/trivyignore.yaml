@@ -46,6 +46,8 @@ vulnerabilities:
     statement: "gcc libstdc++ std::vector<bool>. libstdc++ is not shipped; only libgcc_s is."
   - id: CVE-2026-115456
     statement: "gcc libstdc++ std::from_chars. libstdc++ is not shipped; only libgcc_s is."
+  - id: CVE-2026-125709
+    statement: "gcc libstdc++ file stream buffer overflow after a failed single-character write. libstdc++ is not shipped; only libgcc_s is, and the server binary does not link libstdc++."
   - id: CVE-2021-46195
     statement: "gcc libiberty demangler (binutils/gcc tools). It is not part of libgcc and is not shipped."
   - id: CVE-2022-27943

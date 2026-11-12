@@ -15,7 +15,7 @@
 
 """Reproduce five independent client tests. Missing clients fail the run."""
 import argparse,hashlib,json,os,pathlib,subprocess,tempfile,time
-from image_evidence import local_image_id,packaged_evidence,source_commit
+from image_evidence import local_image_id,packaged_evidence,source_commit,native_sha256
 from test_database import ContainerServer
 from test_runtime import ROOT,Server
 parser=argparse.ArgumentParser();parser.add_argument('--image');parser.add_argument('--skip-build',action='store_true',help='use the frozen prebuilt server binary');parser.add_argument('--engine',default='podman');a=parser.parse_args()
@@ -47,8 +47,8 @@ run('install-pykmip',[str(venv/'bin/pip'),'install','--disable-pip-version-check
 run('build-libkmip',['make','-s','-C',str(CACHE/'libkmip'),'libs'])
 run('build-libkmip-adapter',['cc','-Wall','-Wextra','-Werror','-I',str(CACHE/'libkmip/include'),str(ROOT/'interop/libkmip.c'),str(CACHE/'libkmip/lib/libkmip.a'),'-lssl','-lcrypto','-o',str(CACHE/'libkmip-test')])
 if not a.skip_build:run('build-server',['cargo','build','--locked'])
-else:assert (ROOT/'target/debug/keytend-kmip-server').is_file(),'build the server before selecting --skip-build'
-binary=ROOT/'target/debug/keytend-kmip-server';binary_hash=hashlib.sha256(binary.read_bytes()).hexdigest()
+elif not a.image:assert (ROOT/'target/debug/keytend-kmip-server').is_file(),'build the server before selecting --skip-build'
+binary_hash=native_sha256(a.image)
 image_id=local_image_id(a.engine,a.image) if a.image else None
 image=packaged_evidence(image_id) if image_id else {}
 results=[]

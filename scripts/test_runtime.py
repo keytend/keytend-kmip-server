@@ -36,7 +36,9 @@ class Server:
     def __init__(self,directory,binary=None,draft=False):
         self.root=pathlib.Path(directory);self.pki=self.root/'pki';self.data=self.root/'data';self.data.mkdir(mode=0o700);self.port=stable_port();self.health=free_port();self.binary=str(binary or ROOT/'target/debug/keytend-kmip-server');self.draft=draft;self.process=None;self.crl=None;self.users=None;self.extra_args=[]
         subprocess.run([str(ROOT/'scripts/dev-pki.sh'),str(self.pki)],check=True)
-        subprocess.run([self.binary,'generate-master-key','--output',str(self.pki/'master.key')],check=True)
+        self.generate_master_key(self.pki/'master.key')
+    def generate_master_key(self,path):
+        subprocess.run([self.binary,'generate-master-key','--output',str(path)],check=True)
     def start(self):
         self.log=open(self.root/'server.log','a')
         args=[self.binary,'serve','--listen',f'127.0.0.1:{self.port}','--health-listen',f'127.0.0.1:{self.health}','--cert',str(self.pki/'server.pem'),'--key',str(self.pki/'server.key'),'--ca',str(self.pki/'ca.pem'),'--policy',str(self.pki/'policy.json'),'--database',str(self.data/'kmip.sqlite'),'--master-key',str(self.pki/'master.key')]
@@ -48,7 +50,7 @@ class Server:
         if self.crl:args+=['--crl',str(self.crl)]
         args+=self.extra_args
         self.process=subprocess.Popen(args,stdout=self.log,stderr=self.log)
-        until=time.monotonic()+10
+        until=time.monotonic()+30  # loaded runners start containers slowly
         while time.monotonic()<until:
             if self.process.poll() is not None:raise RuntimeError((self.root/'server.log').read_text())
             try:
@@ -370,10 +372,13 @@ def run(s):
     passed('CRL rejects revoked authorized client; unaffected authorized client still works')
     return results
 if __name__=='__main__':
-    from image_evidence import source_commit
-    parser=argparse.ArgumentParser();parser.add_argument('--skip-build',action='store_true');args=parser.parse_args()
-    if not args.skip_build:subprocess.run(['cargo','build','--locked'],cwd=ROOT,check=True)
-    digest=sha(ROOT/'target/debug/keytend-kmip-server')
+    from image_evidence import source_commit,local_image_id,packaged_evidence
+    parser=argparse.ArgumentParser();parser.add_argument('--skip-build',action='store_true')
+    parser.add_argument('--binary',help='server executable (default target/debug), such as the image run as one (scripts/image_server.py)')
+    parser.add_argument('--image',help='the image that --binary runs, recorded as the tested runtime');parser.add_argument('--engine',default='podman');args=parser.parse_args()
+    if not args.skip_build and not args.binary:subprocess.run(['cargo','build','--locked'],cwd=ROOT,check=True)
+    binary=args.binary or ROOT/'target/debug/keytend-kmip-server'
+    evidence=packaged_evidence(local_image_id(args.engine,args.image)) if args.image else {'source_commit':source_commit()[0],'runtime_binary_sha256':sha(binary)}
     with tempfile.TemporaryDirectory(prefix='keytend-kmip-server-runtime-') as d:
-        with Server(d) as s:results=run(s)
-    out=ROOT/'artifacts';out.mkdir(exist_ok=True);(out/'runtime.json').write_text(json.dumps(dict(status='passed',passed=results,source_commit=source_commit()[0],runtime_binary_sha256=digest),indent=2)+'\n')
+        with Server(d,binary=binary) as s:results=run(s)
+    out=ROOT/'artifacts';out.mkdir(exist_ok=True);(out/'runtime.json').write_text(json.dumps(dict(status='passed',passed=results,server=str(binary),**evidence),indent=2)+'\n')

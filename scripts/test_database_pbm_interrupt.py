@@ -36,7 +36,7 @@ import uuid
 import test_database
 import test_database_pbm as pbm
 import test_database_replicaset
-from image_evidence import ROOT, local_image_id, packaged_evidence
+from image_evidence import ROOT, local_image_id, packaged_evidence, native_sha256
 from test_database_backup import key_state, manifest, sha
 from test_database_replicaset import command
 from wire import key_value
@@ -379,7 +379,7 @@ def main():
     binary = ROOT/'target/debug/keytend-kmip-server'
     fixture = None
     try:
-        report['runtime_binary_sha256'] = sha(binary)
+        report['runtime_binary_sha256'] = native_sha256(args.image)
         report.update(identity('podman', args.image))
         # Freeze both images to config IDs, regardless of later tag movement.
         pbm.COMBINED = 'sha256:'+report['combined_database_image_config_id']

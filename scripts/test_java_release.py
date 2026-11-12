@@ -31,10 +31,9 @@ def collect(engine,image):
     client,jars,artifact=release()
     config=local_image_id(engine,image);packaged=packaged_evidence(config)
     reports={};files={}
+    # Every lane runs the server from the image; there is no native lane.
     paths={'catalog':'artifacts/java-catalog/summary.json',
-           'https_native':'artifacts/https.json',
            'https_image':'artifacts/https-image.json',
-           'wrapping_native':'artifacts/java-release-wrapping/native-summary.json',
            'wrapping_image':'artifacts/java-release-wrapping/image-summary.json',
            'contract':'artifacts/catalog-probes.json'}
     def retain(name):
@@ -79,7 +78,7 @@ def collect(engine,image):
                 findings[(record['test_id'],record['outcome'],record['reason'])].append({'wire_version':key[0],'jdk':major})
         matrix.append({'wire_version':key[0],'jdk':major,'outcomes':counts,'sdk_candidate_profile_qualified':lane['qualified']})
     assert tuples=={(version,jdk) for version in VERSIONS for jdk in [17,21,25]},'expected all 18 catalog lanes'
-    for name in ['https_native','https_image']:
+    for name in ['https_image']:
         lanes=reports[name]['java_lanes'];assert len(lanes)==54
         actual=set()
         for lane in lanes:
@@ -89,7 +88,7 @@ def collect(engine,image):
             path=lane['log'];assert sha(ROOT/path)==lane['log_sha256'];files[path]=lane['log_sha256']
         assert actual=={(version,jdk,encoding) for version in VERSIONS for jdk in [17,21,25] for encoding in ['TTLV','JSON','XML']}
     server_findings=[]
-    for name in ['wrapping_native','wrapping_image']:
+    for name in ['wrapping_image']:
         actual=set()
         for lane in reports[name]['lanes']:
             major=int(re.search(r'version "(\d+)',lane['jdk']).group(1))
@@ -102,15 +101,14 @@ def collect(engine,image):
                     server_findings.append({'id':'SERVER-REL-001','runtime':name,'jdk':major,'wire_version':version,
                                             'expected_reason':1,'observed_reason':row['missing_stored_parameters_reason']})
         assert actual=={(version,jdk) for version in VERSIONS for jdk in [17,21,25]}
-        if name=='wrapping_native':assert reports[name]['runtime_binary_sha256']==reports['https_native']['runtime_binary_sha256']
     assert len(reports['contract']['versions'])==6
     result={'status':'completed_with_findings' if findings or server_findings or coverage_findings else 'passed_applicable_subset',
             'client_artifact':artifact,
-            **packaged,'runtime_binary_sha256':reports['https_native']['runtime_binary_sha256'],
+            **packaged,
             'catalog_observations':18*len(ids),'catalog_matrix':matrix,
             'tested_jdk_runtimes':sorted({lane['jdk'] for lane in reports['catalog']['lanes']}),
-            'supplemental_sdk_wrapping_lanes':{'native':18,'container':18},'server_findings':server_findings,
-            'https_lanes':{'native':54,'container':54},
+            'supplemental_sdk_wrapping_lanes':{'container':18},'server_findings':server_findings,
+            'https_lanes':{'container':54},
             'not_applicable_no_previous_release':[{'test_id':key[0],'reason':key[1],'observations':value} for key,value in sorted(no_previous.items())],
             'opt_in_not_run':[{'test_id':key[0],'reason':key[1],'observations':value} for key,value in sorted(opt_in.items())],
             'raw_catalog_findings':[{'test_id':key[0],'upstream_outcome':key[1],'reason':key[2],'observations':value} for key,value in sorted(findings.items())],
@@ -131,12 +129,10 @@ def main():
         jdks=[arg for java in a.java for arg in ['--java',java]]
         commands=[['test_java_release_fixture.py'],['test_java_catalog.py','--report-only','--engine',a.engine,'--image',a.image]+jdks,
                   ['test_https.py','--engine',a.engine,'--image',a.image]+jdks,
-                  ['test_https.py']+jdks,
-                  ['test_java_wrapping.py']+jdks,
                   ['test_java_wrapping.py','--engine',a.engine,'--image',a.image]+jdks,
                   ['test_catalog_contract.py','--engine',a.engine,'--image',a.image]]
         for script,*args in commands:subprocess.run([sys.executable,str(ROOT/'scripts'/script),*args],check=True,cwd=ROOT)
     result=collect(a.engine,a.image)
-    print(result['status']+f": {result['catalog_observations']:,} catalog observations, 108 HTTPS lanes and 36 supplemental wrapping lanes")
+    print(result['status']+f": {result['catalog_observations']:,} catalog observations, 54 HTTPS lanes and 18 supplemental wrapping lanes, all on the image")
     if not result['subset_gate_passed'] and not a.report_only:raise SystemExit(1)
 if __name__=='__main__':main()
